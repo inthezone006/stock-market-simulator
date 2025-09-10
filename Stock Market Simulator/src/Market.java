@@ -1,10 +1,6 @@
-package main.java.com.stockmarketsimulator;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.stockmarketsimulator.Stock;
 
 public class Market {
     private final List<Stock> stocks;

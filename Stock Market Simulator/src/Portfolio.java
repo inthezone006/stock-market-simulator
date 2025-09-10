@@ -1,10 +1,6 @@
-package main.java.com.stockmarketsimulator;
-
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.stockmarketsimulator.Stock;
 
 public class Portfolio {
     private double cashBalance;

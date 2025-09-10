@@ -1,10 +1,5 @@
-package com.stockmarketsimulator;
-
 import java.util.InputMismatchException;
 import java.util.Scanner;
-
-import main.java.com.stockmarketsimulator.Market;
-import main.java.com.stockmarketsimulator.User;
 
 public class App 
 {

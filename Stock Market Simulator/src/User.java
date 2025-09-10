@@ -1,7 +1,3 @@
-package main.java.com.stockmarketsimulator;
-
-import com.stockmarketsimulator.Stock;
-
 public class User {
     private final String username;
     private final Portfolio portfolio;

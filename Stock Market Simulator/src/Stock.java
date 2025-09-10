@@ -1,5 +1,3 @@
-package com.stockmarketsimulator;
-
 import java.text.DecimalFormat;
 
 public class Stock {

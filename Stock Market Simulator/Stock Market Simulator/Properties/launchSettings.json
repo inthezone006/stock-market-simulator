@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Stock Market Simulator (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Stock Market Simulator (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Stock_Market_Simulator.PortfolioPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Stock_Market_Simulator"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:converters="using:Stock_Market_Simulator.Converters"
+    xmlns:models="using:Shared"
+    Background="Transparent"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:DecimalToCurrencyConverter x:Key="CurrencyConverter"/>
+    </Page.Resources>
+
+    <Grid>
+        <StackPanel Margin="48" Spacing="16">
+            <TextBlock Text="My Portfolio" FontSize="32" FontWeight="SemiBold"/>
+            <controls:DataGrid x:ConnectionId='2' x:Name="HoldingsGrid" AutoGenerateColumns="False">
+                <controls:DataGrid.Columns>
+                    <controls:DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"/>
+                    <controls:DataGridTextColumn Header="Shares" Binding="{Binding Shares}"/>
+
+                    <controls:DataGridTextColumn Header="Average Cost" Binding="{Binding AverageCost, Converter={StaticResource CurrencyConverter}}"/>
+
+                </controls:DataGrid.Columns>
+            </controls:DataGrid>
+        </StackPanel>
+    </Grid>
+</Page>
+

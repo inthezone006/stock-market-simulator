@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "All Projects",
+    "Projects": [
+      {
+        "Path": "API\\API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Stock Market Simulator\\Stock Market Simulator.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

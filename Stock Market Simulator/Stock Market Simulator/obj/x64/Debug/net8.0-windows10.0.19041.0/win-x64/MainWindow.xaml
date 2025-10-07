@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Stock_Market_Simulator.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+
+    <Grid x:ConnectionId='2' x:Name="RootGrid"                         >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid x:ConnectionId='3' x:Name="AppTitleBar" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <NavigationView x:ConnectionId='6' x:Name="NavView"
+                            PaneDisplayMode="Top"
+                            IsSettingsVisible="False"
+                            IsBackButtonVisible="Collapsed"
+                                                             >
+                <NavigationView.MenuItems>
+                    <NavigationViewItem x:ConnectionId='11' Content="Dashboard" Icon="Home" Tag="DashboardPage" Visibility="Collapsed" x:Name="DashboardNavItem"/>
+                    <NavigationViewItem x:ConnectionId='12' Content="Portfolio" Icon="Library" Tag="PortfolioPage" Visibility="Collapsed" x:Name="PortfolioNavItem"/>
+                    <NavigationViewItemSeparator x:ConnectionId='13' Visibility="Collapsed" x:Name="SeparatorNavItem"/>
+                    <NavigationViewItem x:ConnectionId='14' Content="Login" Icon="Contact" Tag="LoginPage" x:Name="LoginNavItem"/>
+                    <NavigationViewItem x:ConnectionId='15' Content="Logout" Icon="LeaveChat" Tag="Logout" x:Name="LogoutNavItem" Visibility="Collapsed"/>
+                </NavigationView.MenuItems>
+            </NavigationView>
+            <StackPanel x:ConnectionId='7' x:Name="TitleBarRightContent" Grid.Column="1" Orientation="Horizontal">
+                <AutoSuggestBox x:ConnectionId='8' x:Name="StockSearchBox"
+                        Grid.Column="1"
+                        PlaceholderText="Search Symbol..."
+                        QueryIcon="Find"
+                        Width="200"
+                        VerticalAlignment="Center"
+                        Margin="0,0,16,0"
+                                                                      />
+                <StackPanel x:ConnectionId='9' Grid.Column="2" x:Name="BalancePanel" Visibility="Collapsed"
+                    Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,16,0" Spacing="8">
+                    <TextBlock Text="Cash:" Foreground="Gray"/>
+                    <TextBlock x:ConnectionId='10' x:Name="BalanceTextBlock" Text="$0.00" FontWeight="SemiBold"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <Frame x:ConnectionId='4' x:Name="ContentFrame" Grid.Row="1" />
+
+        <InfoBar x:ConnectionId='5' x:Name="NotificationInfoBar"
+             Grid.Row="1"
+             IsOpen="False"
+             IsClosable="True"
+             HorizontalAlignment="Center"
+             VerticalAlignment="Bottom"
+             Margin="0,0,0,24"/>
+    </Grid>
+</Window>
+

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PriInfo>
+	<ResourceMap name="LiveChartsCore.SkiaSharpView.Uno.WinUI" version="1.0" primary="true">
+		<Qualifiers/>
+		<ResourceMapSubtree name="Files">
+			<ResourceMapSubtree name="LiveChartsCore.SkiaSharpView.Uno.WinUI">
+				<NamedResource name="CartesianChart.xbf" uri="ms-resource://LiveChartsCore.SkiaSharpView.Uno.WinUI/Files/LiveChartsCore.SkiaSharpView.Uno.WinUI/CartesianChart.xbf">
+					<Candidate type="EmbeddedData">
+						<Base64Value>[Embedded Binary Data]</Base64Value>
+					</Candidate>
+				</NamedResource>
+				<NamedResource name="GeoMap.xbf" uri="ms-resource://LiveChartsCore.SkiaSharpView.Uno.WinUI/Files/LiveChartsCore.SkiaSharpView.Uno.WinUI/GeoMap.xbf">
+					<Candidate type="EmbeddedData">
+						<Base64Value>[Embedded Binary Data]</Base64Value>
+					</Candidate>
+				</NamedResource>
+				<NamedResource name="PieChart.xbf" uri="ms-resource://LiveChartsCore.SkiaSharpView.Uno.WinUI/Files/LiveChartsCore.SkiaSharpView.Uno.WinUI/PieChart.xbf">
+					<Candidate type="EmbeddedData">
+						<Base64Value>[Embedded Binary Data]</Base64Value>
+					</Candidate>
+				</NamedResource>
+				<NamedResource name="PolarChart.xbf" uri="ms-resource://LiveChartsCore.SkiaSharpView.Uno.WinUI/Files/LiveChartsCore.SkiaSharpView.Uno.WinUI/PolarChart.xbf">
+					<Candidate type="EmbeddedData">
+						<Base64Value>[Embedded Binary Data]</Base64Value>
+					</Candidate>
+				</NamedResource>
+			</ResourceMapSubtree>
+		</ResourceMapSubtree>
+	</ResourceMap>
+</PriInfo>

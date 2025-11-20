@@ -1,9 +1,11 @@
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Stock_Market_Simulator.Services;
 using System;
@@ -16,14 +18,13 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Microsoft.UI.Windowing;
+using Windows.UI.ApplicationSettings;
 
 namespace Stock_Market_Simulator;
 
 public sealed partial class MainWindow : Window
 {
     private readonly HttpClient _httpClient = new();
-    private string _jwtToken;
 
     public MainWindow()
     {
@@ -45,19 +46,34 @@ public sealed partial class MainWindow : Window
 
     private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
-        if (args.InvokedItemContainer?.Tag is string pageTag)
+        if (args.InvokedItemContainer?.Tag is string navItemTag)
         {
-            if (pageTag == "Logout")
-            {
-                AuthService.Logout();
-                return;
-            }
+            NavigateToPage(navItemTag);
+        }
+    }
 
-            var pageType = Type.GetType($"StockSimulator.UI.{pageTag}");
-            if (pageType != null)
-            {
-                ContentFrame.Navigate(pageType);
-            }
+    private void NavigateToPage(string pageTag)
+    {
+        // Handle Logout explicitly
+        if (pageTag == "Logout")
+        {
+            AuthService.Logout();
+            ContentFrame.Navigate(typeof(LoginPage), null, new DrillInNavigationTransitionInfo());
+            return;
+        }
+
+        Type? pageType = pageTag switch
+        {
+            "Login" => typeof(LoginPage),
+            "Register" => typeof(RegisterPage),
+            "Dashboard" => typeof(DashboardPage),
+            "Portfolio" => typeof(PortfolioPage),
+            _ => null
+        };
+
+        if (pageType != null)
+        {
+            ContentFrame.Navigate(pageType, null, new DrillInNavigationTransitionInfo());
         }
     }
 
@@ -65,7 +81,7 @@ public sealed partial class MainWindow : Window
     {
         double captionButtonsWidth = this.AppWindow.TitleBar.RightInset;
 
-        TitleBarRightContent.Margin = new Thickness(0, 0, captionButtonsWidth, 0); 
+        TitleBarRightContent.Margin = new Thickness(0, 0, captionButtonsWidth, 0);
     }
 
     private void StockSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
@@ -112,7 +128,6 @@ public sealed partial class MainWindow : Window
             SeparatorNavItem.Visibility = Visibility.Collapsed;
             LogoutNavItem.Visibility = Visibility.Collapsed;
             LoginNavItem.Visibility = Visibility.Visible;
-
 
             NavView.SelectedItem = LoginNavItem;
             ContentFrame.Navigate(typeof(LoginPage));

@@ -219,7 +219,6 @@ C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock M
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\hostfxr.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\hostpolicy.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\mscordaccore.dll
-C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\mscordaccore_amd64_amd64_8.0.2025.41914.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\mscordbi.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\mscorrc.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\msquic.dll
@@ -305,7 +304,6 @@ C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock M
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\HarfBuzzSharp.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\LiveChartsCore.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\LiveChartsCore.SkiaSharpView.dll
-C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\LiveChartsCore.SkiaSharpView.WinUI.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\SkiaSharp.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\SkiaSharp.HarfBuzz.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\SkiaSharp.Views.WinUI.Native.Projection.dll
@@ -314,7 +312,11 @@ C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock M
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\libSkiaSharp.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\SkiaSharp.Views.WinUI.Native.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\SkiaSharp.Views.WinUI.Native.winmd
-C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\libEGL.dll
-C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\libGLESv2.dll
-C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\obj\x64\Debug\net8.0-windows10.0.19041.0\win-x64\LiveChartsCore.SkiaSharpView.WinUI.pri.xml
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\obj\x64\Debug\net8.0-windows10.0.19041.0\win-x64\.winmd_cache\$SkiaSharp.Views.WinUI.Native.winmd_638811997420000000.json
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\mscordaccore_amd64_amd64_8.0.2225.52707.dll
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\CSharpMarkup.WinUI.dll
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\LiveChartsCore.Behaviours.dll
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\LiveChartsCore.SkiaSharpView.Uno.WinUI.dll
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\obj\x64\Debug\net8.0-windows10.0.19041.0\win-x64\LiveChartsCore.SkiaSharpView.Uno.WinUI.pri.xml
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\Stock Market Simulator\obj\x64\Debug\net8.0-windows10.0.19041.0\win-x64\.winmd_cache\$SkiaSharp.Views.WinUI.Native.winmd_638665814300000000.json

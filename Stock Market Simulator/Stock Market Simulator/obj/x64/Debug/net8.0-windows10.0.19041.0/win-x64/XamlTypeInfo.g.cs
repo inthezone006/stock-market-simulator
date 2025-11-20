@@ -226,7 +226,7 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
         
         private void InitTypeTables()
         {
-            _typeNameTable = new string[110];
+            _typeNameTable = new string[112];
             _typeNameTable[0] = "Microsoft.UI.Xaml.Controls.XamlControlsResources";
             _typeNameTable[1] = "Microsoft.UI.Xaml.ResourceDictionary";
             _typeNameTable[2] = "Object";
@@ -310,35 +310,37 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
             _typeNameTable[80] = "Microsoft.UI.Xaml.Controls.NumberBoxValidationMode";
             _typeNameTable[81] = "Stock_Market_Simulator.RegisterPage";
             _typeNameTable[82] = "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart";
-            _typeNameTable[83] = "LiveChartsGeneratedCode.SourceGenCartesianChart";
-            _typeNameTable[84] = "LiveChartsGeneratedCode.SourceGenChart";
-            _typeNameTable[85] = "LiveChartsCore.Measure.TooltipFindingStrategy";
-            _typeNameTable[86] = "LiveChartsCore.Measure.ZoomAndPanMode";
-            _typeNameTable[87] = "LiveChartsCore.Measure.FindingStrategy";
-            _typeNameTable[88] = "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>";
-            _typeNameTable[89] = "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.IChartElement>";
-            _typeNameTable[90] = "LiveChartsCore.Kernel.IChartElement";
-            _typeNameTable[91] = "LiveChartsCore.Chart";
-            _typeNameTable[92] = "LiveChartsCore.Kernel.Sketches.IChartTooltip";
-            _typeNameTable[93] = "LiveChartsCore.Kernel.Sketches.IChartLegend";
-            _typeNameTable[94] = "LiveChartsCore.Themes.Theme";
-            _typeNameTable[95] = "TimeSpan";
-            _typeNameTable[96] = "LiveChartsCore.Motion.CoreMotionCanvas";
+            _typeNameTable[83] = "LiveChartsCore.Chart";
+            _typeNameTable[84] = "LiveChartsCore.Measure.Margin";
+            _typeNameTable[85] = "LiveChartsCore.Motion.CoreMotionCanvas";
+            _typeNameTable[86] = "LiveChartsCore.VisualElements.VisualElement";
+            _typeNameTable[87] = "LiveChartsCore.Kernel.ChartElement";
+            _typeNameTable[88] = "System.Collections.Generic.IEnumerable`1<LiveChartsCore.ISeries>";
+            _typeNameTable[89] = "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>";
+            _typeNameTable[90] = "System.Collections.Generic.IEnumerable`1<LiveChartsCore.CoreSection>";
+            _typeNameTable[91] = "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.ChartElement>";
+            _typeNameTable[92] = "LiveChartsCore.CoreDrawMarginFrame";
+            _typeNameTable[93] = "LiveChartsCore.Measure.ZoomAndPanMode";
+            _typeNameTable[94] = "LiveChartsCore.Measure.TooltipFindingStrategy";
+            _typeNameTable[95] = "LiveChartsCore.Measure.FindingStrategy";
+            _typeNameTable[96] = "TimeSpan";
             _typeNameTable[97] = "System.Func`2<Single, Single>";
             _typeNameTable[98] = "System.MulticastDelegate";
             _typeNameTable[99] = "System.Delegate";
-            _typeNameTable[100] = "LiveChartsCore.Measure.Margin";
-            _typeNameTable[101] = "LiveChartsCore.Measure.LegendPosition";
-            _typeNameTable[102] = "LiveChartsCore.Measure.TooltipPosition";
-            _typeNameTable[103] = "LiveChartsCore.Painting.Paint";
-            _typeNameTable[104] = "LiveChartsCore.Drawing.Animatable";
-            _typeNameTable[105] = "System.Collections.Generic.IEnumerable`1<LiveChartsCore.ISeries>";
-            _typeNameTable[106] = "System.Collections.Generic.IEnumerable`1<Object>";
-            _typeNameTable[107] = "Stock_Market_Simulator.StockSearchPage";
-            _typeNameTable[108] = "Microsoft.UI.Xaml.Controls.TreeViewNode";
-            _typeNameTable[109] = "System.Collections.Generic.IList`1<Microsoft.UI.Xaml.Controls.TreeViewNode>";
+            _typeNameTable[100] = "LiveChartsCore.Measure.LegendPosition";
+            _typeNameTable[101] = "LiveChartsCore.Measure.TooltipPosition";
+            _typeNameTable[102] = "LiveChartsCore.Painting.Paint";
+            _typeNameTable[103] = "LiveChartsCore.Drawing.Animatable";
+            _typeNameTable[104] = "LiveChartsCore.Kernel.Sketches.IChartTooltip";
+            _typeNameTable[105] = "LiveChartsCore.Kernel.Sketches.IChartLegend";
+            _typeNameTable[106] = "Stock_Market_Simulator.StockSearchPage";
+            _typeNameTable[107] = "CSharpMarkup.WinUI.Delegators.BuildChild";
+            _typeNameTable[108] = "Microsoft.UI.Xaml.Controls.Panel";
+            _typeNameTable[109] = "CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate";
+            _typeNameTable[110] = "Microsoft.UI.Xaml.Controls.TreeViewNode";
+            _typeNameTable[111] = "System.Collections.Generic.IList`1<Microsoft.UI.Xaml.Controls.TreeViewNode>";
 
-            _typeTable = new global::System.Type[110];
+            _typeTable = new global::System.Type[112];
             _typeTable[0] = typeof(global::Microsoft.UI.Xaml.Controls.XamlControlsResources);
             _typeTable[1] = typeof(global::Microsoft.UI.Xaml.ResourceDictionary);
             _typeTable[2] = typeof(global::System.Object);
@@ -422,35 +424,37 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
             _typeTable[80] = typeof(global::Microsoft.UI.Xaml.Controls.NumberBoxValidationMode);
             _typeTable[81] = typeof(global::Stock_Market_Simulator.RegisterPage);
             _typeTable[82] = typeof(global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart);
-            _typeTable[83] = typeof(global::LiveChartsGeneratedCode.SourceGenCartesianChart);
-            _typeTable[84] = typeof(global::LiveChartsGeneratedCode.SourceGenChart);
+            _typeTable[83] = typeof(global::LiveChartsCore.Chart);
+            _typeTable[84] = typeof(global::LiveChartsCore.Measure.Margin);
+            _typeTable[85] = typeof(global::LiveChartsCore.Motion.CoreMotionCanvas);
+            _typeTable[86] = typeof(global::LiveChartsCore.VisualElements.VisualElement);
+            _typeTable[87] = typeof(global::LiveChartsCore.Kernel.ChartElement);
+            _typeTable[88] = typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.ISeries>);
+            _typeTable[89] = typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>);
+            _typeTable[90] = typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.CoreSection>);
+            _typeTable[91] = typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.ChartElement>);
+            _typeTable[92] = typeof(global::LiveChartsCore.CoreDrawMarginFrame);
+            _typeTable[93] = typeof(global::LiveChartsCore.Measure.ZoomAndPanMode);
 #pragma warning disable 0618  //   Warning on Deprecated usage
-            _typeTable[85] = typeof(global::LiveChartsCore.Measure.TooltipFindingStrategy);
+            _typeTable[94] = typeof(global::LiveChartsCore.Measure.TooltipFindingStrategy);
 #pragma warning restore 0618
-            _typeTable[86] = typeof(global::LiveChartsCore.Measure.ZoomAndPanMode);
-            _typeTable[87] = typeof(global::LiveChartsCore.Measure.FindingStrategy);
-            _typeTable[88] = typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>);
-            _typeTable[89] = typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.IChartElement>);
-            _typeTable[90] = typeof(global::LiveChartsCore.Kernel.IChartElement);
-            _typeTable[91] = typeof(global::LiveChartsCore.Chart);
-            _typeTable[92] = typeof(global::LiveChartsCore.Kernel.Sketches.IChartTooltip);
-            _typeTable[93] = typeof(global::LiveChartsCore.Kernel.Sketches.IChartLegend);
-            _typeTable[94] = typeof(global::LiveChartsCore.Themes.Theme);
-            _typeTable[95] = typeof(global::System.TimeSpan);
-            _typeTable[96] = typeof(global::LiveChartsCore.Motion.CoreMotionCanvas);
+            _typeTable[95] = typeof(global::LiveChartsCore.Measure.FindingStrategy);
+            _typeTable[96] = typeof(global::System.TimeSpan);
             _typeTable[97] = typeof(global::System.Func<global::System.Single, global::System.Single>);
             _typeTable[98] = typeof(global::System.MulticastDelegate);
             _typeTable[99] = typeof(global::System.Delegate);
-            _typeTable[100] = typeof(global::LiveChartsCore.Measure.Margin);
-            _typeTable[101] = typeof(global::LiveChartsCore.Measure.LegendPosition);
-            _typeTable[102] = typeof(global::LiveChartsCore.Measure.TooltipPosition);
-            _typeTable[103] = typeof(global::LiveChartsCore.Painting.Paint);
-            _typeTable[104] = typeof(global::LiveChartsCore.Drawing.Animatable);
-            _typeTable[105] = typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.ISeries>);
-            _typeTable[106] = typeof(global::System.Collections.Generic.IEnumerable<global::System.Object>);
-            _typeTable[107] = typeof(global::Stock_Market_Simulator.StockSearchPage);
-            _typeTable[108] = typeof(global::Microsoft.UI.Xaml.Controls.TreeViewNode);
-            _typeTable[109] = typeof(global::System.Collections.Generic.IList<global::Microsoft.UI.Xaml.Controls.TreeViewNode>);
+            _typeTable[100] = typeof(global::LiveChartsCore.Measure.LegendPosition);
+            _typeTable[101] = typeof(global::LiveChartsCore.Measure.TooltipPosition);
+            _typeTable[102] = typeof(global::LiveChartsCore.Painting.Paint);
+            _typeTable[103] = typeof(global::LiveChartsCore.Drawing.Animatable);
+            _typeTable[104] = typeof(global::LiveChartsCore.Kernel.Sketches.IChartTooltip);
+            _typeTable[105] = typeof(global::LiveChartsCore.Kernel.Sketches.IChartLegend);
+            _typeTable[106] = typeof(global::Stock_Market_Simulator.StockSearchPage);
+            _typeTable[107] = typeof(global::CSharpMarkup.WinUI.Delegators.BuildChild);
+            _typeTable[108] = typeof(global::Microsoft.UI.Xaml.Controls.Panel);
+            _typeTable[109] = typeof(global::CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate);
+            _typeTable[110] = typeof(global::Microsoft.UI.Xaml.Controls.TreeViewNode);
+            _typeTable[111] = typeof(global::System.Collections.Generic.IList<global::Microsoft.UI.Xaml.Controls.TreeViewNode>);
         }
 
         private int LookupTypeIndexByName(string typeName)
@@ -508,12 +512,12 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
         private object Activate_74_NumberBox() { return new global::Microsoft.UI.Xaml.Controls.NumberBox(); }
         private object Activate_81_RegisterPage() { return new global::Stock_Market_Simulator.RegisterPage(); }
         private object Activate_82_CartesianChart() { return new global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart(); }
-        private object Activate_83_SourceGenCartesianChart() { return new global::LiveChartsGeneratedCode.SourceGenCartesianChart(); }
-        private object Activate_94_Theme() { return new global::LiveChartsCore.Themes.Theme(); }
-        private object Activate_96_CoreMotionCanvas() { return new global::LiveChartsCore.Motion.CoreMotionCanvas(); }
-        private object Activate_100_Margin() { return new global::LiveChartsCore.Measure.Margin(); }
-        private object Activate_107_StockSearchPage() { return new global::Stock_Market_Simulator.StockSearchPage(); }
-        private object Activate_108_TreeViewNode() { return new global::Microsoft.UI.Xaml.Controls.TreeViewNode(); }
+        private object Activate_84_Margin() { return new global::LiveChartsCore.Measure.Margin(); }
+        private object Activate_85_CoreMotionCanvas() { return new global::LiveChartsCore.Motion.CoreMotionCanvas(); }
+        private object Activate_106_StockSearchPage() { return new global::Stock_Market_Simulator.StockSearchPage(); }
+        private object Activate_107_BuildChild() { return new global::CSharpMarkup.WinUI.Delegators.BuildChild(); }
+        private object Activate_109_BuildChildInControlTemplate() { return new global::CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate(); }
+        private object Activate_110_TreeViewNode() { return new global::Microsoft.UI.Xaml.Controls.TreeViewNode(); }
         private void StaticInitializer_0_XamlControlsResources() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Microsoft.UI.Xaml.Controls.XamlControlsResources).TypeHandle);
         private void StaticInitializer_4_DashboardPage() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Stock_Market_Simulator.DashboardPage).TypeHandle);
         private void StaticInitializer_7_InfoBar() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Microsoft.UI.Xaml.Controls.InfoBar).TypeHandle);
@@ -567,35 +571,36 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
         private void StaticInitializer_80_NumberBoxValidationMode() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Microsoft.UI.Xaml.Controls.NumberBoxValidationMode).TypeHandle);
         private void StaticInitializer_81_RegisterPage() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Stock_Market_Simulator.RegisterPage).TypeHandle);
         private void StaticInitializer_82_CartesianChart() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart).TypeHandle);
-        private void StaticInitializer_83_SourceGenCartesianChart() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsGeneratedCode.SourceGenCartesianChart).TypeHandle);
-        private void StaticInitializer_84_SourceGenChart() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsGeneratedCode.SourceGenChart).TypeHandle);
+        private void StaticInitializer_83_Chart() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Chart).TypeHandle);
+        private void StaticInitializer_84_Margin() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.Margin).TypeHandle);
+        private void StaticInitializer_85_CoreMotionCanvas() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Motion.CoreMotionCanvas).TypeHandle);
+        private void StaticInitializer_86_VisualElement() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.VisualElements.VisualElement).TypeHandle);
+        private void StaticInitializer_87_ChartElement() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Kernel.ChartElement).TypeHandle);
+        private void StaticInitializer_88_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.ISeries>).TypeHandle);
+        private void StaticInitializer_89_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>).TypeHandle);
+        private void StaticInitializer_90_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.CoreSection>).TypeHandle);
+        private void StaticInitializer_91_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.ChartElement>).TypeHandle);
+        private void StaticInitializer_92_CoreDrawMarginFrame() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.CoreDrawMarginFrame).TypeHandle);
+        private void StaticInitializer_93_ZoomAndPanMode() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.ZoomAndPanMode).TypeHandle);
 #pragma warning disable 0618  //   Warning on Deprecated usage
-        private void StaticInitializer_85_TooltipFindingStrategy() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.TooltipFindingStrategy).TypeHandle);
+        private void StaticInitializer_94_TooltipFindingStrategy() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.TooltipFindingStrategy).TypeHandle);
 #pragma warning restore 0618
-        private void StaticInitializer_86_ZoomAndPanMode() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.ZoomAndPanMode).TypeHandle);
-        private void StaticInitializer_87_FindingStrategy() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.FindingStrategy).TypeHandle);
-        private void StaticInitializer_88_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>).TypeHandle);
-        private void StaticInitializer_89_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.IChartElement>).TypeHandle);
-        private void StaticInitializer_90_IChartElement() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Kernel.IChartElement).TypeHandle);
-        private void StaticInitializer_91_Chart() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Chart).TypeHandle);
-        private void StaticInitializer_92_IChartTooltip() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Kernel.Sketches.IChartTooltip).TypeHandle);
-        private void StaticInitializer_93_IChartLegend() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Kernel.Sketches.IChartLegend).TypeHandle);
-        private void StaticInitializer_94_Theme() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Themes.Theme).TypeHandle);
-        private void StaticInitializer_95_TimeSpan() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.TimeSpan).TypeHandle);
-        private void StaticInitializer_96_CoreMotionCanvas() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Motion.CoreMotionCanvas).TypeHandle);
+        private void StaticInitializer_95_FindingStrategy() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.FindingStrategy).TypeHandle);
+        private void StaticInitializer_96_TimeSpan() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.TimeSpan).TypeHandle);
         private void StaticInitializer_97_Func() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Func<global::System.Single, global::System.Single>).TypeHandle);
         private void StaticInitializer_98_MulticastDelegate() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.MulticastDelegate).TypeHandle);
         private void StaticInitializer_99_Delegate() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Delegate).TypeHandle);
-        private void StaticInitializer_100_Margin() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.Margin).TypeHandle);
-        private void StaticInitializer_101_LegendPosition() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.LegendPosition).TypeHandle);
-        private void StaticInitializer_102_TooltipPosition() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.TooltipPosition).TypeHandle);
-        private void StaticInitializer_103_Paint() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Painting.Paint).TypeHandle);
-        private void StaticInitializer_104_Animatable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Drawing.Animatable).TypeHandle);
-        private void StaticInitializer_105_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.ISeries>).TypeHandle);
-        private void StaticInitializer_106_IEnumerable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IEnumerable<global::System.Object>).TypeHandle);
-        private void StaticInitializer_107_StockSearchPage() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Stock_Market_Simulator.StockSearchPage).TypeHandle);
-        private void StaticInitializer_108_TreeViewNode() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Microsoft.UI.Xaml.Controls.TreeViewNode).TypeHandle);
-        private void StaticInitializer_109_IList() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IList<global::Microsoft.UI.Xaml.Controls.TreeViewNode>).TypeHandle);
+        private void StaticInitializer_100_LegendPosition() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.LegendPosition).TypeHandle);
+        private void StaticInitializer_101_TooltipPosition() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Measure.TooltipPosition).TypeHandle);
+        private void StaticInitializer_102_Paint() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Painting.Paint).TypeHandle);
+        private void StaticInitializer_103_Animatable() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Drawing.Animatable).TypeHandle);
+        private void StaticInitializer_104_IChartTooltip() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Kernel.Sketches.IChartTooltip).TypeHandle);
+        private void StaticInitializer_105_IChartLegend() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::LiveChartsCore.Kernel.Sketches.IChartLegend).TypeHandle);
+        private void StaticInitializer_106_StockSearchPage() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Stock_Market_Simulator.StockSearchPage).TypeHandle);
+        private void StaticInitializer_107_BuildChild() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::CSharpMarkup.WinUI.Delegators.BuildChild).TypeHandle);
+        private void StaticInitializer_109_BuildChildInControlTemplate() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate).TypeHandle);
+        private void StaticInitializer_110_TreeViewNode() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::Microsoft.UI.Xaml.Controls.TreeViewNode).TypeHandle);
+        private void StaticInitializer_111_IList() => global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(global::System.Collections.Generic.IList<global::Microsoft.UI.Xaml.Controls.TreeViewNode>).TypeHandle);
         private void MapAdd_0_XamlControlsResources(object instance, object key, object item)
         {
             var collection = (global::System.Collections.Generic.IDictionary<global::System.Object, global::System.Object>)instance;
@@ -633,7 +638,7 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
             var newItem = (global::Microsoft.UI.Xaml.Style)item;
             collection.Add(newItem);
         }
-        private void VectorAdd_109_IList(object instance, object item)
+        private void VectorAdd_111_IList(object instance, object item)
         {
             var collection = (global::System.Collections.Generic.ICollection<global::Microsoft.UI.Xaml.Controls.TreeViewNode>)instance;
             var newItem = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)item;
@@ -1339,70 +1344,137 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 break;
 
             case 82:   //  LiveChartsCore.SkiaSharpView.WinUI.CartesianChart
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart"));
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Microsoft.UI.Xaml.Controls.UserControl"));
                 userType.Activator = Activate_82_CartesianChart;
                 userType.StaticInitializer = StaticInitializer_82_CartesianChart;
-                xamlType = userType;
-                break;
-
-            case 83:   //  LiveChartsGeneratedCode.SourceGenCartesianChart
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart"));
-                userType.Activator = Activate_83_SourceGenCartesianChart;
-                userType.StaticInitializer = StaticInitializer_83_SourceGenCartesianChart;
-                userType.AddMemberName("MatchAxesScreenDataRatio");
-                userType.AddMemberName("TooltipFindingStrategy");
-                userType.AddMemberName("ZoomMode");
-                userType.AddMemberName("ZoomingSpeed");
-                userType.AddMemberName("FindingStrategy");
+                userType.AddMemberName("CoreChart");
+                userType.AddMemberName("SyncContext");
+                userType.AddMemberName("DrawMargin");
+                userType.AddMemberName("CoreCanvas");
+                userType.AddMemberName("Title");
+                userType.AddMemberName("Series");
                 userType.AddMemberName("XAxes");
                 userType.AddMemberName("YAxes");
                 userType.AddMemberName("Sections");
+                userType.AddMemberName("VisualElements");
                 userType.AddMemberName("DrawMarginFrame");
-                xamlType = userType;
-                break;
-
-            case 84:   //  LiveChartsGeneratedCode.SourceGenChart
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Microsoft.UI.Xaml.Controls.UserControl"));
-                userType.StaticInitializer = StaticInitializer_84_SourceGenChart;
-                userType.AddMemberName("CoreChart");
-                userType.AddMemberName("ForceGPU");
+                userType.AddMemberName("ZoomMode");
+                userType.AddMemberName("ZoomingSpeed");
+                userType.AddMemberName("TooltipFindingStrategy");
+                userType.AddMemberName("FindingStrategy");
+                userType.AddMemberName("AnimationsSpeed");
+                userType.AddMemberName("EasingFunction");
+                userType.AddMemberName("LegendPosition");
+                userType.AddMemberName("TooltipPosition");
+                userType.AddMemberName("TooltipBackgroundPaint");
+                userType.AddMemberName("TooltipTextPaint");
+                userType.AddMemberName("TooltipTextSize");
                 userType.AddMemberName("Tooltip");
+                userType.AddMemberName("LegendBackgroundPaint");
+                userType.AddMemberName("LegendTextPaint");
+                userType.AddMemberName("LegendTextSize");
                 userType.AddMemberName("Legend");
-                userType.AddMemberName("ChartTheme");
-                userType.AddMemberName("UpdaterThrottler");
                 userType.AddMemberName("AutoUpdateEnabled");
-                userType.AddMemberName("CoreCanvas");
+                userType.AddMemberName("UpdaterThrottler");
                 userType.AddMemberName("UpdateStartedCommand");
+                userType.AddMemberName("PointerPressedCommand");
+                userType.AddMemberName("PointerReleasedCommand");
+                userType.AddMemberName("PointerMoveCommand");
                 userType.AddMemberName("DataPointerDownCommand");
                 userType.AddMemberName("HoveredPointsChangedCommand");
                 userType.AddMemberName("ChartPointPointerDownCommand");
                 userType.AddMemberName("VisualElementsPointerDownCommand");
-                userType.AddMemberName("PointerPressedCommand");
-                userType.AddMemberName("PointerMoveCommand");
-                userType.AddMemberName("PointerReleasedCommand");
-                userType.AddMemberName("AnimationsSpeed");
-                userType.AddMemberName("EasingFunction");
-                userType.AddMemberName("DrawMargin");
-                userType.AddMemberName("LegendPosition");
-                userType.AddMemberName("TooltipPosition");
-                userType.AddMemberName("LegendTextPaint");
-                userType.AddMemberName("LegendBackgroundPaint");
-                userType.AddMemberName("LegendTextSize");
-                userType.AddMemberName("TooltipTextPaint");
-                userType.AddMemberName("TooltipBackgroundPaint");
-                userType.AddMemberName("TooltipTextSize");
-                userType.AddMemberName("SyncContext");
-                userType.AddMemberName("Title");
-                userType.AddMemberName("VisualElements");
-                userType.AddMemberName("Series");
-                userType.AddMemberName("SeriesSource");
-                userType.AddMemberName("SeriesTemplate");
+                userType.AddMemberName("MatchAxesScreenDataRatio");
                 xamlType = userType;
                 break;
 
-            case 85:   //  LiveChartsCore.Measure.TooltipFindingStrategy
+            case 83:   //  LiveChartsCore.Chart
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
+                userType.StaticInitializer = StaticInitializer_83_Chart;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 84:   //  LiveChartsCore.Measure.Margin
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
+                userType.StaticInitializer = StaticInitializer_84_Margin;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 85:   //  LiveChartsCore.Motion.CoreMotionCanvas
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
+                userType.StaticInitializer = StaticInitializer_85_CoreMotionCanvas;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 86:   //  LiveChartsCore.VisualElements.VisualElement
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("LiveChartsCore.Kernel.ChartElement"));
+                userType.StaticInitializer = StaticInitializer_86_VisualElement;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 87:   //  LiveChartsCore.Kernel.ChartElement
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
+                userType.StaticInitializer = StaticInitializer_87_ChartElement;
+                xamlType = userType;
+                break;
+
+            case 88:   //  System.Collections.Generic.IEnumerable`1<LiveChartsCore.ISeries>
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
+                userType.StaticInitializer = StaticInitializer_88_IEnumerable;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 89:   //  System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
+                userType.StaticInitializer = StaticInitializer_89_IEnumerable;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 90:   //  System.Collections.Generic.IEnumerable`1<LiveChartsCore.CoreSection>
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
+                userType.StaticInitializer = StaticInitializer_90_IEnumerable;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 91:   //  System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.ChartElement>
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
+                userType.StaticInitializer = StaticInitializer_91_IEnumerable;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 92:   //  LiveChartsCore.CoreDrawMarginFrame
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("LiveChartsCore.Kernel.ChartElement"));
+                userType.StaticInitializer = StaticInitializer_92_CoreDrawMarginFrame;
+                userType.SetIsReturnTypeStub();
+                xamlType = userType;
+                break;
+
+            case 93:   //  LiveChartsCore.Measure.ZoomAndPanMode
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("System.Enum"));
-                userType.StaticInitializer = StaticInitializer_85_TooltipFindingStrategy;
+                userType.StaticInitializer = StaticInitializer_93_ZoomAndPanMode;
+                userType.AddEnumValue("None", global::LiveChartsCore.Measure.ZoomAndPanMode.None);
+                userType.AddEnumValue("PanX", global::LiveChartsCore.Measure.ZoomAndPanMode.PanX);
+                userType.AddEnumValue("PanY", global::LiveChartsCore.Measure.ZoomAndPanMode.PanY);
+                userType.AddEnumValue("ZoomX", global::LiveChartsCore.Measure.ZoomAndPanMode.ZoomX);
+                userType.AddEnumValue("X", global::LiveChartsCore.Measure.ZoomAndPanMode.X);
+                userType.AddEnumValue("ZoomY", global::LiveChartsCore.Measure.ZoomAndPanMode.ZoomY);
+                userType.AddEnumValue("Y", global::LiveChartsCore.Measure.ZoomAndPanMode.Y);
+                userType.AddEnumValue("Both", global::LiveChartsCore.Measure.ZoomAndPanMode.Both);
+                userType.AddEnumValue("InvertPanningPointerTrigger", global::LiveChartsCore.Measure.ZoomAndPanMode.InvertPanningPointerTrigger);
+                xamlType = userType;
+                break;
+
+            case 94:   //  LiveChartsCore.Measure.TooltipFindingStrategy
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("System.Enum"));
+                userType.StaticInitializer = StaticInitializer_94_TooltipFindingStrategy;
 #pragma warning disable 0618  //   Warning on Deprecated usage
                 userType.AddEnumValue("Automatic", global::LiveChartsCore.Measure.TooltipFindingStrategy.Automatic);
                 userType.AddEnumValue("CompareAll", global::LiveChartsCore.Measure.TooltipFindingStrategy.CompareAll);
@@ -1417,22 +1489,9 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 xamlType = userType;
                 break;
 
-            case 86:   //  LiveChartsCore.Measure.ZoomAndPanMode
+            case 95:   //  LiveChartsCore.Measure.FindingStrategy
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("System.Enum"));
-                userType.StaticInitializer = StaticInitializer_86_ZoomAndPanMode;
-                userType.AddEnumValue("None", global::LiveChartsCore.Measure.ZoomAndPanMode.None);
-                userType.AddEnumValue("X", global::LiveChartsCore.Measure.ZoomAndPanMode.X);
-                userType.AddEnumValue("Y", global::LiveChartsCore.Measure.ZoomAndPanMode.Y);
-                userType.AddEnumValue("Both", global::LiveChartsCore.Measure.ZoomAndPanMode.Both);
-                userType.AddEnumValue("NoFit", global::LiveChartsCore.Measure.ZoomAndPanMode.NoFit);
-                userType.AddEnumValue("NoZoomBySection", global::LiveChartsCore.Measure.ZoomAndPanMode.NoZoomBySection);
-                userType.AddEnumValue("InvertPanningPointerTrigger", global::LiveChartsCore.Measure.ZoomAndPanMode.InvertPanningPointerTrigger);
-                xamlType = userType;
-                break;
-
-            case 87:   //  LiveChartsCore.Measure.FindingStrategy
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("System.Enum"));
-                userType.StaticInitializer = StaticInitializer_87_FindingStrategy;
+                userType.StaticInitializer = StaticInitializer_95_FindingStrategy;
                 userType.AddEnumValue("Automatic", global::LiveChartsCore.Measure.FindingStrategy.Automatic);
                 userType.AddEnumValue("CompareAll", global::LiveChartsCore.Measure.FindingStrategy.CompareAll);
                 userType.AddEnumValue("CompareOnlyX", global::LiveChartsCore.Measure.FindingStrategy.CompareOnlyX);
@@ -1445,65 +1504,9 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 xamlType = userType;
                 break;
 
-            case 88:   //  System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_88_IEnumerable;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 89:   //  System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.IChartElement>
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_89_IEnumerable;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 90:   //  LiveChartsCore.Kernel.IChartElement
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_90_IChartElement;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 91:   //  LiveChartsCore.Chart
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
-                userType.StaticInitializer = StaticInitializer_91_Chart;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 92:   //  LiveChartsCore.Kernel.Sketches.IChartTooltip
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_92_IChartTooltip;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 93:   //  LiveChartsCore.Kernel.Sketches.IChartLegend
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_93_IChartLegend;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 94:   //  LiveChartsCore.Themes.Theme
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
-                userType.StaticInitializer = StaticInitializer_94_Theme;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 95:   //  TimeSpan
+            case 96:   //  TimeSpan
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("System.ValueType"));
-                userType.StaticInitializer = StaticInitializer_95_TimeSpan;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 96:   //  LiveChartsCore.Motion.CoreMotionCanvas
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
-                userType.StaticInitializer = StaticInitializer_96_CoreMotionCanvas;
+                userType.StaticInitializer = StaticInitializer_96_TimeSpan;
                 userType.SetIsReturnTypeStub();
                 xamlType = userType;
                 break;
@@ -1527,16 +1530,9 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 xamlType = userType;
                 break;
 
-            case 100:   //  LiveChartsCore.Measure.Margin
-                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
-                userType.StaticInitializer = StaticInitializer_100_Margin;
-                userType.SetIsReturnTypeStub();
-                xamlType = userType;
-                break;
-
-            case 101:   //  LiveChartsCore.Measure.LegendPosition
+            case 100:   //  LiveChartsCore.Measure.LegendPosition
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("System.Enum"));
-                userType.StaticInitializer = StaticInitializer_101_LegendPosition;
+                userType.StaticInitializer = StaticInitializer_100_LegendPosition;
                 userType.AddEnumValue("Hidden", global::LiveChartsCore.Measure.LegendPosition.Hidden);
                 userType.AddEnumValue("Top", global::LiveChartsCore.Measure.LegendPosition.Top);
                 userType.AddEnumValue("Left", global::LiveChartsCore.Measure.LegendPosition.Left);
@@ -1545,9 +1541,9 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 xamlType = userType;
                 break;
 
-            case 102:   //  LiveChartsCore.Measure.TooltipPosition
+            case 101:   //  LiveChartsCore.Measure.TooltipPosition
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("System.Enum"));
-                userType.StaticInitializer = StaticInitializer_102_TooltipPosition;
+                userType.StaticInitializer = StaticInitializer_101_TooltipPosition;
                 userType.AddEnumValue("Hidden", global::LiveChartsCore.Measure.TooltipPosition.Hidden);
                 userType.AddEnumValue("Auto", global::LiveChartsCore.Measure.TooltipPosition.Auto);
                 userType.AddEnumValue("Top", global::LiveChartsCore.Measure.TooltipPosition.Top);
@@ -1558,45 +1554,68 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 xamlType = userType;
                 break;
 
-            case 103:   //  LiveChartsCore.Painting.Paint
+            case 102:   //  LiveChartsCore.Painting.Paint
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("LiveChartsCore.Drawing.Animatable"));
-                userType.StaticInitializer = StaticInitializer_103_Paint;
+                userType.StaticInitializer = StaticInitializer_102_Paint;
                 userType.SetIsReturnTypeStub();
                 xamlType = userType;
                 break;
 
-            case 104:   //  LiveChartsCore.Drawing.Animatable
+            case 103:   //  LiveChartsCore.Drawing.Animatable
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
-                userType.StaticInitializer = StaticInitializer_104_Animatable;
+                userType.StaticInitializer = StaticInitializer_103_Animatable;
                 xamlType = userType;
                 break;
 
-            case 105:   //  System.Collections.Generic.IEnumerable`1<LiveChartsCore.ISeries>
+            case 104:   //  LiveChartsCore.Kernel.Sketches.IChartTooltip
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_105_IEnumerable;
+                userType.StaticInitializer = StaticInitializer_104_IChartTooltip;
                 userType.SetIsReturnTypeStub();
                 xamlType = userType;
                 break;
 
-            case 106:   //  System.Collections.Generic.IEnumerable`1<Object>
+            case 105:   //  LiveChartsCore.Kernel.Sketches.IChartLegend
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_106_IEnumerable;
+                userType.StaticInitializer = StaticInitializer_105_IChartLegend;
                 userType.SetIsReturnTypeStub();
                 xamlType = userType;
                 break;
 
-            case 107:   //  Stock_Market_Simulator.StockSearchPage
+            case 106:   //  Stock_Market_Simulator.StockSearchPage
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Microsoft.UI.Xaml.Controls.Page"));
-                userType.Activator = Activate_107_StockSearchPage;
-                userType.StaticInitializer = StaticInitializer_107_StockSearchPage;
+                userType.Activator = Activate_106_StockSearchPage;
+                userType.StaticInitializer = StaticInitializer_106_StockSearchPage;
                 userType.SetIsLocalType();
                 xamlType = userType;
                 break;
 
-            case 108:   //  Microsoft.UI.Xaml.Controls.TreeViewNode
+            case 107:   //  CSharpMarkup.WinUI.Delegators.BuildChild
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
+                userType.Activator = Activate_107_BuildChild;
+                userType.StaticInitializer = StaticInitializer_107_BuildChild;
+                userType.AddMemberName("Id");
+                userType.SetIsBindable();
+                xamlType = userType;
+                break;
+
+            case 108:   //  Microsoft.UI.Xaml.Controls.Panel
+                xamlType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlSystemBaseType(typeName, type);
+                break;
+
+            case 109:   //  CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate
+                userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Object"));
+                userType.Activator = Activate_109_BuildChildInControlTemplate;
+                userType.StaticInitializer = StaticInitializer_109_BuildChildInControlTemplate;
+                userType.AddMemberName("Id");
+                userType.AddMemberName("TemplatedParent");
+                userType.SetIsBindable();
+                xamlType = userType;
+                break;
+
+            case 110:   //  Microsoft.UI.Xaml.Controls.TreeViewNode
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Microsoft.UI.Xaml.DependencyObject"));
-                userType.Activator = Activate_108_TreeViewNode;
-                userType.StaticInitializer = StaticInitializer_108_TreeViewNode;
+                userType.Activator = Activate_110_TreeViewNode;
+                userType.StaticInitializer = StaticInitializer_110_TreeViewNode;
                 userType.AddMemberName("Children");
                 userType.AddMemberName("Content");
                 userType.AddMemberName("Depth");
@@ -1608,10 +1627,10 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 xamlType = userType;
                 break;
 
-            case 109:   //  System.Collections.Generic.IList`1<Microsoft.UI.Xaml.Controls.TreeViewNode>
+            case 111:   //  System.Collections.Generic.IList`1<Microsoft.UI.Xaml.Controls.TreeViewNode>
                 userType = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType(this, typeName, type, null);
-                userType.StaticInitializer = StaticInitializer_109_IList;
-                userType.CollectionAdd = VectorAdd_109_IList;
+                userType.StaticInitializer = StaticInitializer_111_IList;
+                userType.CollectionAdd = VectorAdd_111_IList;
                 userType.SetIsReturnTypeStub();
                 xamlType = userType;
                 break;
@@ -1632,7 +1651,7 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                     otherProviders.Add(provider); 
                     provider = new global::CommunityToolkit.WinUI.UI.Controls.CommunityToolkit_WinUI_UI_Controls_DataGrid_XamlTypeInfo.XamlMetaDataProvider() as global::Microsoft.UI.Xaml.Markup.IXamlMetadataProvider;
                     otherProviders.Add(provider); 
-                    provider = new global::LiveChartsCore.SkiaSharpView.WinUI.LiveChartsCore_SkiaSharpView_WinUI_XamlTypeInfo.XamlMetaDataProvider() as global::Microsoft.UI.Xaml.Markup.IXamlMetadataProvider;
+                    provider = new global::LiveChartsCore.SkiaSharpView.WinUI.LiveChartsCore_SkiaSharpView_Uno_WinUI_XamlTypeInfo.XamlMetaDataProvider() as global::Microsoft.UI.Xaml.Markup.IXamlMetadataProvider;
                     otherProviders.Add(provider); 
                     _otherProviders = otherProviders;
                 }
@@ -3208,464 +3227,450 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
             var that = (global::Microsoft.UI.Xaml.Controls.NumberBox)instance;
             that.ValidationMode = (global::Microsoft.UI.Xaml.Controls.NumberBoxValidationMode)Value;
         }
-        private object get_161_SourceGenCartesianChart_MatchAxesScreenDataRatio(object instance)
+        private object get_161_CartesianChart_CoreChart(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            return that.MatchAxesScreenDataRatio;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.CoreChart;
         }
-        private void set_161_SourceGenCartesianChart_MatchAxesScreenDataRatio(object instance, object Value)
+        private object get_162_CartesianChart_SyncContext(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            that.MatchAxesScreenDataRatio = (global::System.Boolean)Value;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.SyncContext;
+        }
+        private void set_162_CartesianChart_SyncContext(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.SyncContext = (global::System.Object)Value;
+        }
+        private object get_163_CartesianChart_DrawMargin(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.DrawMargin;
+        }
+        private void set_163_CartesianChart_DrawMargin(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.DrawMargin = (global::LiveChartsCore.Measure.Margin)Value;
+        }
+        private object get_164_CartesianChart_CoreCanvas(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.CoreCanvas;
+        }
+        private object get_165_CartesianChart_Title(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.Title;
+        }
+        private void set_165_CartesianChart_Title(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.Title = (global::LiveChartsCore.VisualElements.VisualElement)Value;
+        }
+        private object get_166_CartesianChart_Series(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.Series;
+        }
+        private void set_166_CartesianChart_Series(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.Series = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.ISeries>)Value;
+        }
+        private object get_167_CartesianChart_XAxes(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.XAxes;
+        }
+        private void set_167_CartesianChart_XAxes(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.XAxes = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>)Value;
+        }
+        private object get_168_CartesianChart_YAxes(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.YAxes;
+        }
+        private void set_168_CartesianChart_YAxes(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.YAxes = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>)Value;
+        }
+        private object get_169_CartesianChart_Sections(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.Sections;
+        }
+        private void set_169_CartesianChart_Sections(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.Sections = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.CoreSection>)Value;
+        }
+        private object get_170_CartesianChart_VisualElements(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.VisualElements;
+        }
+        private void set_170_CartesianChart_VisualElements(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.VisualElements = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.ChartElement>)Value;
+        }
+        private object get_171_CartesianChart_DrawMarginFrame(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.DrawMarginFrame;
+        }
+        private void set_171_CartesianChart_DrawMarginFrame(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.DrawMarginFrame = (global::LiveChartsCore.CoreDrawMarginFrame)Value;
+        }
+        private object get_172_CartesianChart_ZoomMode(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.ZoomMode;
+        }
+        private void set_172_CartesianChart_ZoomMode(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.ZoomMode = (global::LiveChartsCore.Measure.ZoomAndPanMode)Value;
+        }
+        private object get_173_CartesianChart_ZoomingSpeed(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.ZoomingSpeed;
+        }
+        private void set_173_CartesianChart_ZoomingSpeed(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.ZoomingSpeed = (global::System.Double)Value;
         }
 #pragma warning disable 0618  //   Warning on Deprecated usage
-        private object get_162_SourceGenCartesianChart_TooltipFindingStrategy(object instance)
+        private object get_174_CartesianChart_TooltipFindingStrategy(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.TooltipFindingStrategy;
         }
-        private void set_162_SourceGenCartesianChart_TooltipFindingStrategy(object instance, object Value)
+        private void set_174_CartesianChart_TooltipFindingStrategy(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.TooltipFindingStrategy = (global::LiveChartsCore.Measure.TooltipFindingStrategy)Value;
         }
 #pragma warning restore 0618
-        private object get_163_SourceGenCartesianChart_ZoomMode(object instance)
+        private object get_175_CartesianChart_FindingStrategy(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            return that.ZoomMode;
-        }
-        private void set_163_SourceGenCartesianChart_ZoomMode(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            that.ZoomMode = (global::LiveChartsCore.Measure.ZoomAndPanMode)Value;
-        }
-        private object get_164_SourceGenCartesianChart_ZoomingSpeed(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            return that.ZoomingSpeed;
-        }
-        private void set_164_SourceGenCartesianChart_ZoomingSpeed(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            that.ZoomingSpeed = (global::System.Double)Value;
-        }
-        private object get_165_SourceGenCartesianChart_FindingStrategy(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.FindingStrategy;
         }
-        private void set_165_SourceGenCartesianChart_FindingStrategy(object instance, object Value)
+        private void set_175_CartesianChart_FindingStrategy(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.FindingStrategy = (global::LiveChartsCore.Measure.FindingStrategy)Value;
         }
-        private object get_166_SourceGenCartesianChart_XAxes(object instance)
+        private object get_176_CartesianChart_AnimationsSpeed(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            return that.XAxes;
-        }
-        private void set_166_SourceGenCartesianChart_XAxes(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            that.XAxes = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>)Value;
-        }
-        private object get_167_SourceGenCartesianChart_YAxes(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            return that.YAxes;
-        }
-        private void set_167_SourceGenCartesianChart_YAxes(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            that.YAxes = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.Sketches.ICartesianAxis>)Value;
-        }
-        private object get_168_SourceGenCartesianChart_Sections(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            return that.Sections;
-        }
-        private void set_168_SourceGenCartesianChart_Sections(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            that.Sections = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.IChartElement>)Value;
-        }
-        private object get_169_SourceGenCartesianChart_DrawMarginFrame(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            return that.DrawMarginFrame;
-        }
-        private void set_169_SourceGenCartesianChart_DrawMarginFrame(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenCartesianChart)instance;
-            that.DrawMarginFrame = (global::LiveChartsCore.Kernel.IChartElement)Value;
-        }
-        private object get_170_SourceGenChart_CoreChart(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.CoreChart;
-        }
-        private object get_171_SourceGenChart_ForceGPU(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.ForceGPU;
-        }
-        private void set_171_SourceGenChart_ForceGPU(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.ForceGPU = (global::System.Boolean)Value;
-        }
-        private object get_172_SourceGenChart_Tooltip(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.Tooltip;
-        }
-        private void set_172_SourceGenChart_Tooltip(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.Tooltip = (global::LiveChartsCore.Kernel.Sketches.IChartTooltip)Value;
-        }
-        private object get_173_SourceGenChart_Legend(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.Legend;
-        }
-        private void set_173_SourceGenChart_Legend(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.Legend = (global::LiveChartsCore.Kernel.Sketches.IChartLegend)Value;
-        }
-        private object get_174_SourceGenChart_ChartTheme(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.ChartTheme;
-        }
-        private void set_174_SourceGenChart_ChartTheme(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.ChartTheme = (global::LiveChartsCore.Themes.Theme)Value;
-        }
-        private object get_175_SourceGenChart_UpdaterThrottler(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.UpdaterThrottler;
-        }
-        private void set_175_SourceGenChart_UpdaterThrottler(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.UpdaterThrottler = (global::System.TimeSpan)Value;
-        }
-        private object get_176_SourceGenChart_AutoUpdateEnabled(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.AutoUpdateEnabled;
-        }
-        private void set_176_SourceGenChart_AutoUpdateEnabled(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.AutoUpdateEnabled = (global::System.Boolean)Value;
-        }
-        private object get_177_SourceGenChart_CoreCanvas(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.CoreCanvas;
-        }
-        private object get_178_SourceGenChart_UpdateStartedCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.UpdateStartedCommand;
-        }
-        private void set_178_SourceGenChart_UpdateStartedCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.UpdateStartedCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_179_SourceGenChart_DataPointerDownCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.DataPointerDownCommand;
-        }
-        private void set_179_SourceGenChart_DataPointerDownCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.DataPointerDownCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_180_SourceGenChart_HoveredPointsChangedCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.HoveredPointsChangedCommand;
-        }
-        private void set_180_SourceGenChart_HoveredPointsChangedCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.HoveredPointsChangedCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_181_SourceGenChart_ChartPointPointerDownCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.ChartPointPointerDownCommand;
-        }
-        private void set_181_SourceGenChart_ChartPointPointerDownCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.ChartPointPointerDownCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_182_SourceGenChart_VisualElementsPointerDownCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.VisualElementsPointerDownCommand;
-        }
-        private void set_182_SourceGenChart_VisualElementsPointerDownCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.VisualElementsPointerDownCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_183_SourceGenChart_PointerPressedCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.PointerPressedCommand;
-        }
-        private void set_183_SourceGenChart_PointerPressedCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.PointerPressedCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_184_SourceGenChart_PointerMoveCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.PointerMoveCommand;
-        }
-        private void set_184_SourceGenChart_PointerMoveCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.PointerMoveCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_185_SourceGenChart_PointerReleasedCommand(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.PointerReleasedCommand;
-        }
-        private void set_185_SourceGenChart_PointerReleasedCommand(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.PointerReleasedCommand = (global::System.Windows.Input.ICommand)Value;
-        }
-        private object get_186_SourceGenChart_AnimationsSpeed(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.AnimationsSpeed;
         }
-        private void set_186_SourceGenChart_AnimationsSpeed(object instance, object Value)
+        private void set_176_CartesianChart_AnimationsSpeed(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.AnimationsSpeed = (global::System.TimeSpan)Value;
         }
-        private object get_187_SourceGenChart_EasingFunction(object instance)
+        private object get_177_CartesianChart_EasingFunction(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.EasingFunction;
         }
-        private void set_187_SourceGenChart_EasingFunction(object instance, object Value)
+        private void set_177_CartesianChart_EasingFunction(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.EasingFunction = (global::System.Func<global::System.Single, global::System.Single>)Value;
         }
-        private object get_188_SourceGenChart_DrawMargin(object instance)
+        private object get_178_CartesianChart_LegendPosition(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.DrawMargin;
-        }
-        private void set_188_SourceGenChart_DrawMargin(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.DrawMargin = (global::LiveChartsCore.Measure.Margin)Value;
-        }
-        private object get_189_SourceGenChart_LegendPosition(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.LegendPosition;
         }
-        private void set_189_SourceGenChart_LegendPosition(object instance, object Value)
+        private void set_178_CartesianChart_LegendPosition(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.LegendPosition = (global::LiveChartsCore.Measure.LegendPosition)Value;
         }
-        private object get_190_SourceGenChart_TooltipPosition(object instance)
+        private object get_179_CartesianChart_TooltipPosition(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.TooltipPosition;
         }
-        private void set_190_SourceGenChart_TooltipPosition(object instance, object Value)
+        private void set_179_CartesianChart_TooltipPosition(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.TooltipPosition = (global::LiveChartsCore.Measure.TooltipPosition)Value;
         }
-        private object get_191_SourceGenChart_LegendTextPaint(object instance)
+        private object get_180_CartesianChart_TooltipBackgroundPaint(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.LegendTextPaint;
-        }
-        private void set_191_SourceGenChart_LegendTextPaint(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.LegendTextPaint = (global::LiveChartsCore.Painting.Paint)Value;
-        }
-        private object get_192_SourceGenChart_LegendBackgroundPaint(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.LegendBackgroundPaint;
-        }
-        private void set_192_SourceGenChart_LegendBackgroundPaint(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.LegendBackgroundPaint = (global::LiveChartsCore.Painting.Paint)Value;
-        }
-        private object get_193_SourceGenChart_LegendTextSize(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.LegendTextSize;
-        }
-        private void set_193_SourceGenChart_LegendTextSize(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.LegendTextSize = (global::System.Double)Value;
-        }
-        private object get_194_SourceGenChart_TooltipTextPaint(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.TooltipTextPaint;
-        }
-        private void set_194_SourceGenChart_TooltipTextPaint(object instance, object Value)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.TooltipTextPaint = (global::LiveChartsCore.Painting.Paint)Value;
-        }
-        private object get_195_SourceGenChart_TooltipBackgroundPaint(object instance)
-        {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.TooltipBackgroundPaint;
         }
-        private void set_195_SourceGenChart_TooltipBackgroundPaint(object instance, object Value)
+        private void set_180_CartesianChart_TooltipBackgroundPaint(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.TooltipBackgroundPaint = (global::LiveChartsCore.Painting.Paint)Value;
         }
-        private object get_196_SourceGenChart_TooltipTextSize(object instance)
+        private object get_181_CartesianChart_TooltipTextPaint(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.TooltipTextPaint;
+        }
+        private void set_181_CartesianChart_TooltipTextPaint(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.TooltipTextPaint = (global::LiveChartsCore.Painting.Paint)Value;
+        }
+        private object get_182_CartesianChart_TooltipTextSize(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             return that.TooltipTextSize;
         }
-        private void set_196_SourceGenChart_TooltipTextSize(object instance, object Value)
+        private void set_182_CartesianChart_TooltipTextSize(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
             that.TooltipTextSize = (global::System.Double)Value;
         }
-        private object get_197_SourceGenChart_SyncContext(object instance)
+        private object get_183_CartesianChart_Tooltip(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.SyncContext;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.Tooltip;
         }
-        private void set_197_SourceGenChart_SyncContext(object instance, object Value)
+        private void set_183_CartesianChart_Tooltip(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.SyncContext = (global::System.Object)Value;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.Tooltip = (global::LiveChartsCore.Kernel.Sketches.IChartTooltip)Value;
         }
-        private object get_198_SourceGenChart_Title(object instance)
+        private object get_184_CartesianChart_LegendBackgroundPaint(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.Title;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.LegendBackgroundPaint;
         }
-        private void set_198_SourceGenChart_Title(object instance, object Value)
+        private void set_184_CartesianChart_LegendBackgroundPaint(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.Title = (global::LiveChartsCore.Kernel.IChartElement)Value;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.LegendBackgroundPaint = (global::LiveChartsCore.Painting.Paint)Value;
         }
-        private object get_199_SourceGenChart_VisualElements(object instance)
+        private object get_185_CartesianChart_LegendTextPaint(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.VisualElements;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.LegendTextPaint;
         }
-        private void set_199_SourceGenChart_VisualElements(object instance, object Value)
+        private void set_185_CartesianChart_LegendTextPaint(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.VisualElements = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.Kernel.IChartElement>)Value;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.LegendTextPaint = (global::LiveChartsCore.Painting.Paint)Value;
         }
-        private object get_200_SourceGenChart_Series(object instance)
+        private object get_186_CartesianChart_LegendTextSize(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.Series;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.LegendTextSize;
         }
-        private void set_200_SourceGenChart_Series(object instance, object Value)
+        private void set_186_CartesianChart_LegendTextSize(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.Series = (global::System.Collections.Generic.IEnumerable<global::LiveChartsCore.ISeries>)Value;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.LegendTextSize = (global::System.Double)Value;
         }
-        private object get_201_SourceGenChart_SeriesSource(object instance)
+        private object get_187_CartesianChart_Legend(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.SeriesSource;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.Legend;
         }
-        private void set_201_SourceGenChart_SeriesSource(object instance, object Value)
+        private void set_187_CartesianChart_Legend(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.SeriesSource = (global::System.Collections.Generic.IEnumerable<global::System.Object>)Value;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.Legend = (global::LiveChartsCore.Kernel.Sketches.IChartLegend)Value;
         }
-        private object get_202_SourceGenChart_SeriesTemplate(object instance)
+        private object get_188_CartesianChart_AutoUpdateEnabled(object instance)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            return that.SeriesTemplate;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.AutoUpdateEnabled;
         }
-        private void set_202_SourceGenChart_SeriesTemplate(object instance, object Value)
+        private void set_188_CartesianChart_AutoUpdateEnabled(object instance, object Value)
         {
-            var that = (global::LiveChartsGeneratedCode.SourceGenChart)instance;
-            that.SeriesTemplate = (global::Microsoft.UI.Xaml.DataTemplate)Value;
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.AutoUpdateEnabled = (global::System.Boolean)Value;
         }
-        private object get_203_TreeViewNode_Children(object instance)
+        private object get_189_CartesianChart_UpdaterThrottler(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.UpdaterThrottler;
+        }
+        private void set_189_CartesianChart_UpdaterThrottler(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.UpdaterThrottler = (global::System.TimeSpan)Value;
+        }
+        private object get_190_CartesianChart_UpdateStartedCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.UpdateStartedCommand;
+        }
+        private void set_190_CartesianChart_UpdateStartedCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.UpdateStartedCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+        private object get_191_CartesianChart_PointerPressedCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.PointerPressedCommand;
+        }
+        private void set_191_CartesianChart_PointerPressedCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.PointerPressedCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+        private object get_192_CartesianChart_PointerReleasedCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.PointerReleasedCommand;
+        }
+        private void set_192_CartesianChart_PointerReleasedCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.PointerReleasedCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+        private object get_193_CartesianChart_PointerMoveCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.PointerMoveCommand;
+        }
+        private void set_193_CartesianChart_PointerMoveCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.PointerMoveCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+        private object get_194_CartesianChart_DataPointerDownCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.DataPointerDownCommand;
+        }
+        private void set_194_CartesianChart_DataPointerDownCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.DataPointerDownCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+        private object get_195_CartesianChart_HoveredPointsChangedCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.HoveredPointsChangedCommand;
+        }
+        private void set_195_CartesianChart_HoveredPointsChangedCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.HoveredPointsChangedCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+#pragma warning disable 0618  //   Warning on Deprecated usage
+        private object get_196_CartesianChart_ChartPointPointerDownCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.ChartPointPointerDownCommand;
+        }
+        private void set_196_CartesianChart_ChartPointPointerDownCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.ChartPointPointerDownCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+#pragma warning restore 0618
+        private object get_197_CartesianChart_VisualElementsPointerDownCommand(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.VisualElementsPointerDownCommand;
+        }
+        private void set_197_CartesianChart_VisualElementsPointerDownCommand(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.VisualElementsPointerDownCommand = (global::System.Windows.Input.ICommand)Value;
+        }
+        private object get_198_CartesianChart_MatchAxesScreenDataRatio(object instance)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            return that.MatchAxesScreenDataRatio;
+        }
+        private void set_198_CartesianChart_MatchAxesScreenDataRatio(object instance, object Value)
+        {
+            var that = (global::LiveChartsCore.SkiaSharpView.WinUI.CartesianChart)instance;
+            that.MatchAxesScreenDataRatio = (global::System.Boolean)Value;
+        }
+        private object get_199_BuildChild_Id(object instance)
+        {
+            return global::CSharpMarkup.WinUI.Delegators.BuildChild.GetId((global::Microsoft.UI.Xaml.Controls.Panel)instance);
+        }
+        private void set_199_BuildChild_Id(object instance, object Value)
+        {
+            global::CSharpMarkup.WinUI.Delegators.BuildChild.SetId((global::Microsoft.UI.Xaml.Controls.Panel)instance, (global::System.String)Value);
+        }
+        private object get_200_BuildChildInControlTemplate_Id(object instance)
+        {
+            return global::CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate.GetId((global::Microsoft.UI.Xaml.Controls.Panel)instance);
+        }
+        private void set_200_BuildChildInControlTemplate_Id(object instance, object Value)
+        {
+            global::CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate.SetId((global::Microsoft.UI.Xaml.Controls.Panel)instance, (global::System.String)Value);
+        }
+        private object get_201_BuildChildInControlTemplate_TemplatedParent(object instance)
+        {
+            return global::CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate.GetTemplatedParent((global::Microsoft.UI.Xaml.Controls.Panel)instance);
+        }
+        private void set_201_BuildChildInControlTemplate_TemplatedParent(object instance, object Value)
+        {
+            global::CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate.SetTemplatedParent((global::Microsoft.UI.Xaml.Controls.Panel)instance, (global::Microsoft.UI.Xaml.UIElement)Value);
+        }
+        private object get_202_TreeViewNode_Children(object instance)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             return that.Children;
         }
-        private object get_204_TreeViewNode_Content(object instance)
+        private object get_203_TreeViewNode_Content(object instance)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             return that.Content;
         }
-        private void set_204_TreeViewNode_Content(object instance, object Value)
+        private void set_203_TreeViewNode_Content(object instance, object Value)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             that.Content = (global::System.Object)Value;
         }
-        private object get_205_TreeViewNode_Depth(object instance)
+        private object get_204_TreeViewNode_Depth(object instance)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             return that.Depth;
         }
-        private object get_206_TreeViewNode_HasChildren(object instance)
+        private object get_205_TreeViewNode_HasChildren(object instance)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             return that.HasChildren;
         }
-        private object get_207_TreeViewNode_HasUnrealizedChildren(object instance)
+        private object get_206_TreeViewNode_HasUnrealizedChildren(object instance)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             return that.HasUnrealizedChildren;
         }
-        private void set_207_TreeViewNode_HasUnrealizedChildren(object instance, object Value)
+        private void set_206_TreeViewNode_HasUnrealizedChildren(object instance, object Value)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             that.HasUnrealizedChildren = (global::System.Boolean)Value;
         }
-        private object get_208_TreeViewNode_IsExpanded(object instance)
+        private object get_207_TreeViewNode_IsExpanded(object instance)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             return that.IsExpanded;
         }
-        private void set_208_TreeViewNode_IsExpanded(object instance, object Value)
+        private void set_207_TreeViewNode_IsExpanded(object instance, object Value)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             that.IsExpanded = (global::System.Boolean)Value;
         }
-        private object get_209_TreeViewNode_Parent(object instance)
+        private object get_208_TreeViewNode_Parent(object instance)
         {
             var that = (global::Microsoft.UI.Xaml.Controls.TreeViewNode)instance;
             return that.Parent;
@@ -4772,334 +4777,332 @@ namespace Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo
                 xamlMember.Getter = get_160_NumberBox_ValidationMode;
                 xamlMember.Setter = set_160_NumberBox_ValidationMode;
                 break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.MatchAxesScreenDataRatio":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "MatchAxesScreenDataRatio", "Boolean");
-                xamlMember.Getter = get_161_SourceGenCartesianChart_MatchAxesScreenDataRatio;
-                xamlMember.Setter = set_161_SourceGenCartesianChart_MatchAxesScreenDataRatio;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.TooltipFindingStrategy":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipFindingStrategy", "LiveChartsCore.Measure.TooltipFindingStrategy");
-                xamlMember.Getter = get_162_SourceGenCartesianChart_TooltipFindingStrategy;
-                xamlMember.Setter = set_162_SourceGenCartesianChart_TooltipFindingStrategy;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.ZoomMode":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ZoomMode", "LiveChartsCore.Measure.ZoomAndPanMode");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_163_SourceGenCartesianChart_ZoomMode;
-                xamlMember.Setter = set_163_SourceGenCartesianChart_ZoomMode;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.ZoomingSpeed":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ZoomingSpeed", "Double");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_164_SourceGenCartesianChart_ZoomingSpeed;
-                xamlMember.Setter = set_164_SourceGenCartesianChart_ZoomingSpeed;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.FindingStrategy":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "FindingStrategy", "LiveChartsCore.Measure.FindingStrategy");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_165_SourceGenCartesianChart_FindingStrategy;
-                xamlMember.Setter = set_165_SourceGenCartesianChart_FindingStrategy;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.XAxes":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "XAxes", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_166_SourceGenCartesianChart_XAxes;
-                xamlMember.Setter = set_166_SourceGenCartesianChart_XAxes;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.YAxes":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "YAxes", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_167_SourceGenCartesianChart_YAxes;
-                xamlMember.Setter = set_167_SourceGenCartesianChart_YAxes;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.Sections":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Sections", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.IChartElement>");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_168_SourceGenCartesianChart_Sections;
-                xamlMember.Setter = set_168_SourceGenCartesianChart_Sections;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenCartesianChart.DrawMarginFrame":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenCartesianChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "DrawMarginFrame", "LiveChartsCore.Kernel.IChartElement");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_169_SourceGenCartesianChart_DrawMarginFrame;
-                xamlMember.Setter = set_169_SourceGenCartesianChart_DrawMarginFrame;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.CoreChart":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.CoreChart":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "CoreChart", "LiveChartsCore.Chart");
-                xamlMember.Getter = get_170_SourceGenChart_CoreChart;
+                xamlMember.Getter = get_161_CartesianChart_CoreChart;
                 xamlMember.SetIsReadOnly();
                 break;
-            case "LiveChartsGeneratedCode.SourceGenChart.ForceGPU":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ForceGPU", "Boolean");
-                xamlMember.Getter = get_171_SourceGenChart_ForceGPU;
-                xamlMember.Setter = set_171_SourceGenChart_ForceGPU;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.Tooltip":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Tooltip", "LiveChartsCore.Kernel.Sketches.IChartTooltip");
-                xamlMember.Getter = get_172_SourceGenChart_Tooltip;
-                xamlMember.Setter = set_172_SourceGenChart_Tooltip;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.Legend":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Legend", "LiveChartsCore.Kernel.Sketches.IChartLegend");
-                xamlMember.Getter = get_173_SourceGenChart_Legend;
-                xamlMember.Setter = set_173_SourceGenChart_Legend;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.ChartTheme":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ChartTheme", "LiveChartsCore.Themes.Theme");
-                xamlMember.Getter = get_174_SourceGenChart_ChartTheme;
-                xamlMember.Setter = set_174_SourceGenChart_ChartTheme;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.UpdaterThrottler":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "UpdaterThrottler", "TimeSpan");
-                xamlMember.Getter = get_175_SourceGenChart_UpdaterThrottler;
-                xamlMember.Setter = set_175_SourceGenChart_UpdaterThrottler;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.AutoUpdateEnabled":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "AutoUpdateEnabled", "Boolean");
-                xamlMember.Getter = get_176_SourceGenChart_AutoUpdateEnabled;
-                xamlMember.Setter = set_176_SourceGenChart_AutoUpdateEnabled;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.CoreCanvas":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "CoreCanvas", "LiveChartsCore.Motion.CoreMotionCanvas");
-                xamlMember.Getter = get_177_SourceGenChart_CoreCanvas;
-                xamlMember.SetIsReadOnly();
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.UpdateStartedCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "UpdateStartedCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_178_SourceGenChart_UpdateStartedCommand;
-                xamlMember.Setter = set_178_SourceGenChart_UpdateStartedCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.DataPointerDownCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "DataPointerDownCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_179_SourceGenChart_DataPointerDownCommand;
-                xamlMember.Setter = set_179_SourceGenChart_DataPointerDownCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.HoveredPointsChangedCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "HoveredPointsChangedCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_180_SourceGenChart_HoveredPointsChangedCommand;
-                xamlMember.Setter = set_180_SourceGenChart_HoveredPointsChangedCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.ChartPointPointerDownCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ChartPointPointerDownCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_181_SourceGenChart_ChartPointPointerDownCommand;
-                xamlMember.Setter = set_181_SourceGenChart_ChartPointPointerDownCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.VisualElementsPointerDownCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "VisualElementsPointerDownCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_182_SourceGenChart_VisualElementsPointerDownCommand;
-                xamlMember.Setter = set_182_SourceGenChart_VisualElementsPointerDownCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.PointerPressedCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "PointerPressedCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_183_SourceGenChart_PointerPressedCommand;
-                xamlMember.Setter = set_183_SourceGenChart_PointerPressedCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.PointerMoveCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "PointerMoveCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_184_SourceGenChart_PointerMoveCommand;
-                xamlMember.Setter = set_184_SourceGenChart_PointerMoveCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.PointerReleasedCommand":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "PointerReleasedCommand", "System.Windows.Input.ICommand");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_185_SourceGenChart_PointerReleasedCommand;
-                xamlMember.Setter = set_185_SourceGenChart_PointerReleasedCommand;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.AnimationsSpeed":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "AnimationsSpeed", "TimeSpan");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_186_SourceGenChart_AnimationsSpeed;
-                xamlMember.Setter = set_186_SourceGenChart_AnimationsSpeed;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.EasingFunction":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "EasingFunction", "System.Func`2<Single, Single>");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_187_SourceGenChart_EasingFunction;
-                xamlMember.Setter = set_187_SourceGenChart_EasingFunction;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.DrawMargin":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "DrawMargin", "LiveChartsCore.Measure.Margin");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_188_SourceGenChart_DrawMargin;
-                xamlMember.Setter = set_188_SourceGenChart_DrawMargin;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.LegendPosition":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendPosition", "LiveChartsCore.Measure.LegendPosition");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_189_SourceGenChart_LegendPosition;
-                xamlMember.Setter = set_189_SourceGenChart_LegendPosition;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.TooltipPosition":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipPosition", "LiveChartsCore.Measure.TooltipPosition");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_190_SourceGenChart_TooltipPosition;
-                xamlMember.Setter = set_190_SourceGenChart_TooltipPosition;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.LegendTextPaint":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendTextPaint", "LiveChartsCore.Painting.Paint");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_191_SourceGenChart_LegendTextPaint;
-                xamlMember.Setter = set_191_SourceGenChart_LegendTextPaint;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.LegendBackgroundPaint":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendBackgroundPaint", "LiveChartsCore.Painting.Paint");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_192_SourceGenChart_LegendBackgroundPaint;
-                xamlMember.Setter = set_192_SourceGenChart_LegendBackgroundPaint;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.LegendTextSize":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendTextSize", "Double");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_193_SourceGenChart_LegendTextSize;
-                xamlMember.Setter = set_193_SourceGenChart_LegendTextSize;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.TooltipTextPaint":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipTextPaint", "LiveChartsCore.Painting.Paint");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_194_SourceGenChart_TooltipTextPaint;
-                xamlMember.Setter = set_194_SourceGenChart_TooltipTextPaint;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.TooltipBackgroundPaint":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipBackgroundPaint", "LiveChartsCore.Painting.Paint");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_195_SourceGenChart_TooltipBackgroundPaint;
-                xamlMember.Setter = set_195_SourceGenChart_TooltipBackgroundPaint;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.TooltipTextSize":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipTextSize", "Double");
-                xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_196_SourceGenChart_TooltipTextSize;
-                xamlMember.Setter = set_196_SourceGenChart_TooltipTextSize;
-                break;
-            case "LiveChartsGeneratedCode.SourceGenChart.SyncContext":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.SyncContext":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "SyncContext", "Object");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_197_SourceGenChart_SyncContext;
-                xamlMember.Setter = set_197_SourceGenChart_SyncContext;
+                xamlMember.Getter = get_162_CartesianChart_SyncContext;
+                xamlMember.Setter = set_162_CartesianChart_SyncContext;
                 break;
-            case "LiveChartsGeneratedCode.SourceGenChart.Title":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Title", "LiveChartsCore.Kernel.IChartElement");
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.DrawMargin":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "DrawMargin", "LiveChartsCore.Measure.Margin");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_198_SourceGenChart_Title;
-                xamlMember.Setter = set_198_SourceGenChart_Title;
+                xamlMember.Getter = get_163_CartesianChart_DrawMargin;
+                xamlMember.Setter = set_163_CartesianChart_DrawMargin;
                 break;
-            case "LiveChartsGeneratedCode.SourceGenChart.VisualElements":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "VisualElements", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.IChartElement>");
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.CoreCanvas":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "CoreCanvas", "LiveChartsCore.Motion.CoreMotionCanvas");
+                xamlMember.Getter = get_164_CartesianChart_CoreCanvas;
+                xamlMember.SetIsReadOnly();
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.Title":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Title", "LiveChartsCore.VisualElements.VisualElement");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_199_SourceGenChart_VisualElements;
-                xamlMember.Setter = set_199_SourceGenChart_VisualElements;
+                xamlMember.Getter = get_165_CartesianChart_Title;
+                xamlMember.Setter = set_165_CartesianChart_Title;
                 break;
-            case "LiveChartsGeneratedCode.SourceGenChart.Series":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.Series":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Series", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.ISeries>");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_200_SourceGenChart_Series;
-                xamlMember.Setter = set_200_SourceGenChart_Series;
+                xamlMember.Getter = get_166_CartesianChart_Series;
+                xamlMember.Setter = set_166_CartesianChart_Series;
                 break;
-            case "LiveChartsGeneratedCode.SourceGenChart.SeriesSource":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "SeriesSource", "System.Collections.Generic.IEnumerable`1<Object>");
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.XAxes":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "XAxes", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_201_SourceGenChart_SeriesSource;
-                xamlMember.Setter = set_201_SourceGenChart_SeriesSource;
+                xamlMember.Getter = get_167_CartesianChart_XAxes;
+                xamlMember.Setter = set_167_CartesianChart_XAxes;
                 break;
-            case "LiveChartsGeneratedCode.SourceGenChart.SeriesTemplate":
-                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsGeneratedCode.SourceGenChart");
-                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "SeriesTemplate", "Microsoft.UI.Xaml.DataTemplate");
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.YAxes":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "YAxes", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.Sketches.ICartesianAxis>");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_202_SourceGenChart_SeriesTemplate;
-                xamlMember.Setter = set_202_SourceGenChart_SeriesTemplate;
+                xamlMember.Getter = get_168_CartesianChart_YAxes;
+                xamlMember.Setter = set_168_CartesianChart_YAxes;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.Sections":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Sections", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.CoreSection>");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_169_CartesianChart_Sections;
+                xamlMember.Setter = set_169_CartesianChart_Sections;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.VisualElements":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "VisualElements", "System.Collections.Generic.IEnumerable`1<LiveChartsCore.Kernel.ChartElement>");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_170_CartesianChart_VisualElements;
+                xamlMember.Setter = set_170_CartesianChart_VisualElements;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.DrawMarginFrame":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "DrawMarginFrame", "LiveChartsCore.CoreDrawMarginFrame");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_171_CartesianChart_DrawMarginFrame;
+                xamlMember.Setter = set_171_CartesianChart_DrawMarginFrame;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.ZoomMode":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ZoomMode", "LiveChartsCore.Measure.ZoomAndPanMode");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_172_CartesianChart_ZoomMode;
+                xamlMember.Setter = set_172_CartesianChart_ZoomMode;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.ZoomingSpeed":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ZoomingSpeed", "Double");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_173_CartesianChart_ZoomingSpeed;
+                xamlMember.Setter = set_173_CartesianChart_ZoomingSpeed;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.TooltipFindingStrategy":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipFindingStrategy", "LiveChartsCore.Measure.TooltipFindingStrategy");
+                xamlMember.Getter = get_174_CartesianChart_TooltipFindingStrategy;
+                xamlMember.Setter = set_174_CartesianChart_TooltipFindingStrategy;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.FindingStrategy":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "FindingStrategy", "LiveChartsCore.Measure.FindingStrategy");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_175_CartesianChart_FindingStrategy;
+                xamlMember.Setter = set_175_CartesianChart_FindingStrategy;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.AnimationsSpeed":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "AnimationsSpeed", "TimeSpan");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_176_CartesianChart_AnimationsSpeed;
+                xamlMember.Setter = set_176_CartesianChart_AnimationsSpeed;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.EasingFunction":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "EasingFunction", "System.Func`2<Single, Single>");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_177_CartesianChart_EasingFunction;
+                xamlMember.Setter = set_177_CartesianChart_EasingFunction;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.LegendPosition":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendPosition", "LiveChartsCore.Measure.LegendPosition");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_178_CartesianChart_LegendPosition;
+                xamlMember.Setter = set_178_CartesianChart_LegendPosition;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.TooltipPosition":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipPosition", "LiveChartsCore.Measure.TooltipPosition");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_179_CartesianChart_TooltipPosition;
+                xamlMember.Setter = set_179_CartesianChart_TooltipPosition;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.TooltipBackgroundPaint":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipBackgroundPaint", "LiveChartsCore.Painting.Paint");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_180_CartesianChart_TooltipBackgroundPaint;
+                xamlMember.Setter = set_180_CartesianChart_TooltipBackgroundPaint;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.TooltipTextPaint":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipTextPaint", "LiveChartsCore.Painting.Paint");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_181_CartesianChart_TooltipTextPaint;
+                xamlMember.Setter = set_181_CartesianChart_TooltipTextPaint;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.TooltipTextSize":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TooltipTextSize", "Double");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_182_CartesianChart_TooltipTextSize;
+                xamlMember.Setter = set_182_CartesianChart_TooltipTextSize;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.Tooltip":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Tooltip", "LiveChartsCore.Kernel.Sketches.IChartTooltip");
+                xamlMember.Getter = get_183_CartesianChart_Tooltip;
+                xamlMember.Setter = set_183_CartesianChart_Tooltip;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.LegendBackgroundPaint":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendBackgroundPaint", "LiveChartsCore.Painting.Paint");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_184_CartesianChart_LegendBackgroundPaint;
+                xamlMember.Setter = set_184_CartesianChart_LegendBackgroundPaint;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.LegendTextPaint":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendTextPaint", "LiveChartsCore.Painting.Paint");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_185_CartesianChart_LegendTextPaint;
+                xamlMember.Setter = set_185_CartesianChart_LegendTextPaint;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.LegendTextSize":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "LegendTextSize", "Double");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_186_CartesianChart_LegendTextSize;
+                xamlMember.Setter = set_186_CartesianChart_LegendTextSize;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.Legend":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Legend", "LiveChartsCore.Kernel.Sketches.IChartLegend");
+                xamlMember.Getter = get_187_CartesianChart_Legend;
+                xamlMember.Setter = set_187_CartesianChart_Legend;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.AutoUpdateEnabled":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "AutoUpdateEnabled", "Boolean");
+                xamlMember.Getter = get_188_CartesianChart_AutoUpdateEnabled;
+                xamlMember.Setter = set_188_CartesianChart_AutoUpdateEnabled;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.UpdaterThrottler":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "UpdaterThrottler", "TimeSpan");
+                xamlMember.Getter = get_189_CartesianChart_UpdaterThrottler;
+                xamlMember.Setter = set_189_CartesianChart_UpdaterThrottler;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.UpdateStartedCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "UpdateStartedCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_190_CartesianChart_UpdateStartedCommand;
+                xamlMember.Setter = set_190_CartesianChart_UpdateStartedCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.PointerPressedCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "PointerPressedCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_191_CartesianChart_PointerPressedCommand;
+                xamlMember.Setter = set_191_CartesianChart_PointerPressedCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.PointerReleasedCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "PointerReleasedCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_192_CartesianChart_PointerReleasedCommand;
+                xamlMember.Setter = set_192_CartesianChart_PointerReleasedCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.PointerMoveCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "PointerMoveCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_193_CartesianChart_PointerMoveCommand;
+                xamlMember.Setter = set_193_CartesianChart_PointerMoveCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.DataPointerDownCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "DataPointerDownCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_194_CartesianChart_DataPointerDownCommand;
+                xamlMember.Setter = set_194_CartesianChart_DataPointerDownCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.HoveredPointsChangedCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "HoveredPointsChangedCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_195_CartesianChart_HoveredPointsChangedCommand;
+                xamlMember.Setter = set_195_CartesianChart_HoveredPointsChangedCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.ChartPointPointerDownCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "ChartPointPointerDownCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_196_CartesianChart_ChartPointPointerDownCommand;
+                xamlMember.Setter = set_196_CartesianChart_ChartPointPointerDownCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.VisualElementsPointerDownCommand":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "VisualElementsPointerDownCommand", "System.Windows.Input.ICommand");
+                xamlMember.SetIsDependencyProperty();
+                xamlMember.Getter = get_197_CartesianChart_VisualElementsPointerDownCommand;
+                xamlMember.Setter = set_197_CartesianChart_VisualElementsPointerDownCommand;
+                break;
+            case "LiveChartsCore.SkiaSharpView.WinUI.CartesianChart.MatchAxesScreenDataRatio":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("LiveChartsCore.SkiaSharpView.WinUI.CartesianChart");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "MatchAxesScreenDataRatio", "Boolean");
+                xamlMember.Getter = get_198_CartesianChart_MatchAxesScreenDataRatio;
+                xamlMember.Setter = set_198_CartesianChart_MatchAxesScreenDataRatio;
+                break;
+            case "CSharpMarkup.WinUI.Delegators.BuildChild.Id":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("CSharpMarkup.WinUI.Delegators.BuildChild");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Id", "String");
+                xamlMember.SetTargetTypeName("Microsoft.UI.Xaml.Controls.Panel");
+                xamlMember.SetIsAttachable();
+                xamlMember.Getter = get_199_BuildChild_Id;
+                xamlMember.Setter = set_199_BuildChild_Id;
+                break;
+            case "CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate.Id":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Id", "String");
+                xamlMember.SetTargetTypeName("Microsoft.UI.Xaml.Controls.Panel");
+                xamlMember.SetIsAttachable();
+                xamlMember.Getter = get_200_BuildChildInControlTemplate_Id;
+                xamlMember.Setter = set_200_BuildChildInControlTemplate_Id;
+                break;
+            case "CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate.TemplatedParent":
+                userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("CSharpMarkup.WinUI.Delegators.BuildChildInControlTemplate");
+                xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "TemplatedParent", "Microsoft.UI.Xaml.UIElement");
+                xamlMember.SetTargetTypeName("Microsoft.UI.Xaml.Controls.Panel");
+                xamlMember.SetIsAttachable();
+                xamlMember.Getter = get_201_BuildChildInControlTemplate_TemplatedParent;
+                xamlMember.Setter = set_201_BuildChildInControlTemplate_TemplatedParent;
                 break;
             case "Microsoft.UI.Xaml.Controls.TreeViewNode.Children":
                 userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("Microsoft.UI.Xaml.Controls.TreeViewNode");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Children", "System.Collections.Generic.IList`1<Microsoft.UI.Xaml.Controls.TreeViewNode>");
-                xamlMember.Getter = get_203_TreeViewNode_Children;
+                xamlMember.Getter = get_202_TreeViewNode_Children;
                 xamlMember.SetIsReadOnly();
                 break;
             case "Microsoft.UI.Xaml.Controls.TreeViewNode.Content":
                 userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("Microsoft.UI.Xaml.Controls.TreeViewNode");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Content", "Object");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_204_TreeViewNode_Content;
-                xamlMember.Setter = set_204_TreeViewNode_Content;
+                xamlMember.Getter = get_203_TreeViewNode_Content;
+                xamlMember.Setter = set_203_TreeViewNode_Content;
                 break;
             case "Microsoft.UI.Xaml.Controls.TreeViewNode.Depth":
                 userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("Microsoft.UI.Xaml.Controls.TreeViewNode");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Depth", "Int32");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_205_TreeViewNode_Depth;
+                xamlMember.Getter = get_204_TreeViewNode_Depth;
                 xamlMember.SetIsReadOnly();
                 break;
             case "Microsoft.UI.Xaml.Controls.TreeViewNode.HasChildren":
                 userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("Microsoft.UI.Xaml.Controls.TreeViewNode");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "HasChildren", "Boolean");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_206_TreeViewNode_HasChildren;
+                xamlMember.Getter = get_205_TreeViewNode_HasChildren;
                 xamlMember.SetIsReadOnly();
                 break;
             case "Microsoft.UI.Xaml.Controls.TreeViewNode.HasUnrealizedChildren":
                 userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("Microsoft.UI.Xaml.Controls.TreeViewNode");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "HasUnrealizedChildren", "Boolean");
-                xamlMember.Getter = get_207_TreeViewNode_HasUnrealizedChildren;
-                xamlMember.Setter = set_207_TreeViewNode_HasUnrealizedChildren;
+                xamlMember.Getter = get_206_TreeViewNode_HasUnrealizedChildren;
+                xamlMember.Setter = set_206_TreeViewNode_HasUnrealizedChildren;
                 break;
             case "Microsoft.UI.Xaml.Controls.TreeViewNode.IsExpanded":
                 userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("Microsoft.UI.Xaml.Controls.TreeViewNode");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "IsExpanded", "Boolean");
                 xamlMember.SetIsDependencyProperty();
-                xamlMember.Getter = get_208_TreeViewNode_IsExpanded;
-                xamlMember.Setter = set_208_TreeViewNode_IsExpanded;
+                xamlMember.Getter = get_207_TreeViewNode_IsExpanded;
+                xamlMember.Setter = set_207_TreeViewNode_IsExpanded;
                 break;
             case "Microsoft.UI.Xaml.Controls.TreeViewNode.Parent":
                 userType = (global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlUserType)GetXamlTypeByName("Microsoft.UI.Xaml.Controls.TreeViewNode");
                 xamlMember = new global::Stock_Market_Simulator.Stock_Market_Simulator_XamlTypeInfo.XamlMember(this, "Parent", "Microsoft.UI.Xaml.Controls.TreeViewNode");
-                xamlMember.Getter = get_209_TreeViewNode_Parent;
+                xamlMember.Getter = get_208_TreeViewNode_Parent;
                 xamlMember.SetIsReadOnly();
                 break;
             }

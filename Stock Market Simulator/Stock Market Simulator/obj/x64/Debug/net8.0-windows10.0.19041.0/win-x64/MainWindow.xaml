@@ -23,10 +23,11 @@
                             IsBackButtonVisible="Collapsed"
                                                              >
                 <NavigationView.MenuItems>
-                    <NavigationViewItem x:ConnectionId='11' Content="Dashboard" Icon="Home" Tag="DashboardPage" Visibility="Collapsed" x:Name="DashboardNavItem"/>
-                    <NavigationViewItem x:ConnectionId='12' Content="Portfolio" Icon="Library" Tag="PortfolioPage" Visibility="Collapsed" x:Name="PortfolioNavItem"/>
+                    <!-- Tags changed to match NavigateToPage switch values -->
+                    <NavigationViewItem x:ConnectionId='11' Content="Dashboard" Icon="Home" Tag="Dashboard" Visibility="Collapsed" x:Name="DashboardNavItem"/>
+                    <NavigationViewItem x:ConnectionId='12' Content="Portfolio" Icon="Library" Tag="Portfolio" Visibility="Collapsed" x:Name="PortfolioNavItem"/>
                     <NavigationViewItemSeparator x:ConnectionId='13' Visibility="Collapsed" x:Name="SeparatorNavItem"/>
-                    <NavigationViewItem x:ConnectionId='14' Content="Login" Icon="Contact" Tag="LoginPage" x:Name="LoginNavItem"/>
+                    <NavigationViewItem x:ConnectionId='14' Content="Login" Icon="Contact" Tag="Login" x:Name="LoginNavItem"/>
                     <NavigationViewItem x:ConnectionId='15' Content="Logout" Icon="LeaveChat" Tag="Logout" x:Name="LogoutNavItem" Visibility="Collapsed"/>
                 </NavigationView.MenuItems>
             </NavigationView>

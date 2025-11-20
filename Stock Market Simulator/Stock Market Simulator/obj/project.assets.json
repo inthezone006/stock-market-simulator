@@ -18,6 +18,39 @@
           }
         }
       },
+      "CSharpMarkup.WinUI/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.WindowsAppSDK": "1.7.250401001"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "CSharpMarkup.WinUI": "3.1.2",
+          "LiveChartsCore.SkiaSharpView.Uno.WinUI": "2.0.0-rc5.3"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "DnsClient/1.6.1": {
         "type": "package",
         "dependencies": {
@@ -34,29 +67,45 @@
           }
         }
       },
-      "HarfBuzzSharp/8.3.1.1": {
+      "HarfBuzzSharp/7.3.0.3": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.1"
+          "HarfBuzzSharp.NativeAssets.Win32": "7.3.0.3",
+          "HarfBuzzSharp.NativeAssets.macOS": "7.3.0.3"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "HarfBuzzSharp.NativeAssets.Win32/8.3.1.1": {
+      "HarfBuzzSharp.NativeAssets.macOS/7.3.0.3": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/osx/native/libHarfBuzzSharp.dylib": {
+            "assetType": "native",
+            "rid": "osx"
+          }
+        }
+      },
+      "HarfBuzzSharp.NativeAssets.Win32/7.3.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "runtimeTargets": {
           "runtimes/win-arm64/native/libHarfBuzzSharp.dll": {
@@ -73,7 +122,7 @@
           }
         }
       },
-      "LiveChartsCore/2.0.0-rc6.1": {
+      "LiveChartsCore/2.0.0-rc5.3": {
         "type": "package",
         "compile": {
           "lib/net8.0-windows10.0.19041/LiveChartsCore.dll": {
@@ -86,10 +135,28 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView/2.0.0-rc6.1": {
+      "LiveChartsCore.Behaviours/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
+          "LiveChartsCore": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22000.196",
+          "Microsoft.WindowsAppSDK": "1.1.5"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "LiveChartsCore.SkiaSharpView/2.0.0-rc5.3": {
+        "type": "package",
+        "dependencies": {
+          "LiveChartsCore": "2.0.0-rc5.3",
           "SkiaSharp": "2.88.9",
           "SkiaSharp.HarfBuzz": "2.88.9"
         },
@@ -104,23 +171,22 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView.WinUI/2.0.0-rc6.1": {
+      "LiveChartsCore.SkiaSharpView.Uno.WinUI/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
-          "LiveChartsCore.SkiaSharpView": "2.0.0-rc6.1",
-          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756",
-          "Microsoft.WindowsAppSDK": "1.7.250606001",
-          "SkiaSharp.HarfBuzz": "3.119.0",
-          "SkiaSharp.Views.WinUI": "3.119.0"
+          "LiveChartsCore.Behaviours": "2.0.0-rc5.3",
+          "LiveChartsCore.SkiaSharpView": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.1",
+          "Microsoft.WindowsAppSDK": "1.4.230913002",
+          "SkiaSharp.Views.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         }
@@ -557,44 +623,62 @@
           "lib/net5.0/SharpCompress.dll": {}
         }
       },
-      "SkiaSharp/3.119.0": {
+      "SkiaSharp/2.88.9": {
         "type": "package",
         "dependencies": {
-          "SkiaSharp.NativeAssets.Win32": "3.119.0"
+          "SkiaSharp.NativeAssets.Win32": "2.88.9",
+          "SkiaSharp.NativeAssets.macOS": "2.88.9"
         },
         "compile": {
-          "ref/net8.0-windows10.0.19041/SkiaSharp.dll": {}
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
+          }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.HarfBuzz/3.119.0": {
+      "SkiaSharp.HarfBuzz/2.88.9": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp": "8.3.1.1",
-          "SkiaSharp": "3.119.0"
+          "HarfBuzzSharp": "7.3.0.3",
+          "SkiaSharp": "2.88.9"
         },
         "compile": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.NativeAssets.Win32/3.119.0": {
+      "SkiaSharp.NativeAssets.macOS/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/osx/native/libSkiaSharp.dylib": {
+            "assetType": "native",
+            "rid": "osx"
+          }
+        }
+      },
+      "SkiaSharp.NativeAssets.Win32/2.88.9": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "runtimeTargets": {
           "runtimes/win-arm64/native/libSkiaSharp.dll": {
@@ -611,16 +695,16 @@
           }
         }
       },
-      "SkiaSharp.NativeAssets.WinUI/3.119.0": {
+      "SkiaSharp.NativeAssets.WinUI/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0-windows10.0.19041/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0-windows10.0.19041/_._": {}
         },
         "runtimeTargets": {
-          "runtimes/win-arm64/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll": {
+          "runtimes/win-arm64/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll": {
             "assetType": "runtime",
             "rid": "win-arm64"
           },
@@ -632,15 +716,7 @@
             "assetType": "native",
             "rid": "win-arm64"
           },
-          "runtimes/win-arm64/native/libEGL.dll": {
-            "assetType": "native",
-            "rid": "win-arm64"
-          },
-          "runtimes/win-arm64/native/libGLESv2.dll": {
-            "assetType": "native",
-            "rid": "win-arm64"
-          },
-          "runtimes/win-x64/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll": {
+          "runtimes/win-x64/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll": {
             "assetType": "runtime",
             "rid": "win-x64"
           },
@@ -652,15 +728,7 @@
             "assetType": "native",
             "rid": "win-x64"
           },
-          "runtimes/win-x64/native/libEGL.dll": {
-            "assetType": "native",
-            "rid": "win-x64"
-          },
-          "runtimes/win-x64/native/libGLESv2.dll": {
-            "assetType": "native",
-            "rid": "win-x64"
-          },
-          "runtimes/win-x86/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll": {
+          "runtimes/win-x86/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll": {
             "assetType": "runtime",
             "rid": "win-x86"
           },
@@ -671,32 +739,24 @@
           "runtimes/win-x86/native/SkiaSharp.Views.WinUI.Native.winmd": {
             "assetType": "native",
             "rid": "win-x86"
-          },
-          "runtimes/win-x86/native/libEGL.dll": {
-            "assetType": "native",
-            "rid": "win-x86"
-          },
-          "runtimes/win-x86/native/libGLESv2.dll": {
-            "assetType": "native",
-            "rid": "win-x86"
           }
         }
       },
-      "SkiaSharp.Views.WinUI/3.119.0": {
+      "SkiaSharp.Views.WinUI/2.88.9": {
         "type": "package",
         "dependencies": {
-          "Microsoft.WindowsAppSDK": "1.4.230913002",
-          "SkiaSharp": "3.119.0",
-          "SkiaSharp.NativeAssets.WinUI": "3.119.0"
+          "Microsoft.WindowsAppSDK": "1.1.5",
+          "SkiaSharp": "2.88.9",
+          "SkiaSharp.NativeAssets.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
@@ -830,6 +890,39 @@
           }
         }
       },
+      "CSharpMarkup.WinUI/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.WindowsAppSDK": "1.7.250401001"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "CSharpMarkup.WinUI": "3.1.2",
+          "LiveChartsCore.SkiaSharpView.Uno.WinUI": "2.0.0-rc5.3"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "DnsClient/1.6.1": {
         "type": "package",
         "dependencies": {
@@ -846,35 +939,45 @@
           }
         }
       },
-      "HarfBuzzSharp/8.3.1.1": {
+      "HarfBuzzSharp/7.3.0.3": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.1"
+          "HarfBuzzSharp.NativeAssets.Win32": "7.3.0.3",
+          "HarfBuzzSharp.NativeAssets.macOS": "7.3.0.3"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "HarfBuzzSharp.NativeAssets.Win32/8.3.1.1": {
+      "HarfBuzzSharp.NativeAssets.macOS/7.3.0.3": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        }
+      },
+      "HarfBuzzSharp.NativeAssets.Win32/7.3.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "native": {
           "runtimes/win-arm64/native/libHarfBuzzSharp.dll": {}
         }
       },
-      "LiveChartsCore/2.0.0-rc6.1": {
+      "LiveChartsCore/2.0.0-rc5.3": {
         "type": "package",
         "compile": {
           "lib/net8.0-windows10.0.19041/LiveChartsCore.dll": {
@@ -887,10 +990,28 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView/2.0.0-rc6.1": {
+      "LiveChartsCore.Behaviours/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
+          "LiveChartsCore": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22000.196",
+          "Microsoft.WindowsAppSDK": "1.1.5"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "LiveChartsCore.SkiaSharpView/2.0.0-rc5.3": {
+        "type": "package",
+        "dependencies": {
+          "LiveChartsCore": "2.0.0-rc5.3",
           "SkiaSharp": "2.88.9",
           "SkiaSharp.HarfBuzz": "2.88.9"
         },
@@ -905,23 +1026,22 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView.WinUI/2.0.0-rc6.1": {
+      "LiveChartsCore.SkiaSharpView.Uno.WinUI/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
-          "LiveChartsCore.SkiaSharpView": "2.0.0-rc6.1",
-          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756",
-          "Microsoft.WindowsAppSDK": "1.7.250606001",
-          "SkiaSharp.HarfBuzz": "3.119.0",
-          "SkiaSharp.Views.WinUI": "3.119.0"
+          "LiveChartsCore.Behaviours": "2.0.0-rc5.3",
+          "LiveChartsCore.SkiaSharpView": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.1",
+          "Microsoft.WindowsAppSDK": "1.4.230913002",
+          "SkiaSharp.Views.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         }
@@ -1300,79 +1420,89 @@
           "lib/net5.0/SharpCompress.dll": {}
         }
       },
-      "SkiaSharp/3.119.0": {
+      "SkiaSharp/2.88.9": {
         "type": "package",
         "dependencies": {
-          "SkiaSharp.NativeAssets.Win32": "3.119.0"
+          "SkiaSharp.NativeAssets.Win32": "2.88.9",
+          "SkiaSharp.NativeAssets.macOS": "2.88.9"
         },
         "compile": {
-          "ref/net8.0-windows10.0.19041/SkiaSharp.dll": {}
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
+          }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.HarfBuzz/3.119.0": {
+      "SkiaSharp.HarfBuzz/2.88.9": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp": "8.3.1.1",
-          "SkiaSharp": "3.119.0"
+          "HarfBuzzSharp": "7.3.0.3",
+          "SkiaSharp": "2.88.9"
         },
         "compile": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.NativeAssets.Win32/3.119.0": {
+      "SkiaSharp.NativeAssets.macOS/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        }
+      },
+      "SkiaSharp.NativeAssets.Win32/2.88.9": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "native": {
           "runtimes/win-arm64/native/libSkiaSharp.dll": {}
         }
       },
-      "SkiaSharp.NativeAssets.WinUI/3.119.0": {
+      "SkiaSharp.NativeAssets.WinUI/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0-windows10.0.19041/_._": {}
         },
         "runtime": {
-          "runtimes/win-arm64/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll": {}
+          "runtimes/win-arm64/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll": {}
         },
         "native": {
           "runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.dll": {},
-          "runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.winmd": {},
-          "runtimes/win-arm64/native/libEGL.dll": {},
-          "runtimes/win-arm64/native/libGLESv2.dll": {}
+          "runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.winmd": {}
         }
       },
-      "SkiaSharp.Views.WinUI/3.119.0": {
+      "SkiaSharp.Views.WinUI/2.88.9": {
         "type": "package",
         "dependencies": {
-          "Microsoft.WindowsAppSDK": "1.4.230913002",
-          "SkiaSharp": "3.119.0",
-          "SkiaSharp.NativeAssets.WinUI": "3.119.0"
+          "Microsoft.WindowsAppSDK": "1.1.5",
+          "SkiaSharp": "2.88.9",
+          "SkiaSharp.NativeAssets.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
@@ -1490,6 +1620,39 @@
           }
         }
       },
+      "CSharpMarkup.WinUI/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.WindowsAppSDK": "1.7.250401001"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "CSharpMarkup.WinUI": "3.1.2",
+          "LiveChartsCore.SkiaSharpView.Uno.WinUI": "2.0.0-rc5.3"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "DnsClient/1.6.1": {
         "type": "package",
         "dependencies": {
@@ -1506,35 +1669,45 @@
           }
         }
       },
-      "HarfBuzzSharp/8.3.1.1": {
+      "HarfBuzzSharp/7.3.0.3": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.1"
+          "HarfBuzzSharp.NativeAssets.Win32": "7.3.0.3",
+          "HarfBuzzSharp.NativeAssets.macOS": "7.3.0.3"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "HarfBuzzSharp.NativeAssets.Win32/8.3.1.1": {
+      "HarfBuzzSharp.NativeAssets.macOS/7.3.0.3": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        }
+      },
+      "HarfBuzzSharp.NativeAssets.Win32/7.3.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "native": {
           "runtimes/win-x64/native/libHarfBuzzSharp.dll": {}
         }
       },
-      "LiveChartsCore/2.0.0-rc6.1": {
+      "LiveChartsCore/2.0.0-rc5.3": {
         "type": "package",
         "compile": {
           "lib/net8.0-windows10.0.19041/LiveChartsCore.dll": {
@@ -1547,10 +1720,28 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView/2.0.0-rc6.1": {
+      "LiveChartsCore.Behaviours/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
+          "LiveChartsCore": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22000.196",
+          "Microsoft.WindowsAppSDK": "1.1.5"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "LiveChartsCore.SkiaSharpView/2.0.0-rc5.3": {
+        "type": "package",
+        "dependencies": {
+          "LiveChartsCore": "2.0.0-rc5.3",
           "SkiaSharp": "2.88.9",
           "SkiaSharp.HarfBuzz": "2.88.9"
         },
@@ -1565,23 +1756,22 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView.WinUI/2.0.0-rc6.1": {
+      "LiveChartsCore.SkiaSharpView.Uno.WinUI/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
-          "LiveChartsCore.SkiaSharpView": "2.0.0-rc6.1",
-          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756",
-          "Microsoft.WindowsAppSDK": "1.7.250606001",
-          "SkiaSharp.HarfBuzz": "3.119.0",
-          "SkiaSharp.Views.WinUI": "3.119.0"
+          "LiveChartsCore.Behaviours": "2.0.0-rc5.3",
+          "LiveChartsCore.SkiaSharpView": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.1",
+          "Microsoft.WindowsAppSDK": "1.4.230913002",
+          "SkiaSharp.Views.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         }
@@ -1960,79 +2150,89 @@
           "lib/net5.0/SharpCompress.dll": {}
         }
       },
-      "SkiaSharp/3.119.0": {
+      "SkiaSharp/2.88.9": {
         "type": "package",
         "dependencies": {
-          "SkiaSharp.NativeAssets.Win32": "3.119.0"
+          "SkiaSharp.NativeAssets.Win32": "2.88.9",
+          "SkiaSharp.NativeAssets.macOS": "2.88.9"
         },
         "compile": {
-          "ref/net8.0-windows10.0.19041/SkiaSharp.dll": {}
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
+          }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.HarfBuzz/3.119.0": {
+      "SkiaSharp.HarfBuzz/2.88.9": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp": "8.3.1.1",
-          "SkiaSharp": "3.119.0"
+          "HarfBuzzSharp": "7.3.0.3",
+          "SkiaSharp": "2.88.9"
         },
         "compile": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.NativeAssets.Win32/3.119.0": {
+      "SkiaSharp.NativeAssets.macOS/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        }
+      },
+      "SkiaSharp.NativeAssets.Win32/2.88.9": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "native": {
           "runtimes/win-x64/native/libSkiaSharp.dll": {}
         }
       },
-      "SkiaSharp.NativeAssets.WinUI/3.119.0": {
+      "SkiaSharp.NativeAssets.WinUI/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0-windows10.0.19041/_._": {}
         },
         "runtime": {
-          "runtimes/win-x64/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll": {}
+          "runtimes/win-x64/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll": {}
         },
         "native": {
           "runtimes/win-x64/native/SkiaSharp.Views.WinUI.Native.dll": {},
-          "runtimes/win-x64/native/SkiaSharp.Views.WinUI.Native.winmd": {},
-          "runtimes/win-x64/native/libEGL.dll": {},
-          "runtimes/win-x64/native/libGLESv2.dll": {}
+          "runtimes/win-x64/native/SkiaSharp.Views.WinUI.Native.winmd": {}
         }
       },
-      "SkiaSharp.Views.WinUI/3.119.0": {
+      "SkiaSharp.Views.WinUI/2.88.9": {
         "type": "package",
         "dependencies": {
-          "Microsoft.WindowsAppSDK": "1.4.230913002",
-          "SkiaSharp": "3.119.0",
-          "SkiaSharp.NativeAssets.WinUI": "3.119.0"
+          "Microsoft.WindowsAppSDK": "1.1.5",
+          "SkiaSharp": "2.88.9",
+          "SkiaSharp.NativeAssets.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
@@ -2150,6 +2350,39 @@
           }
         }
       },
+      "CSharpMarkup.WinUI/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.WindowsAppSDK": "1.7.250401001"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "CSharpMarkup.WinUI": "3.1.2",
+          "LiveChartsCore.SkiaSharpView.Uno.WinUI": "2.0.0-rc5.3"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "DnsClient/1.6.1": {
         "type": "package",
         "dependencies": {
@@ -2166,35 +2399,45 @@
           }
         }
       },
-      "HarfBuzzSharp/8.3.1.1": {
+      "HarfBuzzSharp/7.3.0.3": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.1"
+          "HarfBuzzSharp.NativeAssets.Win32": "7.3.0.3",
+          "HarfBuzzSharp.NativeAssets.macOS": "7.3.0.3"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "HarfBuzzSharp.NativeAssets.Win32/8.3.1.1": {
+      "HarfBuzzSharp.NativeAssets.macOS/7.3.0.3": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        }
+      },
+      "HarfBuzzSharp.NativeAssets.Win32/7.3.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "native": {
           "runtimes/win-x86/native/libHarfBuzzSharp.dll": {}
         }
       },
-      "LiveChartsCore/2.0.0-rc6.1": {
+      "LiveChartsCore/2.0.0-rc5.3": {
         "type": "package",
         "compile": {
           "lib/net8.0-windows10.0.19041/LiveChartsCore.dll": {
@@ -2207,10 +2450,28 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView/2.0.0-rc6.1": {
+      "LiveChartsCore.Behaviours/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
+          "LiveChartsCore": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22000.196",
+          "Microsoft.WindowsAppSDK": "1.1.5"
+        },
+        "compile": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "LiveChartsCore.SkiaSharpView/2.0.0-rc5.3": {
+        "type": "package",
+        "dependencies": {
+          "LiveChartsCore": "2.0.0-rc5.3",
           "SkiaSharp": "2.88.9",
           "SkiaSharp.HarfBuzz": "2.88.9"
         },
@@ -2225,23 +2486,22 @@
           }
         }
       },
-      "LiveChartsCore.SkiaSharpView.WinUI/2.0.0-rc6.1": {
+      "LiveChartsCore.SkiaSharpView.Uno.WinUI/2.0.0-rc5.3": {
         "type": "package",
         "dependencies": {
-          "LiveChartsCore": "2.0.0-rc6.1",
-          "LiveChartsCore.SkiaSharpView": "2.0.0-rc6.1",
-          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756",
-          "Microsoft.WindowsAppSDK": "1.7.250606001",
-          "SkiaSharp.HarfBuzz": "3.119.0",
-          "SkiaSharp.Views.WinUI": "3.119.0"
+          "LiveChartsCore.Behaviours": "2.0.0-rc5.3",
+          "LiveChartsCore.SkiaSharpView": "2.0.0-rc5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.1",
+          "Microsoft.WindowsAppSDK": "1.4.230913002",
+          "SkiaSharp.Views.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll": {
+          "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll": {
             "related": ".pri;.xml"
           }
         }
@@ -2617,79 +2877,89 @@
           "lib/net5.0/SharpCompress.dll": {}
         }
       },
-      "SkiaSharp/3.119.0": {
+      "SkiaSharp/2.88.9": {
         "type": "package",
         "dependencies": {
-          "SkiaSharp.NativeAssets.Win32": "3.119.0"
+          "SkiaSharp.NativeAssets.Win32": "2.88.9",
+          "SkiaSharp.NativeAssets.macOS": "2.88.9"
         },
         "compile": {
-          "ref/net8.0-windows10.0.19041/SkiaSharp.dll": {}
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
+          }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.HarfBuzz/3.119.0": {
+      "SkiaSharp.HarfBuzz/2.88.9": {
         "type": "package",
         "dependencies": {
-          "HarfBuzzSharp": "8.3.1.1",
-          "SkiaSharp": "3.119.0"
+          "HarfBuzzSharp": "7.3.0.3",
+          "SkiaSharp": "2.88.9"
         },
         "compile": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
-            "related": ".pdb"
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
-      "SkiaSharp.NativeAssets.Win32/3.119.0": {
+      "SkiaSharp.NativeAssets.macOS/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0/_._": {}
+        }
+      },
+      "SkiaSharp.NativeAssets.Win32/2.88.9": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
         },
         "native": {
           "runtimes/win-x86/native/libSkiaSharp.dll": {}
         }
       },
-      "SkiaSharp.NativeAssets.WinUI/3.119.0": {
+      "SkiaSharp.NativeAssets.WinUI/2.88.9": {
         "type": "package",
         "compile": {
-          "lib/net8.0-windows10.0.19041/_._": {}
+          "lib/net6.0-windows10.0.19041/_._": {}
         },
         "runtime": {
-          "runtimes/win-x86/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll": {}
+          "runtimes/win-x86/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll": {}
         },
         "native": {
           "runtimes/win-x86/native/SkiaSharp.Views.WinUI.Native.dll": {},
-          "runtimes/win-x86/native/SkiaSharp.Views.WinUI.Native.winmd": {},
-          "runtimes/win-x86/native/libEGL.dll": {},
-          "runtimes/win-x86/native/libGLESv2.dll": {}
+          "runtimes/win-x86/native/SkiaSharp.Views.WinUI.Native.winmd": {}
         }
       },
-      "SkiaSharp.Views.WinUI/3.119.0": {
+      "SkiaSharp.Views.WinUI/2.88.9": {
         "type": "package",
         "dependencies": {
-          "Microsoft.WindowsAppSDK": "1.4.230913002",
-          "SkiaSharp": "3.119.0",
-          "SkiaSharp.NativeAssets.WinUI": "3.119.0"
+          "Microsoft.WindowsAppSDK": "1.1.5",
+          "SkiaSharp": "2.88.9",
+          "SkiaSharp.NativeAssets.WinUI": "2.88.9"
         },
         "compile": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll": {
-            "related": ".pdb"
+          "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
@@ -2814,6 +3084,78 @@
         "tools/VisualStudioToolsManifest.xml"
       ]
     },
+    "CSharpMarkup.WinUI/3.1.2": {
+      "sha512": "SDAp3a1O1BJJqzrp/bvLoDhIBYsaw+DCv2mW6OMfOJItMR9JK2YK0fUKwr6XCPqug1KGMcjFTW8t4FLWc2omxg==",
+      "type": "package",
+      "path": "csharpmarkup.winui/3.1.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Readme.md",
+        "csharpmarkup.winui.3.1.2.nupkg.sha512",
+        "csharpmarkup.winui.nuspec",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.aar",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.dll",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.pdb",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.xml",
+        "lib/net8.0-ios17.0/CSharpMarkup.WinUI.dll",
+        "lib/net8.0-ios17.0/CSharpMarkup.WinUI.pdb",
+        "lib/net8.0-ios17.0/CSharpMarkup.WinUI.xml",
+        "lib/net8.0-maccatalyst17.0/CSharpMarkup.WinUI.dll",
+        "lib/net8.0-maccatalyst17.0/CSharpMarkup.WinUI.pdb",
+        "lib/net8.0-maccatalyst17.0/CSharpMarkup.WinUI.xml",
+        "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.dll",
+        "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.pdb",
+        "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.xml",
+        "lib/net8.0/CSharpMarkup.WinUI.dll",
+        "lib/net8.0/CSharpMarkup.WinUI.pdb",
+        "lib/net8.0/CSharpMarkup.WinUI.xml",
+        "lib/net9.0-android35.0/CSharpMarkup.WinUI.aar",
+        "lib/net9.0-android35.0/CSharpMarkup.WinUI.dll",
+        "lib/net9.0-android35.0/CSharpMarkup.WinUI.pdb",
+        "lib/net9.0-android35.0/CSharpMarkup.WinUI.xml",
+        "lib/net9.0-ios18.0/CSharpMarkup.WinUI.dll",
+        "lib/net9.0-ios18.0/CSharpMarkup.WinUI.pdb",
+        "lib/net9.0-ios18.0/CSharpMarkup.WinUI.xml",
+        "lib/net9.0-maccatalyst18.0/CSharpMarkup.WinUI.dll",
+        "lib/net9.0-maccatalyst18.0/CSharpMarkup.WinUI.pdb",
+        "lib/net9.0-maccatalyst18.0/CSharpMarkup.WinUI.xml",
+        "lib/net9.0-windows10.0.19041/CSharpMarkup.WinUI.dll",
+        "lib/net9.0-windows10.0.19041/CSharpMarkup.WinUI.pdb",
+        "lib/net9.0-windows10.0.19041/CSharpMarkup.WinUI.xml",
+        "lib/net9.0/CSharpMarkup.WinUI.dll",
+        "lib/net9.0/CSharpMarkup.WinUI.pdb",
+        "lib/net9.0/CSharpMarkup.WinUI.xml"
+      ]
+    },
+    "CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView/3.1.2": {
+      "sha512": "HATSQmLzz8tu5CGCy5qeHr+g0pRkp5GeZ4EzVyf8buS+wAy5ByQrLUxQjjh7pKi82VmWvLcoROLLOTBF1WpLqg==",
+      "type": "package",
+      "path": "csharpmarkup.winui.livechartscore.skiasharpview/3.1.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Readme.md",
+        "csharpmarkup.winui.livechartscore.skiasharpview.3.1.2.nupkg.sha512",
+        "csharpmarkup.winui.livechartscore.skiasharpview.nuspec",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.aar",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.pdb",
+        "lib/net8.0-android34.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.xml",
+        "lib/net8.0-ios18.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll",
+        "lib/net8.0-ios18.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.pdb",
+        "lib/net8.0-ios18.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.xml",
+        "lib/net8.0-maccatalyst18.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll",
+        "lib/net8.0-maccatalyst18.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.pdb",
+        "lib/net8.0-maccatalyst18.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.xml",
+        "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll",
+        "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.pdb",
+        "lib/net8.0-windows10.0.19041/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.xml",
+        "lib/net8.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.dll",
+        "lib/net8.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.pdb",
+        "lib/net8.0/CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView.xml"
+      ]
+    },
     "DnsClient/1.6.1": {
       "sha512": "4H/f2uYJOZ+YObZjpY9ABrKZI+JNw3uizp6oMzTXwDw6F+2qIPhpRl/1t68O/6e98+vqNiYGu+lswmwdYUy3gg==",
       "type": "package",
@@ -2838,75 +3180,128 @@
         "lib/netstandard2.1/DnsClient.xml"
       ]
     },
-    "HarfBuzzSharp/8.3.1.1": {
-      "sha512": "tLZN66oe/uiRPTZfrCU4i8ScVGwqHNh5MHrXj0yVf4l7Mz0FhTGnQ71RGySROTmdognAs0JtluHkL41pIabWuQ==",
+    "HarfBuzzSharp/7.3.0.3": {
+      "sha512": "Hq+5+gx10coOvuRgB13KBwiWxJq1QeYuhtVLbA01ZCWaugOnolUahF44KvrQTUUHDNk/C7HB6SMaebsZeOdhgg==",
       "type": "package",
-      "path": "harfbuzzsharp/8.3.1.1",
+      "path": "harfbuzzsharp/7.3.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.txt",
-        "README.md",
-        "harfbuzzsharp.8.3.1.1.nupkg.sha512",
+        "THIRD-PARTY-NOTICES.txt",
+        "harfbuzzsharp.7.3.0.3.nupkg.sha512",
         "harfbuzzsharp.nuspec",
-        "icon.png",
+        "lib/monoandroid1.0/HarfBuzzSharp.dll",
+        "lib/monoandroid1.0/HarfBuzzSharp.pdb",
+        "lib/monoandroid1.0/HarfBuzzSharp.xml",
         "lib/net462/HarfBuzzSharp.dll",
         "lib/net462/HarfBuzzSharp.pdb",
+        "lib/net462/HarfBuzzSharp.xml",
+        "lib/net6.0-android30.0/HarfBuzzSharp.dll",
+        "lib/net6.0-android30.0/HarfBuzzSharp.pdb",
+        "lib/net6.0-android30.0/HarfBuzzSharp.xml",
+        "lib/net6.0-ios13.6/HarfBuzzSharp.dll",
+        "lib/net6.0-ios13.6/HarfBuzzSharp.pdb",
+        "lib/net6.0-ios13.6/HarfBuzzSharp.xml",
+        "lib/net6.0-maccatalyst13.5/HarfBuzzSharp.dll",
+        "lib/net6.0-maccatalyst13.5/HarfBuzzSharp.pdb",
+        "lib/net6.0-maccatalyst13.5/HarfBuzzSharp.xml",
+        "lib/net6.0-macos10.15/HarfBuzzSharp.dll",
+        "lib/net6.0-macos10.15/HarfBuzzSharp.pdb",
+        "lib/net6.0-macos10.15/HarfBuzzSharp.xml",
+        "lib/net6.0-tvos13.4/HarfBuzzSharp.dll",
+        "lib/net6.0-tvos13.4/HarfBuzzSharp.pdb",
+        "lib/net6.0-tvos13.4/HarfBuzzSharp.xml",
         "lib/net6.0/HarfBuzzSharp.dll",
         "lib/net6.0/HarfBuzzSharp.pdb",
-        "lib/net8.0-android34.0/HarfBuzzSharp.dll",
-        "lib/net8.0-android34.0/HarfBuzzSharp.pdb",
-        "lib/net8.0-android34.0/HarfBuzzSharp.xml",
-        "lib/net8.0-ios17.0/HarfBuzzSharp.dll",
-        "lib/net8.0-ios17.0/HarfBuzzSharp.pdb",
-        "lib/net8.0-maccatalyst17.0/HarfBuzzSharp.dll",
-        "lib/net8.0-maccatalyst17.0/HarfBuzzSharp.pdb",
-        "lib/net8.0-macos14.0/HarfBuzzSharp.dll",
-        "lib/net8.0-macos14.0/HarfBuzzSharp.pdb",
-        "lib/net8.0-tizen7.0/HarfBuzzSharp.dll",
-        "lib/net8.0-tizen7.0/HarfBuzzSharp.pdb",
-        "lib/net8.0-tvos17.0/HarfBuzzSharp.dll",
-        "lib/net8.0-tvos17.0/HarfBuzzSharp.pdb",
-        "lib/net8.0-windows10.0.19041/HarfBuzzSharp.dll",
-        "lib/net8.0-windows10.0.19041/HarfBuzzSharp.pdb",
-        "lib/net8.0/HarfBuzzSharp.dll",
-        "lib/net8.0/HarfBuzzSharp.pdb",
+        "lib/net6.0/HarfBuzzSharp.xml",
+        "lib/netcoreapp3.1/HarfBuzzSharp.dll",
+        "lib/netcoreapp3.1/HarfBuzzSharp.pdb",
+        "lib/netcoreapp3.1/HarfBuzzSharp.xml",
+        "lib/netstandard1.3/HarfBuzzSharp.dll",
+        "lib/netstandard1.3/HarfBuzzSharp.pdb",
+        "lib/netstandard1.3/HarfBuzzSharp.xml",
         "lib/netstandard2.0/HarfBuzzSharp.dll",
         "lib/netstandard2.0/HarfBuzzSharp.pdb",
+        "lib/netstandard2.0/HarfBuzzSharp.xml",
         "lib/netstandard2.1/HarfBuzzSharp.dll",
-        "lib/netstandard2.1/HarfBuzzSharp.pdb"
+        "lib/netstandard2.1/HarfBuzzSharp.pdb",
+        "lib/netstandard2.1/HarfBuzzSharp.xml",
+        "lib/tizen40/HarfBuzzSharp.dll",
+        "lib/tizen40/HarfBuzzSharp.pdb",
+        "lib/tizen40/HarfBuzzSharp.xml",
+        "lib/uap10.0.10240/HarfBuzzSharp.dll",
+        "lib/uap10.0.10240/HarfBuzzSharp.pdb",
+        "lib/uap10.0.10240/HarfBuzzSharp.xml",
+        "lib/uap10.0.16299/HarfBuzzSharp.dll",
+        "lib/uap10.0.16299/HarfBuzzSharp.pdb",
+        "lib/uap10.0.16299/HarfBuzzSharp.xml",
+        "lib/xamarinios1.0/HarfBuzzSharp.dll",
+        "lib/xamarinios1.0/HarfBuzzSharp.pdb",
+        "lib/xamarinios1.0/HarfBuzzSharp.xml",
+        "lib/xamarinmac2.0/HarfBuzzSharp.dll",
+        "lib/xamarinmac2.0/HarfBuzzSharp.pdb",
+        "lib/xamarinmac2.0/HarfBuzzSharp.xml",
+        "lib/xamarintvos1.0/HarfBuzzSharp.dll",
+        "lib/xamarintvos1.0/HarfBuzzSharp.pdb",
+        "lib/xamarintvos1.0/HarfBuzzSharp.xml",
+        "lib/xamarinwatchos1.0/HarfBuzzSharp.dll",
+        "lib/xamarinwatchos1.0/HarfBuzzSharp.pdb",
+        "lib/xamarinwatchos1.0/HarfBuzzSharp.xml"
       ]
     },
-    "HarfBuzzSharp.NativeAssets.Win32/8.3.1.1": {
-      "sha512": "UsJtQsfAJoFDZrXc4hCUfRPMqccfKZ0iumJ/upcUjz/cmsTgVFGNEL5yaJWmkqsuFYdMWbj/En5/kS4PFl9hBA==",
+    "HarfBuzzSharp.NativeAssets.macOS/7.3.0.3": {
+      "sha512": "UAwIYnkbBTzBJv1Id8FijY/i8QiIepRemSXufU8fyzwWhYJdx4+ajG8yQUie5HW/uusbVLFSr26muSlJOFDgSw==",
       "type": "package",
-      "path": "harfbuzzsharp.nativeassets.win32/8.3.1.1",
+      "path": "harfbuzzsharp.nativeassets.macos/7.3.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.txt",
-        "README.md",
         "THIRD-PARTY-NOTICES.txt",
-        "buildTransitive/net462/HarfBuzzSharp.NativeAssets.Win32.targets",
-        "harfbuzzsharp.nativeassets.win32.8.3.1.1.nupkg.sha512",
-        "harfbuzzsharp.nativeassets.win32.nuspec",
-        "icon.png",
+        "build/net462/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "build/net6.0-macos10.15/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "build/xamarinmac2.0/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net462/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net6.0-macos10.15/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "buildTransitive/xamarinmac2.0/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "harfbuzzsharp.nativeassets.macos.7.3.0.3.nupkg.sha512",
+        "harfbuzzsharp.nativeassets.macos.nuspec",
         "lib/net462/_._",
-        "lib/net6.0-windows10.0.19041/_._",
+        "lib/net6.0-macos10.15/_._",
         "lib/net6.0/_._",
-        "lib/net8.0-windows10.0.19041/_._",
-        "lib/net8.0/_._",
-        "lib/netstandard2.0/_._",
-        "lib/netstandard2.1/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
+        "lib/xamarinmac2.0/_._",
+        "runtimes/osx/native/libHarfBuzzSharp.dylib"
+      ]
+    },
+    "HarfBuzzSharp.NativeAssets.Win32/7.3.0.3": {
+      "sha512": "RPxRXD16KtSs8Yxr2RK9Qs7AwyN9MlpqZIYs0AvfaJwl7RAtVhC0+u2f2SKwX0uMYYd3O98Z+OBA1sj6aWVKQA==",
+      "type": "package",
+      "path": "harfbuzzsharp.nativeassets.win32/7.3.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/HarfBuzzSharp.NativeAssets.Win32.targets",
+        "buildTransitive/net462/HarfBuzzSharp.NativeAssets.Win32.targets",
+        "harfbuzzsharp.nativeassets.win32.7.3.0.3.nupkg.sha512",
+        "harfbuzzsharp.nativeassets.win32.nuspec",
+        "lib/net462/_._",
+        "lib/net6.0/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
         "runtimes/win-arm64/native/libHarfBuzzSharp.dll",
         "runtimes/win-x64/native/libHarfBuzzSharp.dll",
         "runtimes/win-x86/native/libHarfBuzzSharp.dll"
       ]
     },
-    "LiveChartsCore/2.0.0-rc6.1": {
-      "sha512": "yaeFXCpH7AspjMKzXNdfr1Ikg06Dm+a4XRW/8wBtHAa/TEVJLY8yBsG6pNpjrPk+FpRaSImlNYw7pv298W1XPw==",
+    "LiveChartsCore/2.0.0-rc5.3": {
+      "sha512": "HirzXpe1jP7iv1ueLZl6nRtxqdlvN9qRLNNuc3T9RlGGrXokaFWj2wSGYTDZINnDXdbb6QxhZFt1aAavBcKlVw==",
       "type": "package",
-      "path": "livechartscore/2.0.0-rc6.1",
+      "path": "livechartscore/2.0.0-rc5.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2915,6 +3310,8 @@
         "lib/net462/LiveChartsCore.xml",
         "lib/net6.0-windows10.0.19041/LiveChartsCore.dll",
         "lib/net6.0-windows10.0.19041/LiveChartsCore.xml",
+        "lib/net6.0-windows7.0/LiveChartsCore.dll",
+        "lib/net6.0-windows7.0/LiveChartsCore.xml",
         "lib/net8.0-android34.0/LiveChartsCore.dll",
         "lib/net8.0-android34.0/LiveChartsCore.xml",
         "lib/net8.0-ios18.0/LiveChartsCore.dll",
@@ -2923,26 +3320,58 @@
         "lib/net8.0-maccatalyst18.0/LiveChartsCore.xml",
         "lib/net8.0-windows10.0.19041/LiveChartsCore.dll",
         "lib/net8.0-windows10.0.19041/LiveChartsCore.xml",
+        "lib/net8.0-windows7.0/LiveChartsCore.dll",
+        "lib/net8.0-windows7.0/LiveChartsCore.xml",
         "lib/net8.0/LiveChartsCore.dll",
         "lib/net8.0/LiveChartsCore.xml",
         "lib/netstandard2.0/LiveChartsCore.dll",
         "lib/netstandard2.0/LiveChartsCore.xml",
         "lib/netstandard2.1/LiveChartsCore.dll",
         "lib/netstandard2.1/LiveChartsCore.xml",
-        "livechartscore.2.0.0-rc6.1.nupkg.sha512",
+        "livechartscore.2.0.0-rc5.3.nupkg.sha512",
         "livechartscore.nuspec"
       ]
     },
-    "LiveChartsCore.SkiaSharpView/2.0.0-rc6.1": {
-      "sha512": "FU+0uIxL3xR631+4aN296L+M3f6qWrIEUJr8+SSmcGVVa27iB0+ko55IRInZGdYlmaR+8mRTPAXObXT6/1EMDQ==",
+    "LiveChartsCore.Behaviours/2.0.0-rc5.3": {
+      "sha512": "J5wnb8yyIB+UTHYoj1+cuoHmgatNtjW5sPgCUyHx4D3MRkZTjC8dHNGksXbn4ydJOTo9j+pceZKwv6THmjiZng==",
       "type": "package",
-      "path": "livechartscore.skiasharpview/2.0.0-rc6.1",
+      "path": "livechartscore.behaviours/2.0.0-rc5.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "icon.png",
+        "lib/net6.0-windows10.0.19041/LiveChartsCore.Behaviours.dll",
+        "lib/net6.0-windows10.0.19041/LiveChartsCore.Behaviours.xml",
+        "lib/net8.0-android34.0/LiveChartsCore.Behaviours.dll",
+        "lib/net8.0-android34.0/LiveChartsCore.Behaviours.xml",
+        "lib/net8.0-ios18.0/LiveChartsCore.Behaviours.dll",
+        "lib/net8.0-ios18.0/LiveChartsCore.Behaviours.xml",
+        "lib/net8.0-maccatalyst18.0/LiveChartsCore.Behaviours.dll",
+        "lib/net8.0-maccatalyst18.0/LiveChartsCore.Behaviours.xml",
+        "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.dll",
+        "lib/net8.0-windows10.0.19041/LiveChartsCore.Behaviours.xml",
+        "lib/net8.0/LiveChartsCore.Behaviours.dll",
+        "lib/net8.0/LiveChartsCore.Behaviours.xml",
+        "lib/netstandard2.0/LiveChartsCore.Behaviours.dll",
+        "lib/netstandard2.0/LiveChartsCore.Behaviours.xml",
+        "lib/netstandard2.1/LiveChartsCore.Behaviours.dll",
+        "lib/netstandard2.1/LiveChartsCore.Behaviours.xml",
+        "livechartscore.behaviours.2.0.0-rc5.3.nupkg.sha512",
+        "livechartscore.behaviours.nuspec"
+      ]
+    },
+    "LiveChartsCore.SkiaSharpView/2.0.0-rc5.3": {
+      "sha512": "UZUNBShABAJQKIV2Rb7KhKcyYtTp0MjLf0fatRV1vmDDwiCOFWd9xO5jeVlOlnTJt938EGZzz4j1lKJjjtYAzw==",
+      "type": "package",
+      "path": "livechartscore.skiasharpview/2.0.0-rc5.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "icon.png",
         "lib/net462/LiveChartsCore.SkiaSharpView.dll",
         "lib/net462/LiveChartsCore.SkiaSharpView.xml",
+        "lib/net6.0-windows7.0/LiveChartsCore.SkiaSharpView.dll",
+        "lib/net6.0-windows7.0/LiveChartsCore.SkiaSharpView.xml",
         "lib/net8.0-android34.0/LiveChartsCore.SkiaSharpView.dll",
         "lib/net8.0-android34.0/LiveChartsCore.SkiaSharpView.xml",
         "lib/net8.0-ios18.0/LiveChartsCore.SkiaSharpView.dll",
@@ -2953,32 +3382,43 @@
         "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.xml",
         "lib/net8.0-windows10.0.20348/LiveChartsCore.SkiaSharpView.dll",
         "lib/net8.0-windows10.0.20348/LiveChartsCore.SkiaSharpView.xml",
+        "lib/net8.0-windows7.0/LiveChartsCore.SkiaSharpView.dll",
+        "lib/net8.0-windows7.0/LiveChartsCore.SkiaSharpView.xml",
         "lib/net8.0/LiveChartsCore.SkiaSharpView.dll",
         "lib/net8.0/LiveChartsCore.SkiaSharpView.xml",
         "lib/netstandard2.0/LiveChartsCore.SkiaSharpView.dll",
         "lib/netstandard2.0/LiveChartsCore.SkiaSharpView.xml",
         "lib/netstandard2.1/LiveChartsCore.SkiaSharpView.dll",
         "lib/netstandard2.1/LiveChartsCore.SkiaSharpView.xml",
-        "livechartscore.skiasharpview.2.0.0-rc6.1.nupkg.sha512",
+        "livechartscore.skiasharpview.2.0.0-rc5.3.nupkg.sha512",
         "livechartscore.skiasharpview.nuspec"
       ]
     },
-    "LiveChartsCore.SkiaSharpView.WinUI/2.0.0-rc6.1": {
-      "sha512": "sFFXTGabI82g69TNzhfFn8wbKTVGbznIx4HfsE810EID9wAcT5hGVwRGvHUVKgv5xfLmysoNKobYchyt+TJd3w==",
+    "LiveChartsCore.SkiaSharpView.Uno.WinUI/2.0.0-rc5.3": {
+      "sha512": "+ng1hwXbPzNYZA8nZ67BYAyJLu9ScdRT4G6rTMLnMAYxiD4jaTwgE6FvUuXGNTvb/oq97FVxlYyYO01DrcCR9g==",
       "type": "package",
-      "path": "livechartscore.skiasharpview.winui/2.0.0-rc6.1",
+      "path": "livechartscore.skiasharpview.uno.winui/2.0.0-rc5.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "icon.png",
-        "lib/net6.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll",
-        "lib/net6.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.pri",
-        "lib/net6.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.xml",
-        "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.dll",
-        "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.pri",
-        "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.WinUI.xml",
-        "livechartscore.skiasharpview.winui.2.0.0-rc6.1.nupkg.sha512",
-        "livechartscore.skiasharpview.winui.nuspec"
+        "lib/net6.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll",
+        "lib/net6.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.pri",
+        "lib/net6.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.xml",
+        "lib/net8.0-android34.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.aar",
+        "lib/net8.0-android34.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll",
+        "lib/net8.0-android34.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.xml",
+        "lib/net8.0-ios18.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll",
+        "lib/net8.0-ios18.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.xml",
+        "lib/net8.0-maccatalyst18.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll",
+        "lib/net8.0-maccatalyst18.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.xml",
+        "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll",
+        "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.pri",
+        "lib/net8.0-windows10.0.19041/LiveChartsCore.SkiaSharpView.Uno.WinUI.xml",
+        "lib/net8.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.dll",
+        "lib/net8.0/LiveChartsCore.SkiaSharpView.Uno.WinUI.xml",
+        "livechartscore.skiasharpview.uno.winui.2.0.0-rc5.3.nupkg.sha512",
+        "livechartscore.skiasharpview.uno.winui.nuspec"
       ]
     },
     "Microsoft.Extensions.Logging.Abstractions/2.0.0": {
@@ -4985,156 +5425,196 @@
         "sharpcompress.nuspec"
       ]
     },
-    "SkiaSharp/3.119.0": {
-      "sha512": "gR9yVoOta2Mc1Rxt15LD65AckfHMfwjIs/3kkD59C9bT2nYYISsE6uz3t4aMPNHA6CgsIL0Ssn+jE5OVilZ1yw==",
+    "SkiaSharp/2.88.9": {
+      "sha512": "3MD5VHjXXieSHCleRLuaTXmL2pD0mB7CcOB1x2kA1I4bhptf4e3R27iM93264ZYuAq6mkUyX5XbcxnZvMJYc1Q==",
       "type": "package",
-      "path": "skiasharp/3.119.0",
+      "path": "skiasharp/2.88.9",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.txt",
-        "README.md",
-        "icon.png",
+        "THIRD-PARTY-NOTICES.txt",
         "interactive-extensions/dotnet/SkiaSharp.DotNet.Interactive.dll",
+        "lib/monoandroid1.0/SkiaSharp.dll",
+        "lib/monoandroid1.0/SkiaSharp.pdb",
+        "lib/monoandroid1.0/SkiaSharp.xml",
         "lib/net462/SkiaSharp.dll",
         "lib/net462/SkiaSharp.pdb",
+        "lib/net462/SkiaSharp.xml",
+        "lib/net6.0-android30.0/SkiaSharp.dll",
+        "lib/net6.0-android30.0/SkiaSharp.pdb",
+        "lib/net6.0-android30.0/SkiaSharp.xml",
+        "lib/net6.0-ios13.6/SkiaSharp.dll",
+        "lib/net6.0-ios13.6/SkiaSharp.pdb",
+        "lib/net6.0-ios13.6/SkiaSharp.xml",
+        "lib/net6.0-maccatalyst13.5/SkiaSharp.dll",
+        "lib/net6.0-maccatalyst13.5/SkiaSharp.pdb",
+        "lib/net6.0-maccatalyst13.5/SkiaSharp.xml",
+        "lib/net6.0-macos10.15/SkiaSharp.dll",
+        "lib/net6.0-macos10.15/SkiaSharp.pdb",
+        "lib/net6.0-macos10.15/SkiaSharp.xml",
+        "lib/net6.0-tizen7.0/SkiaSharp.dll",
+        "lib/net6.0-tizen7.0/SkiaSharp.pdb",
+        "lib/net6.0-tizen7.0/SkiaSharp.xml",
+        "lib/net6.0-tvos13.4/SkiaSharp.dll",
+        "lib/net6.0-tvos13.4/SkiaSharp.pdb",
+        "lib/net6.0-tvos13.4/SkiaSharp.xml",
         "lib/net6.0/SkiaSharp.dll",
         "lib/net6.0/SkiaSharp.pdb",
-        "lib/net8.0-android34.0/SkiaSharp.dll",
-        "lib/net8.0-android34.0/SkiaSharp.pdb",
-        "lib/net8.0-android34.0/SkiaSharp.xml",
-        "lib/net8.0-ios17.0/SkiaSharp.dll",
-        "lib/net8.0-ios17.0/SkiaSharp.pdb",
-        "lib/net8.0-maccatalyst17.0/SkiaSharp.dll",
-        "lib/net8.0-maccatalyst17.0/SkiaSharp.pdb",
-        "lib/net8.0-macos14.0/SkiaSharp.dll",
-        "lib/net8.0-macos14.0/SkiaSharp.pdb",
-        "lib/net8.0-tizen7.0/SkiaSharp.dll",
-        "lib/net8.0-tizen7.0/SkiaSharp.pdb",
-        "lib/net8.0-tvos17.0/SkiaSharp.dll",
-        "lib/net8.0-tvos17.0/SkiaSharp.pdb",
-        "lib/net8.0-windows10.0.19041/SkiaSharp.dll",
-        "lib/net8.0-windows10.0.19041/SkiaSharp.pdb",
-        "lib/net8.0/SkiaSharp.dll",
-        "lib/net8.0/SkiaSharp.pdb",
+        "lib/net6.0/SkiaSharp.xml",
+        "lib/netcoreapp3.1/SkiaSharp.dll",
+        "lib/netcoreapp3.1/SkiaSharp.pdb",
+        "lib/netcoreapp3.1/SkiaSharp.xml",
+        "lib/netstandard1.3/SkiaSharp.dll",
+        "lib/netstandard1.3/SkiaSharp.pdb",
+        "lib/netstandard1.3/SkiaSharp.xml",
         "lib/netstandard2.0/SkiaSharp.dll",
         "lib/netstandard2.0/SkiaSharp.pdb",
+        "lib/netstandard2.0/SkiaSharp.xml",
         "lib/netstandard2.1/SkiaSharp.dll",
         "lib/netstandard2.1/SkiaSharp.pdb",
-        "ref/net462/SkiaSharp.dll",
-        "ref/net6.0/SkiaSharp.dll",
-        "ref/net8.0-android34.0/SkiaSharp.dll",
-        "ref/net8.0-ios17.0/SkiaSharp.dll",
-        "ref/net8.0-maccatalyst17.0/SkiaSharp.dll",
-        "ref/net8.0-macos14.0/SkiaSharp.dll",
-        "ref/net8.0-tizen7.0/SkiaSharp.dll",
-        "ref/net8.0-tvos17.0/SkiaSharp.dll",
-        "ref/net8.0-windows10.0.19041/SkiaSharp.dll",
-        "ref/net8.0/SkiaSharp.dll",
-        "ref/netstandard2.0/SkiaSharp.dll",
-        "ref/netstandard2.1/SkiaSharp.dll",
-        "skiasharp.3.119.0.nupkg.sha512",
+        "lib/netstandard2.1/SkiaSharp.xml",
+        "lib/tizen40/SkiaSharp.dll",
+        "lib/tizen40/SkiaSharp.pdb",
+        "lib/tizen40/SkiaSharp.xml",
+        "lib/uap10.0.10240/SkiaSharp.dll",
+        "lib/uap10.0.10240/SkiaSharp.pdb",
+        "lib/uap10.0.10240/SkiaSharp.xml",
+        "lib/uap10.0.16299/SkiaSharp.dll",
+        "lib/uap10.0.16299/SkiaSharp.pdb",
+        "lib/uap10.0.16299/SkiaSharp.xml",
+        "lib/xamarinios1.0/SkiaSharp.dll",
+        "lib/xamarinios1.0/SkiaSharp.pdb",
+        "lib/xamarinios1.0/SkiaSharp.xml",
+        "lib/xamarinmac2.0/SkiaSharp.dll",
+        "lib/xamarinmac2.0/SkiaSharp.pdb",
+        "lib/xamarinmac2.0/SkiaSharp.xml",
+        "lib/xamarintvos1.0/SkiaSharp.dll",
+        "lib/xamarintvos1.0/SkiaSharp.pdb",
+        "lib/xamarintvos1.0/SkiaSharp.xml",
+        "lib/xamarinwatchos1.0/SkiaSharp.dll",
+        "lib/xamarinwatchos1.0/SkiaSharp.pdb",
+        "lib/xamarinwatchos1.0/SkiaSharp.xml",
+        "skiasharp.2.88.9.nupkg.sha512",
         "skiasharp.nuspec"
       ]
     },
-    "SkiaSharp.HarfBuzz/3.119.0": {
-      "sha512": "5ocGzl+RYEZFnUPUbModshnEFvKTku4hTtOBsLvy5MCK2KAHjq5Nw2+uAVUx79Rjh0z8fTojT6ZVav8MJgW0ug==",
+    "SkiaSharp.HarfBuzz/2.88.9": {
+      "sha512": "5lyjX04CSWTKFYMSNN6SMupV2qzYDr8W/u8S3ZEkr+Sg3kOi0YE06EOqG0tzn/YPBID89xam4L3rz3hUUKOGEQ==",
       "type": "package",
-      "path": "skiasharp.harfbuzz/3.119.0",
+      "path": "skiasharp.harfbuzz/2.88.9",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.txt",
-        "README.md",
-        "icon.png",
         "lib/net462/SkiaSharp.HarfBuzz.dll",
         "lib/net462/SkiaSharp.HarfBuzz.pdb",
+        "lib/net462/SkiaSharp.HarfBuzz.xml",
         "lib/net6.0/SkiaSharp.HarfBuzz.dll",
         "lib/net6.0/SkiaSharp.HarfBuzz.pdb",
-        "lib/net8.0/SkiaSharp.HarfBuzz.dll",
-        "lib/net8.0/SkiaSharp.HarfBuzz.pdb",
+        "lib/net6.0/SkiaSharp.HarfBuzz.xml",
+        "lib/netcoreapp3.1/SkiaSharp.HarfBuzz.dll",
+        "lib/netcoreapp3.1/SkiaSharp.HarfBuzz.pdb",
+        "lib/netcoreapp3.1/SkiaSharp.HarfBuzz.xml",
+        "lib/netstandard1.3/SkiaSharp.HarfBuzz.dll",
+        "lib/netstandard1.3/SkiaSharp.HarfBuzz.pdb",
+        "lib/netstandard1.3/SkiaSharp.HarfBuzz.xml",
         "lib/netstandard2.0/SkiaSharp.HarfBuzz.dll",
         "lib/netstandard2.0/SkiaSharp.HarfBuzz.pdb",
+        "lib/netstandard2.0/SkiaSharp.HarfBuzz.xml",
         "lib/netstandard2.1/SkiaSharp.HarfBuzz.dll",
         "lib/netstandard2.1/SkiaSharp.HarfBuzz.pdb",
-        "skiasharp.harfbuzz.3.119.0.nupkg.sha512",
+        "lib/netstandard2.1/SkiaSharp.HarfBuzz.xml",
+        "skiasharp.harfbuzz.2.88.9.nupkg.sha512",
         "skiasharp.harfbuzz.nuspec"
       ]
     },
-    "SkiaSharp.NativeAssets.Win32/3.119.0": {
-      "sha512": "IwC9yx36lOdXVT2DjgmWHl1qkVspfj8ctd4+li8CNnvqdfaTolXCOh6TLznURcPAvzatx9K/tLOB7zT6T8EA9w==",
+    "SkiaSharp.NativeAssets.macOS/2.88.9": {
+      "sha512": "Nv5spmKc4505Ep7oUoJ5vp3KweFpeNqxpyGDWyeEPTX2uR6S6syXIm3gj75dM0YJz7NPvcix48mR5laqs8dPuA==",
       "type": "package",
-      "path": "skiasharp.nativeassets.win32/3.119.0",
+      "path": "skiasharp.nativeassets.macos/2.88.9",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.txt",
-        "README.md",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/SkiaSharp.NativeAssets.macOS.targets",
+        "build/net6.0-macos10.15/SkiaSharp.NativeAssets.macOS.targets",
+        "build/xamarinmac2.0/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net462/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net6.0-macos10.15/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/xamarinmac2.0/SkiaSharp.NativeAssets.macOS.targets",
+        "lib/net462/_._",
+        "lib/net6.0-macos10.15/_._",
+        "lib/net6.0/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
+        "lib/xamarinmac2.0/_._",
+        "runtimes/osx/native/libSkiaSharp.dylib",
+        "skiasharp.nativeassets.macos.2.88.9.nupkg.sha512",
+        "skiasharp.nativeassets.macos.nuspec"
+      ]
+    },
+    "SkiaSharp.NativeAssets.Win32/2.88.9": {
+      "sha512": "wb2kYgU7iy84nQLYZwMeJXixvK++GoIuECjU4ECaUKNuflyRlJKyiRhN1MAHswvlvzuvkrjRWlK0Za6+kYQK7w==",
+      "type": "package",
+      "path": "skiasharp.nativeassets.win32/2.88.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
         "THIRD-PARTY-NOTICES.txt",
         "build/net462/SkiaSharp.NativeAssets.Win32.targets",
         "buildTransitive/net462/SkiaSharp.NativeAssets.Win32.targets",
-        "icon.png",
         "lib/net462/_._",
-        "lib/net6.0-windows10.0.19041/_._",
         "lib/net6.0/_._",
-        "lib/net8.0-windows10.0.19041/_._",
-        "lib/net8.0/_._",
-        "lib/netstandard2.0/_._",
-        "lib/netstandard2.1/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
         "runtimes/win-arm64/native/libSkiaSharp.dll",
         "runtimes/win-x64/native/libSkiaSharp.dll",
         "runtimes/win-x86/native/libSkiaSharp.dll",
-        "skiasharp.nativeassets.win32.3.119.0.nupkg.sha512",
+        "skiasharp.nativeassets.win32.2.88.9.nupkg.sha512",
         "skiasharp.nativeassets.win32.nuspec"
       ]
     },
-    "SkiaSharp.NativeAssets.WinUI/3.119.0": {
-      "sha512": "3SKd21ukSNowYTw36gnYdUL7VZMZD3/LQCcM1DygvpTqt+YaetsufJjuSqj0mdfz6V2EZvyIkDYR0K93Gb3Dog==",
+    "SkiaSharp.NativeAssets.WinUI/2.88.9": {
+      "sha512": "l/AL4vL/jQDWNeKeMCayodNHC/QVhl7M9PYfSmkEja1JC+BHXFuHdPecfqWHVJl1GR+ALg3I7XpZ2w32BM6LRw==",
       "type": "package",
-      "path": "skiasharp.nativeassets.winui/3.119.0",
+      "path": "skiasharp.nativeassets.winui/2.88.9",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.txt",
-        "README.md",
         "THIRD-PARTY-NOTICES.txt",
-        "icon.png",
         "lib/net6.0-windows10.0.19041/_._",
-        "lib/net8.0-windows10.0.19041/_._",
-        "runtimes/win-arm64/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll",
+        "runtimes/win-arm64/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll",
         "runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.dll",
         "runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.winmd",
-        "runtimes/win-arm64/native/libEGL.dll",
-        "runtimes/win-arm64/native/libGLESv2.dll",
-        "runtimes/win-x64/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll",
+        "runtimes/win-x64/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll",
         "runtimes/win-x64/native/SkiaSharp.Views.WinUI.Native.dll",
         "runtimes/win-x64/native/SkiaSharp.Views.WinUI.Native.winmd",
-        "runtimes/win-x64/native/libEGL.dll",
-        "runtimes/win-x64/native/libGLESv2.dll",
-        "runtimes/win-x86/lib/net8.0-windows10.0.19041.0/SkiaSharp.Views.WinUI.Native.Projection.dll",
+        "runtimes/win-x86/lib/net6.0-windows10.0.19041/SkiaSharp.Views.WinUI.Native.Projection.dll",
         "runtimes/win-x86/native/SkiaSharp.Views.WinUI.Native.dll",
         "runtimes/win-x86/native/SkiaSharp.Views.WinUI.Native.winmd",
-        "runtimes/win-x86/native/libEGL.dll",
-        "runtimes/win-x86/native/libGLESv2.dll",
-        "skiasharp.nativeassets.winui.3.119.0.nupkg.sha512",
+        "skiasharp.nativeassets.winui.2.88.9.nupkg.sha512",
         "skiasharp.nativeassets.winui.nuspec"
       ]
     },
-    "SkiaSharp.Views.WinUI/3.119.0": {
-      "sha512": "ApBQ+okTw05BTSdw1wALI2IwJgQ0eXa2nvzoLMTHtbTtrQiGJzMR0K//Qh4PkYrVI5LPSd8NdG9R1B0L6gRiSg==",
+    "SkiaSharp.Views.WinUI/2.88.9": {
+      "sha512": "aZgmQeyhz9HOE8+2jAi8/7hqhmi8i+cUV7oTUREFHWr3h0p8ExyIaML6KckWQwnCFZZlof7ky6vCblgmRL/aCw==",
       "type": "package",
-      "path": "skiasharp.views.winui/3.119.0",
+      "path": "skiasharp.views.winui/2.88.9",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.txt",
-        "README.md",
-        "icon.png",
-        "lib/net6.0-windows10.0.19041/SkiaSharp.Views.Windows.dll",
-        "lib/net6.0-windows10.0.19041/SkiaSharp.Views.Windows.pdb",
-        "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.dll",
-        "lib/net8.0-windows10.0.19041/SkiaSharp.Views.Windows.pdb",
-        "skiasharp.views.winui.3.119.0.nupkg.sha512",
+        "lib/net6.0-windows10.0.18362.0/SkiaSharp.Views.Windows.dll",
+        "lib/net6.0-windows10.0.18362.0/SkiaSharp.Views.Windows.pdb",
+        "lib/net6.0-windows10.0.18362.0/SkiaSharp.Views.Windows.xml",
+        "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.dll",
+        "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.pdb",
+        "lib/net6.0-windows10.0.19041.0/SkiaSharp.Views.Windows.xml",
+        "skiasharp.views.winui.2.88.9.nupkg.sha512",
         "skiasharp.views.winui.nuspec"
       ]
     },
@@ -5372,8 +5852,8 @@
   },
   "projectFileDependencyGroups": {
     "net8.0-windows10.0.19041": [
+      "CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView >= 3.1.2",
       "CommunityToolkit.WinUI.UI.Controls.DataGrid >= 7.1.2",
-      "LiveChartsCore.SkiaSharpView.WinUI >= 2.0.0-rc6.1",
       "Microsoft.Windows.SDK.BuildTools >= 10.0.26100.6584",
       "Microsoft.WindowsAppSDK >= 1.8.250916003",
       "Shared >= 1.0.0"
@@ -5428,19 +5908,19 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net8.0-windows10.0.19041": {
         "targetAlias": "net8.0-windows10.0.19041.0",
         "dependencies": {
+          "CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView": {
+            "target": "Package",
+            "version": "[3.1.2, )"
+          },
           "CommunityToolkit.WinUI.UI.Controls.DataGrid": {
             "target": "Package",
             "version": "[7.1.2, )"
-          },
-          "LiveChartsCore.SkiaSharpView.WinUI": {
-            "target": "Package",
-            "version": "[2.0.0-rc6.1, )"
           },
           "Microsoft.Windows.SDK.BuildTools": {
             "target": "Package",
@@ -5465,27 +5945,27 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Runtime.win-arm64",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.AspNetCore.App.Runtime.win-x86",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.NETCore.App.Runtime.win-arm64",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.NETCore.App.Runtime.win-x64",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.NETCore.App.Runtime.win-x86",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.Windows.SDK.NET.Ref",
@@ -5493,15 +5973,15 @@
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Runtime.win-arm64",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Runtime.win-x86",
-            "version": "[8.0.20, 8.0.20]"
+            "version": "[8.0.22, 8.0.22]"
           }
         ],
         "frameworkReferences": {
@@ -5512,7 +5992,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100/PortableRuntimeIdentifierGraph.json"
       }
     },
     "runtimes": {

@@ -48,3 +48,7 @@ C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\bin
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\bin\Debug\net8.0\Shared.dll
 C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\bin\Debug\net8.0\Shared.pdb
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\obj\Debug\net8.0\swae.build.ex.cache
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\rahul\Programming\stock-market-simulator\Stock Market Simulator\API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll

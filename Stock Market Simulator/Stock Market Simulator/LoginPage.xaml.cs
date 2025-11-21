@@ -15,6 +15,7 @@ using System.Net.Http.Json;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
 
 namespace Stock_Market_Simulator
 {
@@ -27,7 +28,22 @@ namespace Stock_Market_Simulator
         public LoginPage()
         {
             this.InitializeComponent();
+
+            // wire Enter key on input controls to trigger login
+            UsernameTextBox.KeyDown += Input_KeyDown;
+            PasswordBox.KeyDown += Input_KeyDown;
         }
+
+        private void Input_KeyDown(object? sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                // perform same action as clicking the login button
+                LoginButton_Click(LoginButton, new RoutedEventArgs());
+                e.Handled = true;
+            }
+        }
+
         private void ShowNotification(string title, string message, InfoBarSeverity severity)
         {
             NotificationInfoBar.Title = title;

@@ -11,39 +11,37 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!-- Title bar area with three columns: nav, spacer, right content -->
         <Grid x:Name="AppTitleBar" Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
+
+            <!-- Navigation view sits in column 0 -->
             <NavigationView x:Name="NavView"
+                            Grid.Column="0"
                             PaneDisplayMode="Top"
                             IsSettingsVisible="False"
                             IsBackButtonVisible="Collapsed"
                             ItemInvoked="NavView_ItemInvoked">
                 <NavigationView.MenuItems>
-                    <!-- Tags changed to match NavigateToPage switch values -->
                     <NavigationViewItem Content="Dashboard" Icon="Home" Tag="Dashboard" Visibility="Collapsed" x:Name="DashboardNavItem"/>
                     <NavigationViewItem Content="Portfolio" Icon="Library" Tag="Portfolio" Visibility="Collapsed" x:Name="PortfolioNavItem"/>
+                    <NavigationViewItem Content="Search" Icon="Find" Tag="Search" Visibility="Collapsed" x:Name="SearchNavItem"/>
                     <NavigationViewItemSeparator Visibility="Collapsed" x:Name="SeparatorNavItem"/>
                     <NavigationViewItem Content="Login" Icon="Contact" Tag="Login" x:Name="LoginNavItem"/>
                     <NavigationViewItem Content="Logout" Icon="LeaveChat" Tag="Logout" x:Name="LogoutNavItem" Visibility="Collapsed"/>
                 </NavigationView.MenuItems>
             </NavigationView>
-            <StackPanel x:Name="TitleBarRightContent" Grid.Column="1" Orientation="Horizontal">
-                <AutoSuggestBox x:Name="StockSearchBox"
-                        Grid.Column="1"
-                        PlaceholderText="Search Symbol..."
-                        QueryIcon="Find"
-                        Width="200"
-                        VerticalAlignment="Center"
-                        Margin="0,0,16,0"
-                        QuerySubmitted="StockSearchBox_QuerySubmitted"/>
-                <StackPanel Grid.Column="2" x:Name="BalancePanel" Visibility="Collapsed"
-                    Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,16,0" Spacing="8">
-                    <TextBlock Text="Cash:" Foreground="Gray"/>
-                    <TextBlock x:Name="BalanceTextBlock" Text="$0.00" FontWeight="SemiBold"/>
+
+            <!-- Right side (column 2) contains balance and other right-aligned content -->
+            <StackPanel x:Name="TitleBarRightContent" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8,0,12,0" Spacing="8">
+                <StackPanel x:Name="BalancePanel" Visibility="Collapsed"
+                            Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                    <TextBlock Text="Cash:" Foreground="Gray" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="BalanceTextBlock" Text="$0.00" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
             </StackPanel>
         </Grid>

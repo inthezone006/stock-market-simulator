@@ -11,11 +11,15 @@
     <Grid Padding="12" RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- header -->
             <RowDefinition Height="Auto"/>
+            <!-- loading / error -->
             <RowDefinition Height="*"/>
+            <!-- results / chart -->
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <HyperlinkButton x:Name="BackButton" Content="Back" Click="BackButton_Click" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8" Grid.Row="0" VerticalAlignment="Top">
+            <HyperlinkButton x:Name="BackButton" Content="← Back to Dashboard" Click="BackButton_Click" />
             <TextBlock x:Name="HeaderTextBlock" Text="Stock Details" FontSize="20" VerticalAlignment="Center"/>
         </StackPanel>
 
@@ -32,6 +36,14 @@
                         <TextBlock x:Name="CompanyNameTextBlock" Foreground="Gray"/>
                     </StackPanel>
                     <TextBlock x:Name="CurrentPriceTextBlock" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Margin="24,0,0,0"/>
+                </StackPanel>
+
+                <!-- purchase controls -->
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock Text="Shares:" VerticalAlignment="Center"/>
+                    <NumberBox x:Name="SharesNumberBox" Minimum="1" Value="1" Width="100"/>
+                    <Button x:Name="PurchaseButton" Content="Buy at Current Price" Click="PurchaseButton_Click"/>
+                    <TextBlock x:Name="PurchaseStatusTextBlock" Foreground="Green" Visibility="Collapsed" VerticalAlignment="Center" Margin="8,0,0,0"/>
                 </StackPanel>
 
                 <Border Height="320" Background="Transparent" Padding="8" HorizontalAlignment="Stretch" VerticalAlignment="Top">

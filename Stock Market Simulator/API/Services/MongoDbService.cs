@@ -30,4 +30,8 @@ public class MongoDbService
     }
     public async Task CreatePortfolioAsync(Portfolio newPortfolio) =>
         await _portfoliosCollection.InsertOneAsync(newPortfolio);
+
+    // new: replace the whole portfolio document after changes
+    public async Task UpdatePortfolioAsync(Portfolio updatedPortfolio) =>
+        await _portfoliosCollection.ReplaceOneAsync(p => p.Id == updatedPortfolio.Id, updatedPortfolio);
 }

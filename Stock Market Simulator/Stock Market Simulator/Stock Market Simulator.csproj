@@ -19,6 +19,9 @@
     <None Remove="RegisterPage.xaml" />
     <None Remove="StockSearchPage.xaml" />
   </ItemGroup>
+  <ItemGroup>
+    <Page Remove="SearchPage.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -50,6 +53,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="SearchPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Page Update="StockSearchPage.xaml">

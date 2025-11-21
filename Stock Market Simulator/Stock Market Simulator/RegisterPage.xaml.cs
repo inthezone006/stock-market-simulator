@@ -14,6 +14,7 @@ using System.Net.Http.Json;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
 
 namespace Stock_Market_Simulator
 {
@@ -23,6 +24,20 @@ namespace Stock_Market_Simulator
         public RegisterPage()
         {
             InitializeComponent();
+
+            // wire Enter key on input controls to trigger registration
+            UsernameTextBox.KeyDown += Input_KeyDown;
+            PasswordBox.KeyDown += Input_KeyDown;
+            InitialDepositBox.KeyDown += Input_KeyDown;
+        }
+
+        private void Input_KeyDown(object? sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                RegisterButton_Click(RegisterButton, new RoutedEventArgs());
+                e.Handled = true;
+            }
         }
 
         private async void RegisterButton_Click(object sender, RoutedEventArgs e)

@@ -10,6 +10,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "API.Controllers.PortfoliosController",
+    "Method": "Purchase",
+    "RelativePath": "api/Portfolios/purchase",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Shared.PurchaseRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "API.Controllers.StocksController",
     "Method": "GetStockData",
     "RelativePath": "api/Stocks/{symbol}",

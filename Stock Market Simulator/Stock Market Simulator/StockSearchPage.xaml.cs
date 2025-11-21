@@ -6,6 +6,7 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Media;
 using Shared;
 using SkiaSharp;
 using System;
@@ -13,12 +14,15 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using System.Net.Http.Headers;
+using Stock_Market_Simulator.Services;
 
 namespace Stock_Market_Simulator;
 
 public sealed partial class StockSearchPage : Page
 {
     private readonly HttpClient _httpClient = new();
+    private Stock? _currentStock;
 
     public StockSearchPage()
     {
@@ -49,7 +53,10 @@ public sealed partial class StockSearchPage : Page
 
             if (stockData != null && stockData.HistoricalData != null && stockData.HistoricalData.Any())
             {
-                HeaderTextBlock.Text = "Stock Details";
+                _currentStock = stockData;
+
+                // show company name as header
+                HeaderTextBlock.Text = $"{stockData.CompanyName} ({stockData.Symbol.ToUpper()})";
                 SymbolTextBlock.Text = stockData.Symbol.ToUpper();
                 CompanyNameTextBlock.Text = stockData.CompanyName;
                 CurrentPriceTextBlock.Text = stockData.CurrentPrice.ToString("C");
@@ -94,6 +101,70 @@ public sealed partial class StockSearchPage : Page
             HeaderTextBlock.Text = "Stock Details";
             ErrorTextBlock.Text = $"Could not fetch data: {ex.Message}";
             ErrorTextBlock.Visibility = Visibility.Visible;
+        }
+        finally
+        {
+            LoadingRing.IsActive = false;
+        }
+    }
+
+    private async void PurchaseButton_Click(object sender, RoutedEventArgs e)
+    {
+        PurchaseStatusTextBlock.Visibility = Visibility.Collapsed;
+
+        if (_currentStock == null)
+        {
+            PurchaseStatusTextBlock.Text = "No stock loaded.";
+            PurchaseStatusTextBlock.Foreground = new SolidColorBrush(Colors.Red);
+            PurchaseStatusTextBlock.Visibility = Visibility.Visible;
+            return;
+        }
+
+        if (!AuthService.IsLoggedIn)
+        {
+            // not logged in - navigate to login
+            this.Frame?.Navigate(typeof(LoginPage));
+            return;
+        }
+
+        var sharesValue = (int)SharesNumberBox.Value;
+        if (sharesValue <= 0)
+        {
+            PurchaseStatusTextBlock.Text = "Enter a valid number of shares.";
+            PurchaseStatusTextBlock.Foreground = new SolidColorBrush(Colors.Red);
+            PurchaseStatusTextBlock.Visibility = Visibility.Visible;
+            return;
+        }
+
+        LoadingRing.IsActive = true;
+        try
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthService.JwtToken);
+            var purchaseRequest = new { Symbol = _currentStock.Symbol, Shares = sharesValue, Price = _currentStock.CurrentPrice };
+            var response = await _httpClient.PostAsJsonAsync("https://localhost:7179/api/Portfolios/purchase", purchaseRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // refresh client-side portfolio
+                await AuthService.FetchPortfolioAsync();
+
+                PurchaseStatusTextBlock.Text = $"Purchased {sharesValue} shares of {_currentStock.Symbol} at {_currentStock.CurrentPrice:C}";
+                PurchaseStatusTextBlock.Foreground = new SolidColorBrush(Colors.Green);
+                PurchaseStatusTextBlock.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                PurchaseStatusTextBlock.Text = $"Purchase failed: {err}";
+                PurchaseStatusTextBlock.Foreground = new SolidColorBrush(Colors.Red);
+                PurchaseStatusTextBlock.Visibility = Visibility.Visible;
+            }
+        }
+        catch (Exception ex)
+        {
+            PurchaseStatusTextBlock.Text = $"Error: {ex.Message}";
+            PurchaseStatusTextBlock.Foreground = new SolidColorBrush(Colors.Red);
+            PurchaseStatusTextBlock.Visibility = Visibility.Visible;
         }
         finally
         {

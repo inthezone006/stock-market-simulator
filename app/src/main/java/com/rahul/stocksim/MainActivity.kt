@@ -45,3 +45,8 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
+
+@Composable
+fun StockFuncRow(stock: Stock) {
+
+}

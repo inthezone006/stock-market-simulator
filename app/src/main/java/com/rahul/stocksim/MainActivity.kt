@@ -6,19 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
 import com.rahul.stocksim.ui.theme.StockMarketSimulatorTheme
+import com.rahul.stocksim.ui.screens.HomeScreen
+import com.rahul.stocksim.ui.screens.LoginScreen
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 
 //MainActivity = starting point of app
 //ComponentActivity = base class for all activities
@@ -33,80 +28,61 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         //defines layout of activity with Composables
         setContent {
-            //creates an immutable list of stocks
-            val stockList = listOf(
-                Stock("AAPL", "Apple Inc.", 150.00, 5.00),
-                Stock("GOOGL", "Alphabet Inc.", 2500.00, 100.00),
-                Stock("MSFT", "Microsoft Corporation", 200.00, 2.00),
-                Stock("AMZN", "Amazon.com Inc.", 3000.00, 500.00),
-                Stock("FB", "Facebook Inc.", 200.00, 1.00),
-                Stock("TSLA", "Tesla Inc.", 500.00, 10.00),
-                Stock("NFLX", "Netflix Inc.", 400.00, 2.00),
-                Stock("NVDA", "Nvidia Corporation", 100.00, 0.50),
-                Stock("AMD", "AMD Inc.", 80.00, 0.25),
-                Stock("INTC", "Intel Corporation", 50.00, 0.10),
-                Stock("PYPL", "PayPal Holdings Inc.", 30.00, 0.05),
-                Stock("CSCO", "Cisco Systems Inc.", 70.00, 0.15),
-                Stock("ADBE", "Adobe Inc.", 120.00, 0.20),
-                Stock("EBAY", "eBay Inc.", 15.00, 0.02)
-            )
+            //instantiates controller responsible for tracking the
+            //back stack of screens the user has visited. because
+            //wrapped in remember, the navcontroller survives
+            //recompositions. navcontroller can navigate by name
+            //or pop from stack or navigate or identify current screen
+            val navController = rememberNavController()
 
-            //fundamental Compose component to provide background
-            //it handles color and elevation clipping automatically
-            Surface(
-                //allows surface to expand and take up entire screen
-                //and pushes down content to not be overlaid
-                modifier = Modifier.fillMaxSize()
-                    .safeDrawingPadding(),
-                //sets background color
-                color = MaterialTheme.colorScheme.background
-            ) {
-                //container that renders only items on screen efficiently
-                LazyColumn(
-                    //takes up all the available width/height
-                    modifier = Modifier.fillMaxSize()
+            //wraps entire application to ensure that all components
+            //inherit the correct colors, typography, and shapes
+            StockMarketSimulatorTheme() {
+                //fundamental Compose component to provide background
+                //it handles color and elevation clipping automatically
+                Surface(
+                    //allows surface to expand and take up entire screen
+                    //and pushes down content to not be overlaid
+                    modifier = Modifier.fillMaxSize().safeDrawingPadding(),
+                    //sets background color
+                    color = MaterialTheme.colorScheme.background
                 ) {
-                    //loops through collection, executing code for each
-                    //use itemsIndexed to get index of current item
-                    items(stockList) {
-                        //names current item in loop to reference
-                        //creating a defined StockRow for the current stock
-                        currentStock -> StockRow(stock = currentStock)
-                        //creates a divider between items
-                        HorizontalDivider(
-                            //thin line
-                            thickness = 0.5.dp,
-                            //color of line (70% transparent)
-                            color = Color.Gray.copy(alpha = 0.3f)
-                        )
+                    //navhost is container for the current screen
+                    //navcontroller holds track of the backstack of screens
+                    //startdestination tells app which screen to show first,
+                    //as defined in function
+                    NavHost(
+                        navController = navController,
+                        startDestination = "login_screen"
+                    ) {
+                        //define navigation graph, route is
+                        //a unique name for string
+                        composable(route = "login_screen") {
+                            //when controller is told to navigate to login, execute code inside
+                            //block
+                            LoginScreen(onLoginSuccess = {
+                                //callback: when user clicks login button, the navController
+                                //is instructed to switch the view to the screen named "home"
+                                navController.navigate("home_screen") {
+                                    //remove login_screen from stack, so if back
+                                    //is pressed, then the app just exits
+                                    popUpTo("login_screen") {
+                                        //keeps login_screen unless inclusive is true
+                                        inclusive = true
+                                    }
+                                }
+                            })
+                        }
+                        composable("home_screen") {
+                            //this displays home ui
+                            //navcontroller is passed into homescreen so other
+                            //changes to screens can be made (like back, settings,
+                            //profile, etc.)
+                            HomeScreen(navController = navController)
+                        }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun StockRow(stock: Stock) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth() //fill screen
-            .padding(16.dp), //padding from edges of screen
-        horizontalArrangement = Arrangement.SpaceBetween
-        //ensures elements are evenly spaced to each side of screen
-    ) {
-        //left side
-        Column {
-            //create a column in this row to show symbol and name vertically
-            //use text to edit text and style
-            Text(text = stock.symbol, style = MaterialTheme.typography.titleLarge)
-            Text(text = stock.name, style = MaterialTheme.typography.bodyMedium)
-        }
-        //right side
-        Text(
-            text = "$${"%.2f".format(stock.price)}",
-            color = if (stock.change >= 0) Color.Green else Color.Red,
-            style = MaterialTheme.typography.titleMedium
-        )
     }
 }

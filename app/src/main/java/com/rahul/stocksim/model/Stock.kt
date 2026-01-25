@@ -1,4 +1,4 @@
-package com.rahul.stocksim
+package com.rahul.stocksim.model
 
 data class Stock(
     val symbol: String, // Stock symbol

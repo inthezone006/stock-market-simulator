@@ -1,5 +1,6 @@
 package com.rahul.stocksim.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,18 +10,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Modifier.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.rahul.stocksim.model.Stock
 
 @Composable
-fun StockRow(stock: Stock) {
+fun StockRow(stock: Stock, onRowClick: (Stock) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth() //fill screen
+            .clickable { onRowClick(stock) } //make row clickable and do function onclick
             .padding(16.dp), //padding from edges of screen
-        horizontalArrangement = Arrangement.SpaceBetween
         //ensures elements are evenly spaced to each side of screen
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         //left side
         Column {

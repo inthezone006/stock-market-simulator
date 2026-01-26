@@ -8,12 +8,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
 import com.rahul.stocksim.ui.theme.StockMarketSimulatorTheme
 import com.rahul.stocksim.ui.screens.HomeScreen
 import com.rahul.stocksim.ui.screens.LoginScreen
+import com.rahul.stocksim.ui.screens.RegisterScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.rahul.stocksim.ui.screens.StockDetailScreen
 
 //MainActivity = starting point of app
 //ComponentActivity = base class for all activities
@@ -60,25 +64,85 @@ class MainActivity : ComponentActivity() {
                         composable(route = "login_screen") {
                             //when controller is told to navigate to login, execute code inside
                             //block
-                            LoginScreen(onLoginSuccess = {
-                                //callback: when user clicks login button, the navController
-                                //is instructed to switch the view to the screen named "home"
-                                navController.navigate("home_screen") {
-                                    //remove login_screen from stack, so if back
-                                    //is pressed, then the app just exits
-                                    popUpTo("login_screen") {
-                                        //keeps login_screen unless inclusive is true
-                                        inclusive = true
+                            LoginScreen(
+                                //add the two functions for loginscreen here (from screens/)
+                                onLoginSuccess = {
+                                    //callback: when user clicks login button, the navController
+                                    //is instructed to switch the view to the screen named "home"
+                                    navController.navigate("home_screen") {
+                                        //remove login_screen from stack, so if back
+                                        //is pressed, then the app just exits
+                                        popUpTo("login_screen") {
+                                            //keeps login_screen unless inclusive is true
+                                            inclusive = true
+                                        }
+                                    }
+                                },
+                                onRegisterClick = {
+                                    //callback: when user clicks register button, the navController
+                                    //is instructed to switch the view to the screen named register
+                                    navController.navigate("register_screen")
+                                }
+                            )
+                        }
+                        composable("register_screen") {
+                            RegisterScreen(
+                                onRegisterSuccess = {
+                                    navController.navigate("home_screen")
+                                },
+                                onLoginClick = {
+                                    navController.navigate("login_screen") {
+                                        //remove register_screen from stack, so if back
+                                        //is pressed, then the app just exits
+                                        popUpTo("register_screen") {
+                                            inclusive = true
+                                        }
+
                                     }
                                 }
-                            })
+                            )
                         }
                         composable("home_screen") {
                             //this displays home ui
                             //navcontroller is passed into homescreen so other
                             //changes to screens can be made (like back, settings,
                             //profile, etc.)
-                            HomeScreen(navController = navController)
+                            HomeScreen(
+                                navController = navController,
+                                onStockClick = {
+                                    stock ->
+                                    navController.navigate("details/${stock.symbol}")
+                                }
+                            )
+                        }
+                        //route to the specific stockdetailscreen
+                        composable(
+                            //details/ is the static part of the route
+                            //{symbol} is a placeholder for the symbol of the stock
+                            route = "details/{symbol}",
+                            //makes navhost look for arguments in graph
+                            arguments = listOf(
+                                //makes navhost look for argument named symbol
+                                navArgument("symbol") {
+                                    //identiies that parameter is treated as string
+                                    type = NavType.StringType
+                                }
+                            )
+                        ) {
+                            //backStackEntry holds information about current nav state,
+                            //including the current set of arguments and state
+                            backStackEntry ->
+                            //holds into a variable the string that was passed into to the nav
+                            //which is symbol
+                            val symbol = backStackEntry.arguments?.getString("symbol")
+                            //finally, it calls the ui component and passes that symbol in to
+                            //to show the correct stock
+                            StockDetailScreen(
+                                stockSymbol = symbol,
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
                         }
                     }
                 }

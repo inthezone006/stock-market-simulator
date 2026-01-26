@@ -13,7 +13,7 @@ import com.rahul.stocksim.model.Stock
 import com.rahul.stocksim.ui.components.StockRow
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, onStockClick: (Stock) -> Unit) {
     //creates an immutable list of stocks
 
     val stockList = listOf(
@@ -43,7 +43,17 @@ fun HomeScreen(navController: NavController) {
         items(stockList) {
             //names current item in loop to reference
             //creating a defined StockRow for the current stock
-            currentStock -> StockRow(stock = currentStock)
+            currentStock -> StockRow(
+                //passes in the current stock to stockrow as
+                //a stock
+                stock = currentStock,
+                //and the onrowclick function to use
+                onRowClick = {
+                    //that same stock is piped in to the
+                    //onstockclick command
+                    stock -> onStockClick(stock)
+                }
+            )
             //creates a divider between items
             HorizontalDivider(
                 //thin line

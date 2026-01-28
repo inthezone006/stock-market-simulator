@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "921964890596",
+    "project_id": "stock-sim-6e305",
+    "storage_bucket": "stock-sim-6e305.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:921964890596:android:36439016fdaea5d9cd5ff1",
+        "android_client_info": {
+          "package_name": "com.rahul.stocksim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLKlk67era2DdNcSqOYz5nwiSlKdALQJc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

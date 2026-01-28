@@ -30,12 +30,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         //for modern devices to draw content under system bars too
         enableEdgeToEdge()
-        //defines layout of activity with Composables
+        //defines layout of activity with Composable
         setContent {
             //instantiates controller responsible for tracking the
             //back stack of screens the user has visited. because
-            //wrapped in remember, the navcontroller survives
-            //recompositions. navcontroller can navigate by name
+            //wrapped in remember, the nav controller survives
+            //recompositions. nav controller can navigate by name
             //or pop from stack or navigate or identify current screen
             val navController = rememberNavController()
 
@@ -51,9 +51,9 @@ class MainActivity : ComponentActivity() {
                     //sets background color
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //navhost is container for the current screen
-                    //navcontroller holds track of the backstack of screens
-                    //startdestination tells app which screen to show first,
+                    //nav host is container for the current screen
+                    //nav controller holds track of the backstack of screens
+                    //start destination tells app which screen to show first,
                     //as defined in function
                     NavHost(
                         navController = navController,
@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
                             //when controller is told to navigate to login, execute code inside
                             //block
                             LoginScreen(
-                                //add the two functions for loginscreen here (from screens/)
+                                //add the two functions for login screen here (from screens/)
                                 onLoginSuccess = {
                                     //callback: when user clicks login button, the navController
                                     //is instructed to switch the view to the screen named "home"
@@ -104,18 +104,17 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("home_screen") {
                             //this displays home ui
-                            //navcontroller is passed into homescreen so other
+                            //nav controller is passed into homescreen so other
                             //changes to screens can be made (like back, settings,
                             //profile, etc.)
                             HomeScreen(
                                 navController = navController,
-                                onStockClick = {
-                                    stock ->
+                                onStockClick = { stock ->
                                     navController.navigate("details/${stock.symbol}")
                                 }
                             )
                         }
-                        //route to the specific stockdetailscreen
+                        //route to the specific stock detail screen
                         composable(
                             //details/ is the static part of the route
                             //{symbol} is a placeholder for the symbol of the stock
@@ -131,7 +130,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             //backStackEntry holds information about current nav state,
                             //including the current set of arguments and state
-                            backStackEntry ->
+                                backStackEntry ->
                             //holds into a variable the string that was passed into to the nav
                             //which is symbol
                             val symbol = backStackEntry.arguments?.getString("symbol")

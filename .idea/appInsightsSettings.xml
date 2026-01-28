@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.rahul.stocksim" />
+                  <option name="mobileSdkAppId" value="1:921964890596:android:36439016fdaea5d9cd5ff1" />
+                  <option name="projectId" value="stock-sim-6e305" />
+                  <option name="projectNumber" value="921964890596" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

@@ -7,36 +7,41 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Modifier.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rahul.stocksim.model.Stock
 
 @Composable
 fun StockRow(stock: Stock, onRowClick: (Stock) -> Unit) {
-    Row(
+    Surface(
         modifier = Modifier
-            .fillMaxWidth() //fill screen
-            .clickable { onRowClick(stock) } //make row clickable and do function onclick
-            .padding(16.dp), //padding from edges of screen
-        //ensures elements are evenly spaced to each side of screen
-        horizontalArrangement = Arrangement.SpaceBetween
+            .fillMaxWidth()
+            .clickable { onRowClick(stock) }
     ) {
-        //left side
-        Column {
-            //create a column in this row to show symbol and name vertically
-            //use text to edit text and style
-            Text(text = stock.symbol, style = MaterialTheme.typography.titleLarge)
-            Text(text = stock.name, style = MaterialTheme.typography.bodyMedium)
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+              Column(
+                  modifier = Modifier.weight(1f)
+              ) {
+                  Text(text = stock.symbol, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                  Text(text = stock.name, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+              }
         }
-        //right side
-        Text(
-            text = "$${"%.2f".format(stock.price)}",
-            color = if (stock.change >= 0) Color.Green else Color.Red,
-            style = MaterialTheme.typography.titleMedium
-        )
+
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(text = "$${"%.2f".format(stock.price)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+            Text(text = "${if (stock.change >= 0) "+" else ""}${stock.change}%", style = MaterialTheme.typography.labelMedium, color = if (stock.change >= 0) Color(0xFF4CAF50) else Color.Red)
+        }
     }
 }

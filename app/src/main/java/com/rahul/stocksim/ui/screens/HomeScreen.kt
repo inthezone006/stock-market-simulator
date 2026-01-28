@@ -53,7 +53,10 @@ fun HomeScreen(navController: NavController, onStockClick: (Stock) -> Unit) {
         topBar = {
             //create center aligned top bar
             CenterAlignedTopAppBar(
-                title = { Text("Stock Market Simulator", style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text("Stock Market Simulator",
+                    style = MaterialTheme.typography.titleLarge)
+                },
                 colors =
                     TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -67,7 +70,7 @@ fun HomeScreen(navController: NavController, onStockClick: (Stock) -> Unit) {
             }
         }
     ) {
-        //use provided innerpadding values
+        //use provided inner padding values
         innerPadding ->
         //container that renders only items on screen efficiently
         LazyColumn(
@@ -80,13 +83,13 @@ fun HomeScreen(navController: NavController, onStockClick: (Stock) -> Unit) {
                 //names current item in loop to reference
                 //creating a defined StockRow for the current stock
                 currentStock -> StockRow(
-                    //passes in the current stock to stockrow as
+                    //passes in the current stock to stock row as
                     //a stock
                     stock = currentStock,
-                    //and the onrowclick function to use
+                    //and the on row click function to use
                     onRowClick = {
                         //that same stock is piped in to the
-                        //onstockclick command
+                        //on stock click command
                         stock -> onStockClick(stock)
                     }
                 )

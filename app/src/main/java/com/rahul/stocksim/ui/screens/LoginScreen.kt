@@ -33,8 +33,6 @@ import com.rahul.stocksim.R
 import com.rahul.stocksim.data.AuthRepository
 import kotlinx.coroutines.launch
 
-const val WEB_CLIENT_ID = "921964890596-iqltc99aa0dbc73p644csaa5p8qcmeph.apps.googleusercontent.com"
-
 // Helper function to safely find Activity from Context
 private fun Context.findActivity(): Activity? {
     var context = this
@@ -124,8 +122,8 @@ fun LoginScreen(navController: NavController) {
                         authRepository.login(email, password) { success, error ->
                             isLoading = false
                             if (success) {
-                                navController.navigate("home_screen") {
-                                    popUpTo("login_screen") { inclusive = true }
+                                navController.navigate(Screen.Main.route) {
+                                    popUpTo(Screen.Login.route) { inclusive = true }
                                 }
                             } else {
                                 errorMessage = error ?: "Registration failed"
@@ -185,8 +183,8 @@ fun LoginScreen(navController: NavController) {
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
                                 authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
                                     if (success) {
-                                        navController.navigate("home_screen") {
-                                            popUpTo("login_screen") { inclusive = true }
+                                        navController.navigate(Screen.Main.route) {
+                                            popUpTo(Screen.Login.route) { inclusive = true }
                                         }
                                     } else {
                                         errorMessage = "Firebase Google Auth Failed"
@@ -223,8 +221,8 @@ fun LoginScreen(navController: NavController) {
 
             TextButton(
                 onClick = {
-                    navController.navigate("register_screen") {
-                        popUpTo("register_screen") { inclusive = true }
+                    navController.navigate(Screen.Register.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
             ) {

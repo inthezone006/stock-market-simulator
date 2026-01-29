@@ -1,34 +1,37 @@
 package com.rahul.stocksim.ui.screens
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.rahul.stocksim.data.AuthRepository
 import com.rahul.stocksim.model.Stock
 import com.rahul.stocksim.ui.components.StockRow
 
-//allow to use experimental material3
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, onStockClick: (Stock) -> Unit) {
-    //creates an immutable list of stocks
-
+    val authRepository = AuthRepository()
+    val user = authRepository.currentUser
+    
     val stockList = listOf(
         Stock("AAPL", "Apple Inc.", 150.00, 5.00),
         Stock("GOOGL", "Alphabet Inc.", 2500.00, 100.00),
@@ -49,56 +52,83 @@ fun HomeScreen(navController: NavController, onStockClick: (Stock) -> Unit) {
     )
 
     Scaffold(
-        //create top bar
+        containerColor = Color(0xFF121212),
         topBar = {
-            //create center aligned top bar
             CenterAlignedTopAppBar(
                 title = {
-                    Text("Stock Market Simulator",
-                    style = MaterialTheme.typography.titleLarge)
-                },
-                colors =
-                    TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    Text(
+                        "Stock Market Simulator",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
                     )
+                },
+                actions = {
+                    // Profile Icon / Initials
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color.DarkGray)
+                            .clickable { navController.navigate("settings_screen") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val photoUrl = user?.photoUrl
+                        if (photoUrl != null) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(photoUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Profile Picture",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            val initials = user?.displayName?.split(" ")
+                                ?.mapNotNull { it.firstOrNull()?.toString() }
+                                ?.joinToString("") ?: user?.email?.firstOrNull()?.toString()?.uppercase() ?: "?"
+                            
+                            Text(
+                                text = initials,
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color(0xFF121212),
+                    titleContentColor = Color.White
+                )
             )
-            //create bottom action button
-        }, floatingActionButton = {
-            FloatingActionButton(onClick = { /* TODO: Add stock logic */ }) {
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { /* TODO: Add stock logic */ },
+                containerColor = Color.White,
+                contentColor = Color.Black
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Stock")
             }
         }
-    ) {
-        //use provided inner padding values
-        innerPadding ->
-        //container that renders only items on screen efficiently
+    ) { innerPadding ->
         LazyColumn(
-            //takes up all the available width/height
-            modifier = Modifier.fillMaxSize().padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color(0xFF121212))
         ) {
-            //loops through collection, executing code for each
-            //use itemsIndexed to get index of current item
-            items(stockList) {
-                //names current item in loop to reference
-                //creating a defined StockRow for the current stock
-                currentStock -> StockRow(
-                    //passes in the current stock to stock row as
-                    //a stock
+            items(stockList) { currentStock ->
+                StockRow(
                     stock = currentStock,
-                    //and the on row click function to use
-                    onRowClick = {
-                        //that same stock is piped in to the
-                        //on stock click command
-                        stock -> onStockClick(stock)
-                    }
+                    onRowClick = { stock -> onStockClick(stock) }
                 )
-                //creates a divider between items
                 HorizontalDivider(
-                    //thin line
                     thickness = 0.5.dp,
-                    //color of line (70% transparent)
-                    color = Color.Gray.copy(alpha = 0.3f)
+                    color = Color.White.copy(alpha = 0.1f)
                 )
             }
         }

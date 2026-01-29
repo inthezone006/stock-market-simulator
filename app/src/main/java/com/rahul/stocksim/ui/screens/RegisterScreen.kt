@@ -141,8 +141,8 @@ fun RegisterScreen(navController: NavController) {
                         authRepository.register(email, password) { success, error ->
                             isLoading = false
                             if (success) {
-                                navController.navigate("home_screen") {
-                                    popUpTo("register_screen") { inclusive = true }
+                                navController.navigate(Screen.Main.route) {
+                                    popUpTo(Screen.Register.route) { inclusive = true }
                                 }
                             } else {
                                 errorMessage = error ?: "Registration failed"
@@ -201,8 +201,8 @@ fun RegisterScreen(navController: NavController) {
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
                                 authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
                                     if (success) {
-                                        navController.navigate("home_screen") {
-                                            popUpTo("register_screen") { inclusive = true }
+                                        navController.navigate(Screen.Main.route) {
+                                            popUpTo(Screen.Register.route) { inclusive = true }
                                         }
                                     } else {
                                         errorMessage = "Firebase Google Auth Failed"
@@ -239,8 +239,8 @@ fun RegisterScreen(navController: NavController) {
 
             TextButton(
                 onClick = {
-                    navController.navigate("login_screen") {
-                        popUpTo("login_screen") { inclusive = true }
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 }
             ) {

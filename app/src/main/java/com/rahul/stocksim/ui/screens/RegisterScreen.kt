@@ -1,24 +1,50 @@
 package com.rahul.stocksim.ui.screens
 
-import androidx.compose.runtime.Composable
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.navigation.NavController
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.rahul.stocksim.R
 import com.rahul.stocksim.data.AuthRepository
+import kotlinx.coroutines.launch
 
-//function register screen takes another function as parameter, returning
-//unit(nothing). () -> Unit defines the type of parameter it is
+// Helper function to safely find Activity from Context
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
+}
+
 @Composable
 fun RegisterScreen(navController: NavController) {
-    //mutableStateOf creates state object that compose can
-    //track through refreshes. initial value is empty string
-    //remember holds those values in memory when screen refreshes
     val authRepository = AuthRepository() //TODO: Implement dependency injection
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -26,101 +52,200 @@ fun RegisterScreen(navController: NavController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-    //column stacks elements vertically
-    Column(
-        //makes login column fill available space with padding
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        //arranges elements all in center
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val credentialManager = CredentialManager.create(context)
+
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color(0xFF121212))
     ) {
-        //create header
-        Text(text = "Sign Up",
-            style = MaterialTheme.typography.headlineMedium)
+        Column(
+            modifier = Modifier.fillMaxSize().systemBarsPadding().padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.stock_market_sim),
+                contentDescription = "Logo",
+                modifier = Modifier.size(120.dp)
+            )
 
-        //creates gaps between elements so UI is not cramped
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-        //standard text field
-        OutlinedTextField(
-            //sets value of email to what is typed
-            value = email,
-            //callback to update email variable when text changes
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            //use modifier to fill max width
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text(text = "Email", color = Color.LightGray) },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.DarkGray,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            //masks the input with dots for security
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text(text = "Password", color = Color.LightGray) },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.DarkGray,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirm Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text(text = "Confirm Password", color = Color.LightGray) },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.DarkGray,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            if (errorMessage != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+            }
 
-        if (errorMessage != null) {
-            Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
-        }
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
-            //when button is pressed, call on register success
-            onClick = {
-                isLoading = true
-                authRepository.register(email, password) { success, error ->
-                    isLoading = false
-                    if (success) {
-                        navController.navigate("home_screen") {
-                            popUpTo("register_screen") {
-                                inclusive = true
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Register button
+                OutlinedButton(
+                    onClick = {
+                        isLoading = true
+                        authRepository.register(email, password) { success, error ->
+                            isLoading = false
+                            if (success) {
+                                navController.navigate("home_screen") {
+                                    popUpTo("register_screen") { inclusive = true }
+                                }
+                            } else {
+                                errorMessage = error ?: "Registration failed"
                             }
                         }
+                    },
+                    enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && password == confirmPassword,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.DarkGray),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color.White,
+                        disabledContentColor = Color.Gray
+                    )
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(24.dp)
+                        )
                     } else {
-                        errorMessage = error ?: "Registration failed"
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.PersonAdd,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Sign up", fontWeight = FontWeight.Medium)
+                        }
                     }
                 }
-            },
-            //button is greyed out until user has typed at least
-            //one character in both username and password
-            //and the passwords match
-            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && password == confirmPassword,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(color = Color.White)
-            } else {
-                Text("Create Account")
-            }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+                // Google sign up button
+                OutlinedButton(
+                    onClick = {
+                        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(serverClientId = WEB_CLIENT_ID)
+                            .build()
 
-        TextButton(
-            onClick = {
-                navController.navigate("login_screen") {
-                    popUpTo("login_screen") {
-                        inclusive = true
+                        val request = GetCredentialRequest.Builder()
+                            .addCredentialOption(signInWithGoogleOption)
+                            .build()
+
+                        coroutineScope.launch {
+                            try {
+                                val activity = context.findActivity()
+                                if (activity == null) {
+                                    errorMessage = "Internal Error: Activity not found"
+                                    return@launch
+                                }
+                                val result = credentialManager.getCredential(
+                                    request = request,
+                                    context = activity
+                                )
+                                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
+                                authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
+                                    if (success) {
+                                        navController.navigate("home_screen") {
+                                            popUpTo("register_screen") { inclusive = true }
+                                        }
+                                    } else {
+                                        errorMessage = "Firebase Google Auth Failed"
+                                    }
+                                }
+                            } catch (e: GetCredentialException) {
+                                Log.e("Auth", "Google Sign-in failed", e)
+                                errorMessage = when (e) {
+                                    is GetCredentialCancellationException -> "Sign-in cancelled"
+                                    is NoCredentialException -> "No Google accounts found. Check SHA-1 configuration."
+                                    else -> e.message ?: "Google Sign-in failed"
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.DarkGray),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.android_light_rd_na),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Google", fontWeight = FontWeight.Medium)
                     }
                 }
             }
-        ) {
-            Text("Already have an account? Sign in")
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            TextButton(
+                onClick = {
+                    navController.navigate("login_screen") {
+                        popUpTo("login_screen") { inclusive = true }
+                    }
+                }
+            ) {
+                Text(text = "Already have an account? Sign in", color = Color.Gray)
+            }
         }
     }
 }

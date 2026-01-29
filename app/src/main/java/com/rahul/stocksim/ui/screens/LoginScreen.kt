@@ -1,6 +1,8 @@
 package com.rahul.stocksim.ui.screens
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -21,15 +23,27 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.navigation.NavController
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.rahul.stocksim.R
 import com.rahul.stocksim.data.AuthRepository
 import kotlinx.coroutines.launch
 
 const val WEB_CLIENT_ID = "921964890596-iqltc99aa0dbc73p644csaa5p8qcmeph.apps.googleusercontent.com"
+
+// Helper function to safely find Activity from Context
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
+}
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -149,21 +163,24 @@ fun LoginScreen(navController: NavController) {
                 // Google sign in button
                 OutlinedButton(
                     onClick = {
-                        val googleIdOption = GetGoogleIdOption.Builder()
-                            .setFilterByAuthorizedAccounts(false)
-                            .setServerClientId(WEB_CLIENT_ID)
-                            .setAutoSelectEnabled(true)
+                        // Use GetSignInWithGoogleOption for a button-triggered flow
+                        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(serverClientId = WEB_CLIENT_ID)
                             .build()
 
                         val request = GetCredentialRequest.Builder()
-                            .addCredentialOption(googleIdOption)
+                            .addCredentialOption(signInWithGoogleOption)
                             .build()
 
                         coroutineScope.launch {
                             try {
+                                val activity = context.findActivity()
+                                if (activity == null) {
+                                    errorMessage = "Internal Error: Activity not found"
+                                    return@launch
+                                }
                                 val result = credentialManager.getCredential(
                                     request = request,
-                                    context = context as Activity
+                                    context = activity
                                 )
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
                                 authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
@@ -176,8 +193,12 @@ fun LoginScreen(navController: NavController) {
                                     }
                                 }
                             } catch (e: GetCredentialException) {
-                                Log.e("Auth", "Google Sign-in failed: ${e.message}")
-                                errorMessage = "Google Sign-In Cancelled"
+                                Log.e("Auth", "Google Sign-in failed", e)
+                                errorMessage = when (e) {
+                                    is GetCredentialCancellationException -> "Sign-in cancelled"
+                                    is NoCredentialException -> "No Google accounts found. Please check your device accounts or SHA-1 configuration in Firebase."
+                                    else -> e.message ?: "Google Sign-in failed"
+                                }
                             }
                         }
                     },

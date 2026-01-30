@@ -23,7 +23,7 @@ class AuthRepository {
                 if (task.isSuccessful) {
                     onResult(true, null)
                 } else {
-                    onResult(false, task.exception?.localizedMessage)
+                    onResult(false, "Invalid credentials. Please check your email and password.")
                 }
             }
     }
@@ -32,26 +32,9 @@ class AuthRepository {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val user = task.result?.user
-                    if (user != null) {
-                        // Initialize user balance with $1000 in Firestore
-                        val userData = hashMapOf(
-                            "balance" to 1000.0,
-                            "email" to email
-                        )
-                        firestore.collection("users").document(user.uid).set(userData)
-                            .addOnCompleteListener { firestoreTask ->
-                                if (firestoreTask.isSuccessful) {
-                                    onResult(true, null)
-                                } else {
-                                    onResult(false, firestoreTask.exception?.localizedMessage)
-                                }
-                            }
-                    } else {
-                        onResult(true, null)
-                    }
+                    onResult(true, null)
                 } else {
-                    onResult(false, task.exception?.localizedMessage)
+                    onResult(false, "Registration failed. ${task.exception?.localizedMessage ?: "Please try again."}")
                 }
             }
     }
@@ -60,28 +43,27 @@ class AuthRepository {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
-                if (task.isSuccessful && task.result?.additionalUserInfo?.isNewUser == true) {
-                    val user = task.result?.user
-                    if (user != null) {
-                        val userData = hashMapOf(
-                            "balance" to 1000.0,
-                            "email" to user.email
-                        )
-                        firestore.collection("users").document(user.uid).set(userData)
-                            .addOnCompleteListener { 
-                                onResult(task.isSuccessful)
-                            }
-                    } else {
-                        onResult(task.isSuccessful)
-                    }
-                } else {
-                    onResult(task.isSuccessful)
-                }
+                onResult(task.isSuccessful)
             }
     }
 
+    suspend fun setUserBalance(balance: Double): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Session expired. Please log in again."))
+        return try {
+            val userData = hashMapOf(
+                "balance" to balance,
+                "email" to auth.currentUser?.email
+            )
+            // CRITICAL: Writing to 'users' collection, not root 'all-data'
+            firestore.collection("users").document(userId).set(userData).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateProfilePicture(imageUri: Uri): Result<Unit> {
-        val user = currentUser ?: return Result.failure(Exception("User not authenticated"))
+        val user = currentUser ?: return Result.failure(Exception("Auth error"))
         
         return try {
             val storageRef = storage.reference.child("profile_pictures/${user.uid}")

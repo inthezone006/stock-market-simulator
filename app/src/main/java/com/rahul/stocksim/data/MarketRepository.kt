@@ -1,8 +1,11 @@
 package com.rahul.stocksim.data
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rahul.stocksim.model.Stock
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -28,10 +31,10 @@ data class FinnhubQuoteResponse(
     val c: Double, // Current price
     val d: Double, // Change
     val dp: Double, // Percent change
-    val h: Double, // High price of the day
-    val l: Double, // Low price of the day
-    val o: Double, // Open price of the day
-    val pc: Double // Previous close price
+    val h: Double,
+    val l: Double,
+    val o: Double,
+    val pc: Double
 )
 
 data class FinnhubSearchResponse(
@@ -45,6 +48,8 @@ data class FinnhubSearchResult(
     val symbol: String,
     val type: String
 )
+
+data class WatchlistItem(val symbol: String)
 
 class MarketRepository {
     private val firestore = FirebaseFirestore.getInstance()
@@ -63,7 +68,7 @@ class MarketRepository {
             val response = api.getQuote(symbol, apiKey)
             Stock(
                 symbol = symbol,
-                name = symbol, // Finnhub quote doesn't provide name, need to fetch from search or profile
+                name = symbol,
                 price = response.c,
                 change = response.d
             )
@@ -72,16 +77,17 @@ class MarketRepository {
         }
     }
 
-    suspend fun searchStocks(query: String): List<Stock> {
+    suspend fun searchStocks(query: String, nasdaqOnly: Boolean = false): List<Stock> {
         return try {
             val response = api.searchSymbol(query, apiKey)
             response.result
-                .filter { it.type == "Common Stock" }
+                .filter { result ->
+                    val isStock = result.type == "Common Stock" || result.type == "ADR"
+                    val isNasdaq = !nasdaqOnly || result.symbol.all { it.isLetter() } // Simplified NASDAQ filter
+                    isStock && isNasdaq
+                }
                 .take(10)
                 .map { result ->
-                    // For each search result, we ideally want the current price.
-                    // However, fetching quotes for all would be many API calls.
-                    // For now, we'll return them with 0.0 price or fetch if needed.
                     val quote = getStockQuote(result.symbol)
                     Stock(
                         symbol = result.symbol,
@@ -95,21 +101,60 @@ class MarketRepository {
         }
     }
 
+    // Watchlist methods
+    suspend fun getWatchlist(): List<WatchlistItem> {
+        val userId = auth.currentUser?.uid ?: return emptyList()
+        return try {
+            val snapshot = firestore.collection("users").document(userId)
+                .collection("watchlist").get().await()
+            snapshot.documents.map { WatchlistItem(it.getString("symbol") ?: "") }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun addToWatchlist(symbol: String): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            firestore.collection("users").document(userId)
+                .collection("watchlist").document(symbol)
+                .set(mapOf("symbol" to symbol)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun removeFromWatchlist(symbol: String): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            firestore.collection("users").document(userId)
+                .collection("watchlist").document(symbol)
+                .delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun buyStock(symbol: String, quantity: Int, pricePerShare: Double): Result<Unit> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
         val totalCost = quantity * pricePerShare
 
         return try {
             val userRef = firestore.collection("users").document(userId)
+            val portfolioRef = userRef.collection("portfolio").document(symbol)
+            
             firestore.runTransaction { transaction ->
-                val snapshot = transaction.get(userRef)
-                val currentBalance = snapshot.getDouble("balance") ?: 0.0
+                // READ ALL FIRST
+                val userSnapshot = transaction.get(userRef)
+                val portfolioDoc = transaction.get(portfolioRef)
+                
+                val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
 
                 if (currentBalance >= totalCost) {
+                    // WRITE ALL AFTER
                     transaction.update(userRef, "balance", currentBalance - totalCost)
-                    
-                    val portfolioRef = userRef.collection("portfolio").document(symbol)
-                    val portfolioDoc = transaction.get(portfolioRef)
                     
                     if (portfolioDoc.exists()) {
                         val currentQty = portfolioDoc.getLong("quantity") ?: 0L
@@ -137,13 +182,16 @@ class MarketRepository {
             val portfolioRef = userRef.collection("portfolio").document(symbol)
 
             firestore.runTransaction { transaction ->
+                // READ ALL FIRST
                 val portfolioDoc = transaction.get(portfolioRef)
+                val userSnapshot = transaction.get(userRef)
+                
                 val currentQty = portfolioDoc.getLong("quantity") ?: 0L
 
                 if (currentQty >= quantity) {
-                    val snapshot = transaction.get(userRef)
-                    val currentBalance = snapshot.getDouble("balance") ?: 0.0
+                    val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
                     
+                    // WRITE ALL AFTER
                     transaction.update(userRef, "balance", currentBalance + totalGain)
                     
                     if (currentQty == quantity.toLong()) {
@@ -159,6 +207,32 @@ class MarketRepository {
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    fun getUserBalance(): Flow<Double> = flow {
+        val userId = auth.currentUser?.uid ?: return@flow
+        while(true) {
+            try {
+                val snapshot = firestore.collection("users").document(userId).get().await()
+                emit(snapshot.getDouble("balance") ?: 0.0)
+            } catch (e: Exception) {
+                Log.e("MarketRepo", "Error fetching balance: ${e.message}")
+                emit(0.0) // Fallback to 0.0 on error
+            }
+            kotlinx.coroutines.delay(5000)
+        }
+    }
+
+    suspend fun getPortfolio(): List<Pair<String, Long>> {
+        val userId = auth.currentUser?.uid ?: return emptyList()
+        return try {
+            val snapshot = firestore.collection("users").document(userId).collection("portfolio").get().await()
+            snapshot.documents.map { 
+                it.getString("symbol").orEmpty() to (it.getLong("quantity") ?: 0L)
+            }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 }

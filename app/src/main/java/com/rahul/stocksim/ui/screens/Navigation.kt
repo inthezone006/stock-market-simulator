@@ -12,6 +12,7 @@ const val WEB_CLIENT_ID = "921964890596-iqltc99aa0dbc73p644csaa5p8qcmeph.apps.go
 sealed class Screen(val route: String) {
     object Login : Screen("login_screen")
     object Register : Screen("register_screen")
+    object BalanceSelection : Screen("balance_selection_screen")
     object Settings : Screen("settings_screen")
     object Main : Screen("main_screen")
     object Details : Screen("details/{symbol}")

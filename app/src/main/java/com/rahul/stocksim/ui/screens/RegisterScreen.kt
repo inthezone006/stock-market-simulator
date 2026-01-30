@@ -45,7 +45,7 @@ private fun Context.findActivity(): Activity? {
 
 @Composable
 fun RegisterScreen(navController: NavController) {
-    val authRepository = AuthRepository() //TODO: Implement dependency injection
+    val authRepository = AuthRepository()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -141,7 +141,7 @@ fun RegisterScreen(navController: NavController) {
                         authRepository.register(email, password) { success, error ->
                             isLoading = false
                             if (success) {
-                                navController.navigate(Screen.Main.route) {
+                                navController.navigate(Screen.BalanceSelection.route) {
                                     popUpTo(Screen.Register.route) { inclusive = true }
                                 }
                             } else {
@@ -201,7 +201,7 @@ fun RegisterScreen(navController: NavController) {
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
                                 authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
                                     if (success) {
-                                        navController.navigate(Screen.Main.route) {
+                                        navController.navigate(Screen.BalanceSelection.route) {
                                             popUpTo(Screen.Register.route) { inclusive = true }
                                         }
                                     } else {

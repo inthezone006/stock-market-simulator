@@ -31,10 +31,10 @@ data class FinnhubQuoteResponse(
     val c: Double, // Current price
     val d: Double, // Change
     val dp: Double, // Percent change
-    val h: Double,
-    val l: Double,
-    val o: Double,
-    val pc: Double
+    val h: Double, // High
+    val l: Double, // Low
+    val o: Double, // Open
+    val pc: Double // Prev Close
 )
 
 data class FinnhubSearchResponse(
@@ -70,7 +70,12 @@ class MarketRepository {
                 symbol = symbol,
                 name = symbol,
                 price = response.c,
-                change = response.d
+                change = response.d,
+                percentChange = response.dp,
+                high = response.h,
+                low = response.l,
+                open = response.o,
+                prevClose = response.pc
             )
         } catch (e: Exception) {
             null
@@ -83,7 +88,7 @@ class MarketRepository {
             response.result
                 .filter { result ->
                     val isStock = result.type == "Common Stock" || result.type == "ADR"
-                    val isNasdaq = !nasdaqOnly || result.symbol.all { it.isLetter() } // Simplified NASDAQ filter
+                    val isNasdaq = !nasdaqOnly || result.symbol.all { it.isLetter() }
                     isStock && isNasdaq
                 }
                 .take(10)
@@ -93,7 +98,12 @@ class MarketRepository {
                         symbol = result.symbol,
                         name = result.description,
                         price = quote?.price ?: 0.0,
-                        change = quote?.change ?: 0.0
+                        change = quote?.change ?: 0.0,
+                        percentChange = quote?.percentChange ?: 0.0,
+                        high = quote?.high ?: 0.0,
+                        low = quote?.low ?: 0.0,
+                        open = quote?.open ?: 0.0,
+                        prevClose = quote?.prevClose ?: 0.0
                     )
                 }
         } catch (e: Exception) {
@@ -146,14 +156,12 @@ class MarketRepository {
             val portfolioRef = userRef.collection("portfolio").document(symbol)
             
             firestore.runTransaction { transaction ->
-                // READ ALL FIRST
                 val userSnapshot = transaction.get(userRef)
                 val portfolioDoc = transaction.get(portfolioRef)
                 
                 val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
 
                 if (currentBalance >= totalCost) {
-                    // WRITE ALL AFTER
                     transaction.update(userRef, "balance", currentBalance - totalCost)
                     
                     if (portfolioDoc.exists()) {
@@ -182,7 +190,6 @@ class MarketRepository {
             val portfolioRef = userRef.collection("portfolio").document(symbol)
 
             firestore.runTransaction { transaction ->
-                // READ ALL FIRST
                 val portfolioDoc = transaction.get(portfolioRef)
                 val userSnapshot = transaction.get(userRef)
                 
@@ -191,7 +198,6 @@ class MarketRepository {
                 if (currentQty >= quantity) {
                     val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
                     
-                    // WRITE ALL AFTER
                     transaction.update(userRef, "balance", currentBalance + totalGain)
                     
                     if (currentQty == quantity.toLong()) {
@@ -218,7 +224,7 @@ class MarketRepository {
                 emit(snapshot.getDouble("balance") ?: 0.0)
             } catch (e: Exception) {
                 Log.e("MarketRepo", "Error fetching balance: ${e.message}")
-                emit(0.0) // Fallback to 0.0 on error
+                emit(0.0)
             }
             kotlinx.coroutines.delay(5000)
         }

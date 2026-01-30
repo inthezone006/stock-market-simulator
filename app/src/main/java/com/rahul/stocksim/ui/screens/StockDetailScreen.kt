@@ -32,16 +32,25 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var quantity by remember { mutableIntStateOf(1) }
     var isInWatchlist by remember { mutableStateOf(false) }
+    var ownedQuantity by remember { mutableLongStateOf(0L) }
     
-    LaunchedEffect(stockSymbol) {
+    val refreshStockData = {
         if (stockSymbol != null) {
-            isLoading = true
-            stock = marketRepository.getStockQuote(stockSymbol)
-            // Check if in watchlist
-            val watchlist = marketRepository.getWatchlist()
-            isInWatchlist = watchlist.any { it.symbol == stockSymbol }
-            isLoading = false
+            coroutineScope.launch {
+                stock = marketRepository.getStockQuote(stockSymbol)
+                val watchlist = marketRepository.getWatchlist()
+                isInWatchlist = watchlist.any { it.symbol == stockSymbol }
+                
+                val portfolio = marketRepository.getPortfolio()
+                ownedQuantity = portfolio.find { it.first == stockSymbol }?.second ?: 0L
+                isLoading = false
+            }
         }
+    }
+
+    LaunchedEffect(stockSymbol) {
+        isLoading = true
+        refreshStockData()
     }
 
     Scaffold(
@@ -118,12 +127,34 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                         color = if (stock!!.change >= 0) Color.Green else Color.Red
                     )
                     Text(
-                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)}",
+                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
                         color = if (stock!!.change >= 0) Color.Green else Color.Red,
                         fontSize = 18.sp
                     )
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    if (ownedQuantity > 0) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Shares Owned", color = Color.Gray, fontSize = 12.sp)
+                                    Text("$ownedQuantity", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Equity Value", color = Color.Gray, fontSize = 12.sp)
+                                    Text("$${String.format("%.2f", ownedQuantity * stock!!.price)}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                }
+                            }
+                        }
+                    }
 
                     // Trade Controls
                     Card(
@@ -166,6 +197,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                                             val result = marketRepository.buyStock(stock!!.symbol, quantity, stock!!.price)
                                             if (result.isSuccess) {
                                                 Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
+                                                refreshStockData()
                                             } else {
                                                 Toast.makeText(context, result.exceptionOrNull()?.message ?: "Purchase Failed", Toast.LENGTH_SHORT).show()
                                             }
@@ -176,22 +208,49 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                                 ) {
                                     Text("BUY")
                                 }
-                                Button(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            val result = marketRepository.sellStock(stock!!.symbol, quantity, stock!!.price)
-                                            if (result.isSuccess) {
-                                                Toast.makeText(context, "Sale Successful", Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                Toast.makeText(context, result.exceptionOrNull()?.message ?: "Sale Failed", Toast.LENGTH_SHORT).show()
+                                
+                                if (ownedQuantity > 0) {
+                                    Button(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                val result = marketRepository.sellStock(stock!!.symbol, quantity, stock!!.price)
+                                                if (result.isSuccess) {
+                                                    Toast.makeText(context, "Sale Successful", Toast.LENGTH_SHORT).show()
+                                                    refreshStockData()
+                                                } else {
+                                                    Toast.makeText(context, result.exceptionOrNull()?.message ?: "Sale Failed", Toast.LENGTH_SHORT).show()
+                                                }
                                             }
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000))
-                                ) {
-                                    Text("SELL")
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000)),
+                                        enabled = quantity <= ownedQuantity
+                                    ) {
+                                        Text("SELL")
+                                    }
                                 }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Stock Statistics
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Market Stats", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                            
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                StatItem("Open", "$${String.format("%.2f", stock!!.open)}")
+                                StatItem("Prev Close", "$${String.format("%.2f", stock!!.prevClose)}")
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                StatItem("High", "$${String.format("%.2f", stock!!.high)}")
+                                StatItem("Low", "$${String.format("%.2f", stock!!.low)}")
                             }
                         }
                     }
@@ -204,5 +263,13 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun StatItem(label: String, value: String) {
+    Column {
+        Text(text = label, color = Color.Gray, fontSize = 12.sp)
+        Text(text = value, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
     }
 }

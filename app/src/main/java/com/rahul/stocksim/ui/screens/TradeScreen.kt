@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TradeScreen(navController: NavController) {
+fun TradeScreen(mainNavController: NavController) { // Renamed parameter to be explicit
     val marketRepository = MarketRepository()
     val balance by marketRepository.getUserBalance().collectAsState(initial = 0.0)
     var portfolioItems by remember { mutableStateOf<List<Pair<Stock, Long>>>(emptyList()) }
@@ -100,7 +100,8 @@ fun TradeScreen(navController: NavController) {
                     items(portfolioItems) { (stock, quantity) ->
                         StockRow(
                             stock = stock,
-                            onRowClick = { navController.navigate("details/${stock.symbol}") }
+                            ownedQuantity = quantity,
+                            onRowClick = { mainNavController.navigate("details/${stock.symbol}") }
                         )
                         Row(
                             modifier = Modifier

@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,13 +26,20 @@ fun MarketScreen(
 ) {
     val marketRepository = MarketRepository()
     var stockList by remember { mutableStateOf<List<Stock>>(emptyList()) }
+    var portfolio by remember { mutableStateOf<Map<String, Long>>(emptyMap()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     val refreshData = {
         coroutineScope.launch {
+            if (!isRefreshing) isLoading = true
+            
+            // Fetch watchlist and portfolio in parallel if possible, or sequentially
             val watchlist = marketRepository.getWatchlist()
+            val rawPortfolio = marketRepository.getPortfolio()
+            portfolio = rawPortfolio.toMap()
+            
             stockList = watchlist.mapNotNull { item ->
                 marketRepository.getStockQuote(item.symbol)
             }
@@ -43,7 +49,6 @@ fun MarketScreen(
     }
 
     LaunchedEffect(Unit) {
-        isLoading = true
         refreshData()
     }
 
@@ -75,6 +80,7 @@ fun MarketScreen(
                 items(stockList) { currentStock ->
                     StockRow(
                         stock = currentStock,
+                        ownedQuantity = portfolio[currentStock.symbol] ?: 0L,
                         onRowClick = { stock -> onStockClick(stock) }
                     )
                     HorizontalDivider(

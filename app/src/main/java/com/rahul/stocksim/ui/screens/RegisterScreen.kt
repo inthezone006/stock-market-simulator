@@ -8,8 +8,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -33,7 +37,6 @@ import com.rahul.stocksim.R
 import com.rahul.stocksim.data.AuthRepository
 import kotlinx.coroutines.launch
 
-// Helper function to safely find Activity from Context
 private fun Context.findActivity(): Activity? {
     var context = this
     while (context is ContextWrapper) {
@@ -46,31 +49,63 @@ private fun Context.findActivity(): Activity? {
 @Composable
 fun RegisterScreen(navController: NavController) {
     val authRepository = AuthRepository()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val credentialManager = CredentialManager.create(context)
+
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val credentialManager = CredentialManager.create(context)
+    // Validation Logic
+    val hasMinLength = password.length >= 8
+    val hasUppercase = password.any { it.isUpperCase() }
+    val hasDigit = password.any { it.isDigit() }
+    val hasSpecial = password.any { !it.isLetterOrDigit() }
+    val passwordsMatch = password.isNotEmpty() && password == confirmPassword
+    val isFormValid = name.isNotEmpty() && email.contains("@") && hasMinLength && hasUppercase && hasDigit && hasSpecial && passwordsMatch
 
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF121212))
-    ) {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color(0xFF121212)
+    ) { innerPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().systemBarsPadding().padding(32.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .systemBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(32.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
                 painter = painterResource(id = R.drawable.stock_market_sim),
                 contentDescription = "Logo",
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier.size(80.dp)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(text = "Full Name", color = Color.LightGray) },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.DarkGray
+                ),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = email,
@@ -80,14 +115,14 @@ fun RegisterScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.DarkGray,
                     focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.DarkGray
                 ),
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = password,
@@ -95,17 +130,17 @@ fun RegisterScreen(navController: NavController) {
                 label = { Text(text = "Password", color = Color.LightGray) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.DarkGray,
                     focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.DarkGray
                 ),
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = confirmPassword,
@@ -113,57 +148,65 @@ fun RegisterScreen(navController: NavController) {
                 label = { Text(text = "Confirm Password", color = Color.LightGray) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.DarkGray,
                     focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.DarkGray
                 ),
             )
 
-            if (errorMessage != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Requirements List
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+                Text("Requirements:", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                RequirementItem("At least 8 characters", hasMinLength)
+                RequirementItem("At least one uppercase letter", hasUppercase)
+                RequirementItem("At least one digit", hasDigit)
+                RequirementItem("At least one special character", hasSpecial)
+                RequirementItem("Passwords must match", passwordsMatch)
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Register button
                 OutlinedButton(
                     onClick = {
                         isLoading = true
                         authRepository.register(email, password) { success, error ->
-                            isLoading = false
                             if (success) {
-                                navController.navigate(Screen.BalanceSelection.route) {
-                                    popUpTo(Screen.Register.route) { inclusive = true }
+                                coroutineScope.launch {
+                                    authRepository.updateDisplayName(name)
+                                    isLoading = false
+                                    navController.navigate(Screen.BalanceSelection.route) {
+                                        popUpTo(Screen.Register.route) { inclusive = true }
+                                    }
                                 }
                             } else {
-                                errorMessage = error ?: "Registration failed"
+                                isLoading = false
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(error ?: "Registration failed")
+                                }
                             }
                         }
                     },
-                    enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && password == confirmPassword,
+                    enabled = !isLoading && isFormValid,
                     modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.DarkGray),
+                    border = BorderStroke(1.dp, if (isFormValid) Color.White else Color.DarkGray),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color.White,
                         disabledContentColor = Color.Gray
                     )
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -177,44 +220,27 @@ fun RegisterScreen(navController: NavController) {
                     }
                 }
 
-                // Google sign up button
                 OutlinedButton(
                     onClick = {
-                        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(serverClientId = WEB_CLIENT_ID)
-                            .build()
-
-                        val request = GetCredentialRequest.Builder()
-                            .addCredentialOption(signInWithGoogleOption)
-                            .build()
+                        val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = WEB_CLIENT_ID).build()
+                        val request = GetCredentialRequest.Builder().addCredentialOption(signInOption).build()
 
                         coroutineScope.launch {
                             try {
-                                val activity = context.findActivity()
-                                if (activity == null) {
-                                    errorMessage = "Internal Error: Activity not found"
-                                    return@launch
-                                }
-                                val result = credentialManager.getCredential(
-                                    request = request,
-                                    context = activity
-                                )
+                                val activity = context.findActivity() ?: return@launch
+                                val result = credentialManager.getCredential(request = request, context = activity)
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
                                 authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
                                     if (success) {
-                                        navController.navigate(Screen.BalanceSelection.route) {
+                                        navController.navigate(Screen.PasswordSetup.route) {
                                             popUpTo(Screen.Register.route) { inclusive = true }
                                         }
                                     } else {
-                                        errorMessage = "Firebase Google Auth Failed"
+                                        coroutineScope.launch { snackbarHostState.showSnackbar("Google Sign-in failed") }
                                     }
                                 }
-                            } catch (e: GetCredentialException) {
-                                Log.e("Auth", "Google Sign-in failed", e)
-                                errorMessage = when (e) {
-                                    is GetCredentialCancellationException -> "Sign-in cancelled"
-                                    is NoCredentialException -> "No Google accounts found. Check SHA-1 configuration."
-                                    else -> e.message ?: "Google Sign-in failed"
-                                }
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar("Error: ${e.localizedMessage}")
                             }
                         }
                     },
@@ -223,27 +249,19 @@ fun RegisterScreen(navController: NavController) {
                     border = BorderStroke(1.dp, Color.DarkGray),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.drawable.android_light_rd_na),
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Google", fontWeight = FontWeight.Medium)
-                    }
+                    Image(
+                        painter = painterResource(id = R.drawable.android_light_rd_na),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Google", fontWeight = FontWeight.Medium)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            TextButton(
-                onClick = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Register.route) { inclusive = true }
-                    }
-                }
-            ) {
+            TextButton(onClick = { navController.navigate(Screen.Login.route) }) {
                 Text(text = "Already have an account? Sign in", color = Color.Gray)
             }
         }

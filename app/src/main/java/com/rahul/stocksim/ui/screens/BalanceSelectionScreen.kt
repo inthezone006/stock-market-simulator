@@ -53,7 +53,7 @@ fun BalanceSelectionScreen(navController: NavController) {
                 onClick = {
                     isLoading = true
                     coroutineScope.launch {
-                        val result = authRepository.setUserBalance(selectedLevel.amount)
+                        val result = authRepository.setUserBalance(selectedLevel.amount, selectedLevel.level)
                         isLoading = false
                         if (result.isSuccess) {
                             navController.navigate(Screen.Main.route) {

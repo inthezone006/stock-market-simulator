@@ -12,16 +12,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
 import com.rahul.stocksim.ui.theme.StockMarketSimulatorTheme
-import com.rahul.stocksim.ui.screens.LoginScreen
-import com.rahul.stocksim.ui.screens.RegisterScreen
-import com.rahul.stocksim.ui.screens.SettingsScreen
+import com.rahul.stocksim.ui.screens.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.rahul.stocksim.ui.screens.MainScreen
-import com.rahul.stocksim.ui.screens.Screen
-import com.rahul.stocksim.ui.screens.StockDetailScreen
-import com.rahul.stocksim.ui.screens.BalanceSelectionScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +33,6 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
             
-            // Note: In a real app, you'd check if balance is already set to decide startDest
             val startDest = if (auth.currentUser != null) Screen.Main.route else Screen.Login.route
 
             StockMarketSimulatorTheme() {
@@ -57,6 +50,9 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.Register.route) {
                             RegisterScreen(navController = navController)
                         }
+                        composable(Screen.PasswordSetup.route) {
+                            PasswordSetupScreen(navController = navController)
+                        }
                         composable(Screen.BalanceSelection.route) {
                             BalanceSelectionScreen(navController = navController)
                         }
@@ -70,6 +66,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.Settings.route) {
                             SettingsScreen(navController = navController)
+                        }
+                        composable(Screen.EditProfile.route) {
+                            EditProfileScreen(navController = navController)
                         }
                         composable(
                             route = Screen.Details.route,

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -35,7 +36,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) {
     val bottomNavController = rememberNavController()
-    val navItems = listOf(BottomNavItem.Portfolio, BottomNavItem.Market, BottomNavItem.Trade)
+    val navItems = listOf(
+        BottomNavItem.Portfolio,
+        BottomNavItem.Market,
+        BottomNavItem.Trade,
+        BottomNavItem.Leaderboard
+    )
     
     val authRepository = AuthRepository()
     val marketRepository = MarketRepository()
@@ -50,134 +56,153 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
     Scaffold(
         containerColor = Color(0xFF121212),
         topBar = {
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                SearchBar(
-                    query = searchQuery,
-                    onQueryChange = { 
-                        searchQuery = it
-                        if (it.isNotEmpty()) {
-                            isSearching = true
-                            coroutineScope.launch {
-                                searchResults = marketRepository.searchStocks(it)
-                                isSearching = false
-                            }
-                        } else {
-                            searchResults = emptyList()
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { 
+                    searchQuery = it
+                    if (it.isNotEmpty()) {
+                        isSearching = true
+                        coroutineScope.launch {
+                            searchResults = marketRepository.searchStocks(it, nasdaqOnly = true)
+                            isSearching = false
                         }
-                    },
-                    onSearch = { searchActive = false },
-                    active = searchActive,
-                    onActiveChange = { searchActive = it },
-                    placeholder = { Text("Search stocks...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (searchActive) {
-                                IconButton(onClick = { 
-                                    searchQuery = ""
-                                    searchResults = emptyList()
-                                }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear")
-                                }
-                            }
-                            // Profile Icon always visible in SearchBar's trailing area or next to it
-                            Box(
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.DarkGray)
-                                    .clickable { mainNavController.navigate(Screen.Settings.route) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                val photoUrl = user?.photoUrl
-                                if (photoUrl != null) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(photoUrl)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = "Profile",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Text(
-                                        text = user?.email?.firstOrNull()?.toString()?.uppercase() ?: "?",
-                                        color = Color.White,
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
+                    } else {
+                        searchResults = emptyList()
+                    }
+                },
+                onSearch = { searchActive = false },
+                active = searchActive,
+                onActiveChange = { searchActive = it },
+                placeholder = { Text("Search stocks...") },
+                leadingIcon = { 
+                    if (searchActive) {
+                        IconButton(onClick = { searchActive = false }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = SearchBarDefaults.colors(
-                        containerColor = Color(0xFF1F1F1F),
-                        inputFieldColors = TextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.padding(start = 8.dp)
                         )
+                    }
+                },
+                trailingIcon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (searchActive && searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { 
+                                searchQuery = ""
+                                searchResults = emptyList()
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.White)
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 12.dp)
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color.DarkGray)
+                                .clickable { mainNavController.navigate(Screen.Settings.route) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val photoUrl = user?.photoUrl
+                            if (photoUrl != null) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(photoUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Profile",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Text(
+                                    text = user?.email?.firstOrNull()?.toString()?.uppercase() ?: "?",
+                                    color = Color.White,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (!searchActive) Modifier.padding(horizontal = 16.dp, vertical = 8.dp) else Modifier),
+                colors = SearchBarDefaults.colors(
+                    containerColor = Color(0xFF1F1F1F),
+                    inputFieldColors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     )
-                ) {
-                    if (isSearching) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color.White)
-                    }
-                    searchResults.forEach { stock ->
-                        ListItem(
-                            headlineContent = { Text(stock.symbol, color = Color.White) },
-                            supportingContent = { Text(stock.name, color = Color.Gray) },
-                            trailingContent = { Text("$${String.format("%.2f", stock.price)}", color = Color.White) },
-                            modifier = Modifier.clickable {
-                                searchActive = false
-                                onStockClick(stock)
-                            },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-                        )
-                    }
+                )
+            ) {
+                if (isSearching) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color.White)
+                }
+                searchResults.forEach { stock ->
+                    ListItem(
+                        headlineContent = { Text(stock.symbol, color = Color.White) },
+                        supportingContent = { Text(stock.name, color = Color.Gray) },
+                        trailingContent = { Text("$${String.format("%.2f", stock.price)}", color = Color.White) },
+                        modifier = Modifier.clickable {
+                            searchActive = false
+                            onStockClick(stock)
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                    )
                 }
             }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = Color(0xFF1F1F1F),
-                contentColor = Color.White
-            ) {
-                val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
+            if (!searchActive) {
+                NavigationBar(
+                    containerColor = Color(0xFF1F1F1F),
+                    contentColor = Color.White
+                ) {
+                    val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
 
-                navItems.forEach { item ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            bottomNavController.navigate(item.route) {
-                                popUpTo(bottomNavController.graph.findStartDestination().id) {
-                                    saveState = true
+                    navItems.forEach { item ->
+                        val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                bottomNavController.navigate(item.route) {
+                                    popUpTo(bottomNavController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                item.icon,
-                                contentDescription = item.label,
-                                tint = if (selected) Color.White else Color.Gray
+                            },
+                            icon = {
+                                Icon(
+                                    item.icon,
+                                    contentDescription = item.label,
+                                    tint = if (selected) Color.White else Color.Gray
+                                )
+                            },
+                            label = {
+                                Text(
+                                    item.label,
+                                    color = if (selected) Color.White else Color.Gray,
+                                    fontSize = 10.sp
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = Color(0xFF00796B).copy(alpha = 0.5f),
+                                selectedIconColor = Color.White,
+                                unselectedIconColor = Color.Gray
                             )
-                        },
-                        label = {
-                            Text(
-                                item.label,
-                                color = if (selected) Color.White else Color.Gray
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Color(0xFF00796B).copy(alpha = 0.5f),
-                            selectedIconColor = Color.White,
-                            unselectedIconColor = Color.Gray
                         )
-                    )
+                    }
                 }
             }
         }
@@ -199,7 +224,10 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                     )
                 }
                 composable(BottomNavItem.Trade.route) {
-                    TradeScreen(bottomNavController)
+                    TradeScreen(mainNavController)
+                }
+                composable(BottomNavItem.Leaderboard.route) {
+                    LeaderboardScreen(mainNavController)
                 }
             }
         }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
@@ -21,11 +22,12 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PasswordSetupScreen(navController: NavController) {
+fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean = false) {
     val authRepository = AuthRepository()
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    var oldPassword by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
@@ -36,14 +38,22 @@ fun PasswordSetupScreen(navController: NavController) {
     val hasDigit = password.any { it.isDigit() }
     val hasSpecial = password.any { !it.isLetterOrDigit() }
     val passwordsMatch = password.isNotEmpty() && password == confirmPassword
-    val isPasswordValid = hasMinLength && hasUppercase && hasDigit && hasSpecial && passwordsMatch
+    
+    val isPasswordValid = hasMinLength && hasUppercase && hasDigit && hasSpecial && passwordsMatch && (!isChangePassword || oldPassword.isNotEmpty())
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFF121212),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Set Your Password", color = Color.White) },
+                title = { Text(if (isChangePassword) "Change Password" else "Set Your Password", color = Color.White) },
+                navigationIcon = {
+                    if (isChangePassword) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF121212))
             )
         },
@@ -54,10 +64,15 @@ fun PasswordSetupScreen(navController: NavController) {
                         isLoading = true
                         coroutineScope.launch {
                             val result = authRepository.updatePassword(password)
+                            
                             isLoading = false
                             if (result.isSuccess) {
-                                navController.navigate(Screen.BalanceSelection.route) {
-                                    popUpTo(Screen.PasswordSetup.route) { inclusive = true }
+                                if (isChangePassword) {
+                                    navController.popBackStack()
+                                } else {
+                                    navController.navigate(Screen.BalanceSelection.route) {
+                                        popUpTo(Screen.PasswordSetup.route) { inclusive = true }
+                                    }
                                 }
                             } else {
                                 snackbarHostState.showSnackbar("Error: ${result.exceptionOrNull()?.localizedMessage}")
@@ -71,7 +86,7 @@ fun PasswordSetupScreen(navController: NavController) {
                 if (isLoading) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                 } else {
-                    Icon(Icons.Default.Check, contentDescription = "Confirm Password")
+                    Icon(Icons.Default.Check, contentDescription = "Confirm")
                 }
             }
         }
@@ -83,16 +98,38 @@ fun PasswordSetupScreen(navController: NavController) {
                 .padding(24.dp)
         ) {
             Text(
-                text = "To keep your account secure, please create a password. You can use this to sign in with your Google email later.",
+                text = if (isChangePassword) 
+                    "Update your account password. Make sure it's strong and unique." 
+                    else "To keep your account secure, please create a password. You can use this to sign in with your Google email later.",
                 color = Color.Gray,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(bottom = 32.dp)
             )
 
+            if (isChangePassword) {
+                OutlinedTextField(
+                    value = oldPassword,
+                    onValueChange = { oldPassword = it },
+                    label = { Text("Current Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.DarkGray
+                    ),
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray) }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("New Password") },
+                label = { Text(if (isChangePassword) "New Password" else "Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -111,7 +148,7 @@ fun PasswordSetupScreen(navController: NavController) {
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = { Text("Confirm Password") },
+                label = { Text(if (isChangePassword) "Confirm New Password" else "Confirm Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -134,6 +171,9 @@ fun PasswordSetupScreen(navController: NavController) {
             RequirementItem("At least one digit", hasDigit)
             RequirementItem("At least one special character", hasSpecial)
             RequirementItem("Passwords must match", passwordsMatch)
+            if (isChangePassword) {
+                RequirementItem("Current password required", oldPassword.isNotEmpty())
+            }
         }
     }
 }

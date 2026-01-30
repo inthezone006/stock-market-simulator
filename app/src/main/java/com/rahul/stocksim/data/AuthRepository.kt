@@ -12,7 +12,6 @@ import kotlinx.coroutines.tasks.await
 
 data class NotificationSettings(
     val masterEnabled: Boolean = true,
-    val viaEmail: Boolean = true,
     val viaPush: Boolean = true,
     val notifyLargeDrop: Boolean = true,
     val notifyLowBalance: Boolean = true,
@@ -49,11 +48,12 @@ class AuthRepository {
             }
     }
 
-    fun signInWithGoogle(idToken: String, onResult: (Boolean) -> Unit) {
+    fun signInWithGoogle(idToken: String, onResult: (Boolean, Boolean) -> Unit) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
-                onResult(task.isSuccessful)
+                val isNewUser = task.result?.additionalUserInfo?.isNewUser ?: false
+                onResult(task.isSuccessful, isNewUser)
             }
     }
 
@@ -155,7 +155,6 @@ class AuthRepository {
             val data = snapshot.data ?: return NotificationSettings()
             NotificationSettings(
                 masterEnabled = data["notif_master"] as? Boolean ?: true,
-                viaEmail = data["notif_email"] as? Boolean ?: true,
                 viaPush = data["notif_push"] as? Boolean ?: true,
                 notifyLargeDrop = data["notif_large_drop"] as? Boolean ?: true,
                 notifyLowBalance = data["notif_low_balance"] as? Boolean ?: true,
@@ -171,7 +170,6 @@ class AuthRepository {
         return try {
             val data = hashMapOf(
                 "notif_master" to settings.masterEnabled,
-                "notif_email" to settings.viaEmail,
                 "notif_push" to settings.viaPush,
                 "notif_large_drop" to settings.notifyLargeDrop,
                 "notif_low_balance" to settings.notifyLowBalance,

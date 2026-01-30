@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,7 +48,7 @@ fun EditProfileScreen(navController: NavController) {
         containerColor = Color(0xFF121212),
         topBar = {
             TopAppBar(
-                title = { Text("Edit Profile", color = Color.White) },
+                title = { Text("Edit", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
@@ -65,7 +66,7 @@ fun EditProfileScreen(navController: NavController) {
                 .padding(16.dp)
         ) {
             // Edit Name Section
-            Text("Public Identity", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text("Identity", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
@@ -77,31 +78,35 @@ fun EditProfileScreen(navController: NavController) {
                         label = { Text("Display Name") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            isUpdatingName = true
-                            coroutineScope.launch {
-                                val result = authRepository.updateDisplayName(name)
-                                isUpdatingName = false
-                                if (result.isSuccess) {
-                                    Toast.makeText(context, "Name updated successfully", Toast.LENGTH_SHORT).show()
+                        trailingIcon = {
+                            if (name.isNotEmpty() && name != user?.displayName) {
+                                if (isUpdatingName) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
                                 } else {
-                                    Toast.makeText(context, "Update failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                    IconButton(onClick = {
+                                        isUpdatingName = true
+                                        coroutineScope.launch {
+                                            val result = authRepository.updateDisplayName(name)
+                                            isUpdatingName = false
+                                            if (result.isSuccess) {
+                                                Toast.makeText(context, "Name updated successfully", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Update failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }) {
+                                        Icon(Icons.Default.Check, contentDescription = "Confirm", tint = Color.Green)
+                                    }
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isUpdatingName && name.isNotEmpty() && name != user?.displayName
-                    ) {
-                        if (isUpdatingName) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
-                        else Text("Update Name")
-                    }
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.DarkGray
+                        )
+                    )
                 }
             }
 
@@ -113,6 +118,8 @@ fun EditProfileScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
             ) {
+                val canUpdatePassword = newPassword.length >= 8 && newPassword == confirmPassword && oldPassword.isNotEmpty()
+                
                 Column(modifier = Modifier.padding(16.dp)) {
                     OutlinedTextField(
                         value = oldPassword,
@@ -121,7 +128,7 @@ fun EditProfileScreen(navController: NavController) {
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
@@ -131,7 +138,7 @@ fun EditProfileScreen(navController: NavController) {
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
@@ -141,35 +148,31 @@ fun EditProfileScreen(navController: NavController) {
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    val canUpdatePassword = newPassword.length >= 8 && newPassword == confirmPassword && oldPassword.isNotEmpty()
-                    
-                    Button(
-                        onClick = {
-                            isUpdatingPassword = true
-                            coroutineScope.launch {
-                                // Re-auth and update logic would go here
-                                val result = authRepository.updatePassword(newPassword)
-                                isUpdatingPassword = false
-                                if (result.isSuccess) {
-                                    Toast.makeText(context, "Password updated!", Toast.LENGTH_SHORT).show()
-                                    oldPassword = ""; newPassword = ""; confirmPassword = ""
+                        trailingIcon = {
+                            if (canUpdatePassword) {
+                                if (isUpdatingPassword) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
                                 } else {
-                                    Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                    IconButton(onClick = {
+                                        isUpdatingPassword = true
+                                        coroutineScope.launch {
+                                            val result = authRepository.updatePassword(newPassword)
+                                            isUpdatingPassword = false
+                                            if (result.isSuccess) {
+                                                Toast.makeText(context, "Password updated!", Toast.LENGTH_SHORT).show()
+                                                oldPassword = ""; newPassword = ""; confirmPassword = ""
+                                            } else {
+                                                Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }) {
+                                        Icon(Icons.Default.Check, contentDescription = "Confirm", tint = Color.Green)
+                                    }
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isUpdatingPassword && canUpdatePassword,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                    ) {
-                        if (isUpdatingPassword) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
-                        else Text("Change Password")
-                    }
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
+                    )
                 }
             }
 
@@ -192,7 +195,7 @@ fun EditProfileScreen(navController: NavController) {
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Delete Account", fontWeight = FontWeight.Bold)
+                        Text("Delete account", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -216,7 +219,7 @@ fun EditProfileScreen(navController: NavController) {
                         label = { Text("Confirm Password") },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
                     )
                 }
             },

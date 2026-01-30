@@ -48,10 +48,6 @@ fun SettingsScreen(navController: NavController) {
     var displayName by remember { mutableStateOf(user?.displayName ?: "") }
     var notifSettings by remember { mutableStateOf(NotificationSettings()) }
 
-    // Dialog States
-    var showNameDialog by remember { mutableStateOf(false) }
-    var showPasswordDialog by remember { mutableStateOf(false) }
-
     LaunchedEffect(Unit) {
         notifSettings = authRepository.getNotificationSettings()
     }
@@ -132,18 +128,33 @@ fun SettingsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // User Info Display (Display Name and Email)
+            Text(
+                text = displayName.ifEmpty { "Trading User" },
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = user?.email ?: "N/A",
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             // User Profile Section
             SettingsSection(title = "Profile") {
                 SettingsItem(
-                    icon = Icons.Default.Person,
-                    label = "Display Name",
-                    value = displayName.ifEmpty { "Not set" },
-                    onClick = { showNameDialog = true }
+                    icon = Icons.Default.Edit,
+                    label = "Identity",
+                    value = "Edit account details",
+                    onClick = { navController.navigate(Screen.EditProfile.route) }
                 )
                 SettingsItem(
                     icon = Icons.Default.Email,
-                    label = "Email",
-                    value = user?.email ?: "N/A",
+                    label = "Verification",
+                    value = if (user?.isEmailVerified == true) "Email verified" else "Email not verified",
                     trailing = {
                         if (user?.isEmailVerified == true) {
                             Icon(Icons.Default.Verified, contentDescription = "Verified", tint = Color.Green, modifier = Modifier.size(20.dp))
@@ -154,7 +165,7 @@ fun SettingsScreen(navController: NavController) {
                                     Toast.makeText(context, "Verification email sent!", Toast.LENGTH_SHORT).show()
                                 }
                             }) {
-                                Text("Verify", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                                Text("Verify Now", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                             }
                         }
                     }
@@ -170,7 +181,7 @@ fun SettingsScreen(navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Master Switch", color = Color.White)
+                    Text("Use notifications", color = Color.White)
                     Switch(
                         checked = notifSettings.masterEnabled,
                         onCheckedChange = { 
@@ -182,19 +193,8 @@ fun SettingsScreen(navController: NavController) {
                 }
                 
                 if (notifSettings.masterEnabled) {
-                    Divider(color = Color.DarkGray, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
-                    NotificationCheckbox("Via Email", notifSettings.viaEmail) { 
-                        val updated = notifSettings.copy(viaEmail = it)
-                        notifSettings = updated
-                        coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
-                    }
-                    NotificationCheckbox("Via Push", notifSettings.viaPush) { 
-                        val updated = notifSettings.copy(viaPush = it)
-                        notifSettings = updated
-                        coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
-                    }
-                    
+                    HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
+
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Notify me when:", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp))
                     
@@ -222,9 +222,9 @@ fun SettingsScreen(navController: NavController) {
             SettingsSection(title = "Security") {
                 SettingsItem(
                     icon = Icons.Default.Lock,
-                    label = "Change Password",
-                    value = "********",
-                    onClick = { showPasswordDialog = true }
+                    label = "Security Credentials",
+                    value = "Update password",
+                    onClick = { navController.navigate(Screen.PasswordSetup.createRoute(true)) }
                 )
             }
 
@@ -246,101 +246,6 @@ fun SettingsScreen(navController: NavController) {
                 Text("Logout", fontWeight = FontWeight.Bold)
             }
         }
-    }
-
-    // --- IMMERSIVE DIALOGS (DARK THEME) ---
-
-    // Name Edit Dialog
-    if (showNameDialog) {
-        var tempName by remember { mutableStateOf(displayName) }
-        AlertDialog(
-            onDismissRequest = { showNameDialog = false },
-            containerColor = Color(0xFF1F1F1F),
-            titleContentColor = Color.White,
-            textContentColor = Color.LightGray,
-            title = { Text("Edit Display Name") },
-            text = {
-                OutlinedTextField(
-                    value = tempName,
-                    onValueChange = { tempName = it },
-                    label = { Text("Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    coroutineScope.launch {
-                        val result = authRepository.updateDisplayName(tempName)
-                        if (result.isSuccess) {
-                            displayName = tempName
-                            showNameDialog = false
-                            Toast.makeText(context, "Name updated!", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }) { Text("Save", color = MaterialTheme.colorScheme.primary) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showNameDialog = false }) { Text("Cancel", color = Color.Gray) }
-            }
-        )
-    }
-
-    // Password Change Dialog
-    if (showPasswordDialog) {
-        var newPassword by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showPasswordDialog = false },
-            containerColor = Color(0xFF1F1F1F),
-            titleContentColor = Color.White,
-            title = { Text("Change Password") },
-            text = {
-                OutlinedTextField(
-                    value = newPassword,
-                    onValueChange = { newPassword = it },
-                    label = { Text("New Password") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    coroutineScope.launch {
-                        val result = authRepository.updatePassword(newPassword)
-                        if (result.isSuccess) {
-                            showPasswordDialog = false
-                            Toast.makeText(context, "Password updated!", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(context, "Failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }) { Text("Update", color = MaterialTheme.colorScheme.primary) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPasswordDialog = false }) { Text("Cancel", color = Color.Gray) }
-            }
-        )
-    }
-}
-
-@Composable
-fun NotificationCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().clickable { onCheckedChange(!checked) }.padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(checked = checked, onCheckedChange = onCheckedChange)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(label, color = Color.White, fontSize = 14.sp)
     }
 }
 
@@ -422,5 +327,17 @@ fun SettingsItem(
             Text(text = value, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         }
         trailing()
+    }
+}
+
+@Composable
+fun NotificationCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { onCheckedChange(!checked) }.padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(checked = checked, onCheckedChange = onCheckedChange)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(label, color = Color.White, fontSize = 14.sp)
     }
 }

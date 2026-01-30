@@ -196,7 +196,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                                         coroutineScope.launch {
                                             val result = marketRepository.buyStock(stock!!.symbol, quantity, stock!!.price)
                                             if (result.isSuccess) {
-                                                Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "Purchase successful", Toast.LENGTH_SHORT).show()
                                                 refreshStockData()
                                             } else {
                                                 Toast.makeText(context, result.exceptionOrNull()?.message ?: "Purchase Failed", Toast.LENGTH_SHORT).show()
@@ -215,7 +215,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                                             coroutineScope.launch {
                                                 val result = marketRepository.sellStock(stock!!.symbol, quantity, stock!!.price)
                                                 if (result.isSuccess) {
-                                                    Toast.makeText(context, "Sale Successful", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, "Sale successful", Toast.LENGTH_SHORT).show()
                                                     refreshStockData()
                                                 } else {
                                                     Toast.makeText(context, result.exceptionOrNull()?.message ?: "Sale Failed", Toast.LENGTH_SHORT).show()

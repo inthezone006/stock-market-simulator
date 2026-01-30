@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TradeScreen(mainNavController: NavController) { // Renamed parameter to be explicit
+fun TradeScreen(mainNavController: NavController) {
     val marketRepository = MarketRepository()
     val balance by marketRepository.getUserBalance().collectAsState(initial = 0.0)
     var portfolioItems by remember { mutableStateOf<List<Pair<Stock, Long>>>(emptyList()) }
@@ -79,47 +79,86 @@ fun TradeScreen(mainNavController: NavController) { // Renamed parameter to be e
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Active Positions",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
             if (isLoading && !isRefreshing) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Color.White)
                 }
-            } else if (portfolioItems.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "You don't own any stocks yet.", color = Color.Gray)
-                }
             } else {
+                val activePositions = portfolioItems.filter { it.second > 0 }
+                val oldPositions = portfolioItems.filter { it.second <= 0 }
+
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(portfolioItems) { (stock, quantity) ->
-                        StockRow(
-                            stock = stock,
-                            ownedQuantity = quantity,
-                            onRowClick = { mainNavController.navigate("details/${stock.symbol}") }
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = "$quantity Shares", color = Color.White, fontSize = 14.sp)
+                    if (activePositions.isNotEmpty()) {
+                        item {
                             Text(
-                                text = "Value: $${String.format("%.2f", stock.price * quantity)}",
-                                color = Color.Gray,
-                                fontSize = 14.sp
+                                text = "Active Positions",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 12.dp)
                             )
                         }
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                        items(activePositions) { (stock, quantity) ->
+                            PositionRow(stock, quantity, mainNavController)
+                        }
+                    }
+
+                    if (oldPositions.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = "Old Positions",
+                                color = Color.Gray,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
+                        }
+                        items(oldPositions) { (stock, quantity) ->
+                            PositionRow(stock, quantity, mainNavController, isOld = true)
+                        }
+                    }
+
+                    if (activePositions.isEmpty() && oldPositions.isEmpty()) {
+                        item {
+                            Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                Text(text = "You don't have any trading history yet.", color = Color.Gray)
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PositionRow(stock: Stock, quantity: Long, mainNavController: NavController, isOld: Boolean = false) {
+    Column {
+        StockRow(
+            stock = stock,
+            ownedQuantity = quantity,
+            onRowClick = { mainNavController.navigate("details/${stock.symbol}") }
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = if (isOld) "Sold All" else "$quantity Shares", 
+                color = if (isOld) Color.Gray else Color.White, 
+                fontSize = 14.sp
+            )
+            if (!isOld) {
+                Text(
+                    text = "Value: $${String.format("%.2f", stock.price * quantity)}",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+            }
+        }
+        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
     }
 }

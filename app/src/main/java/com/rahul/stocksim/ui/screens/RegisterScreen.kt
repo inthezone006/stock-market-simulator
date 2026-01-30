@@ -230,10 +230,17 @@ fun RegisterScreen(navController: NavController) {
                                 val activity = context.findActivity() ?: return@launch
                                 val result = credentialManager.getCredential(request = request, context = activity)
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-                                authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
+                                authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success, isNewUser ->
                                     if (success) {
-                                        navController.navigate(Screen.PasswordSetup.route) {
-                                            popUpTo(Screen.Register.route) { inclusive = true }
+                                        if (isNewUser) {
+                                            // Pass the display name from Google to PasswordSetup if it's a new user
+                                            navController.navigate(Screen.PasswordSetup.createRoute(false)) {
+                                                popUpTo(Screen.Register.route) { inclusive = true }
+                                            }
+                                        } else {
+                                            navController.navigate(Screen.Main.route) {
+                                                popUpTo(Screen.Register.route) { inclusive = true }
+                                            }
                                         }
                                     } else {
                                         coroutineScope.launch { snackbarHostState.showSnackbar("Google Sign-in failed") }
@@ -249,12 +256,6 @@ fun RegisterScreen(navController: NavController) {
                     border = BorderStroke(1.dp, Color.DarkGray),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.android_light_rd_na),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Google", fontWeight = FontWeight.Medium)
                 }
             }

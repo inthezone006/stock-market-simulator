@@ -50,8 +50,17 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.Register.route) {
                             RegisterScreen(navController = navController)
                         }
-                        composable(Screen.PasswordSetup.route) {
-                            PasswordSetupScreen(navController = navController)
+                        composable(
+                            route = Screen.PasswordSetup.route,
+                            arguments = listOf(
+                                navArgument("isChangePassword") {
+                                    type = NavType.BoolType
+                                    defaultValue = false
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val isChange = backStackEntry.arguments?.getBoolean("isChangePassword") ?: false
+                            PasswordSetupScreen(navController = navController, isChangePassword = isChange)
                         }
                         composable(Screen.BalanceSelection.route) {
                             BalanceSelectionScreen(navController = navController)

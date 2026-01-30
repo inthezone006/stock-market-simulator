@@ -32,11 +32,14 @@ fun PortfolioScreen(navController: NavController) {
 
     val refreshData = {
         coroutineScope.launch {
+            if (!isRefreshing) isLoading = true
             val rawPortfolio = marketRepository.getPortfolio()
-            portfolioItems = rawPortfolio.mapNotNull { (symbol, qty) ->
-                val stock = marketRepository.getStockQuote(symbol)
-                if (stock != null) stock to qty else null
-            }
+            portfolioItems = rawPortfolio
+                .filter { it.second > 0 } // Only show assets with more than 0 shares
+                .mapNotNull { (symbol, qty) ->
+                    val stock = marketRepository.getStockQuote(symbol)
+                    if (stock != null) stock to qty else null
+                }
             isLoading = false
             isRefreshing = false
         }
@@ -116,6 +119,7 @@ fun PortfolioScreen(navController: NavController) {
                     items(portfolioItems) { (stock, quantity) ->
                         StockRow(
                             stock = stock,
+                            ownedQuantity = quantity,
                             onRowClick = { navController.navigate("details/${stock.symbol}") }
                         )
                         Text(

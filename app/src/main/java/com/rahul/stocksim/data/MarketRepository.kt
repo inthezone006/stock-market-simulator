@@ -200,11 +200,8 @@ class MarketRepository {
                     
                     transaction.update(userRef, "balance", currentBalance + totalGain)
                     
-                    if (currentQty == quantity.toLong()) {
-                        transaction.delete(portfolioRef)
-                    } else {
-                        transaction.update(portfolioRef, "quantity", currentQty - quantity)
-                    }
+                    // Instead of deleting, we update to keep "old" positions
+                    transaction.update(portfolioRef, "quantity", currentQty - quantity)
                     null
                 } else {
                     throw Exception("Insufficient quantity")

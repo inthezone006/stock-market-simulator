@@ -94,7 +94,7 @@ fun LoginScreen(navController: NavController) {
                 label = { Text(text = "Password", color = Color.LightGray) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
@@ -181,10 +181,16 @@ fun LoginScreen(navController: NavController) {
                                     context = activity
                                 )
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-                                authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success ->
+                                authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success, isNewUser ->
                                     if (success) {
-                                        navController.navigate(Screen.Main.route) {
-                                            popUpTo(Screen.Login.route) { inclusive = true }
+                                        if (isNewUser) {
+                                            navController.navigate(Screen.PasswordSetup.createRoute(false)) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
+                                        } else {
+                                            navController.navigate(Screen.Main.route) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
                                         }
                                     } else {
                                         errorMessage = "Firebase Google Auth Failed"

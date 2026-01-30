@@ -13,8 +13,14 @@ const val WEB_CLIENT_ID = "921964890596-iqltc99aa0dbc73p644csaa5p8qcmeph.apps.go
 sealed class Screen(val route: String) {
     object Login : Screen("login_screen")
     object Register : Screen("register_screen")
-    object PasswordSetup : Screen("password_setup_screen/{isChangePassword}") {
-        fun createRoute(isChangePassword: Boolean) = "password_setup_screen/$isChangePassword"
+    object PasswordSetup : Screen("password_setup_screen/{isChangePassword}?name={name}&email={email}") {
+        fun createRoute(isChangePassword: Boolean, name: String? = null, email: String? = null): String {
+            val base = "password_setup_screen/$isChangePassword"
+            val queryParams = mutableListOf<String>()
+            if (name != null) queryParams.add("name=$name")
+            if (email != null) queryParams.add("email=$email")
+            return if (queryParams.isEmpty()) base else "$base?${queryParams.joinToString("&")}"
+        }
     }
     object BalanceSelection : Screen("balance_selection_screen")
     object Settings : Screen("settings_screen")

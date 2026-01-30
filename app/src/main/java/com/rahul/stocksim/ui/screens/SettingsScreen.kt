@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,15 +42,35 @@ fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val authRepository = AuthRepository()
-    val user = authRepository.currentUser
+    
+    // Using mutableStateOf for user to allow manual force-refresh
+    var user by remember { mutableStateOf(authRepository.currentUser) }
+    var isRefreshing by remember { mutableStateOf(false) }
     
     var isUploading by remember { mutableStateOf(false) }
     var profilePhotoUrl by remember { mutableStateOf(user?.photoUrl) }
     var displayName by remember { mutableStateOf(user?.displayName ?: "") }
     var notifSettings by remember { mutableStateOf(NotificationSettings()) }
 
+    val loadData = {
+        coroutineScope.launch {
+            // Force reload the Firebase user to get the latest emailVerification status
+            try {
+                user?.reload()?.await()
+                user = authRepository.currentUser
+                displayName = user?.displayName ?: ""
+                profilePhotoUrl = user?.photoUrl
+                notifSettings = authRepository.getNotificationSettings()
+            } catch (e: Exception) {
+                // Handle potential errors
+            } finally {
+                isRefreshing = false
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
-        notifSettings = authRepository.getNotificationSettings()
+        loadData()
     }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -63,7 +84,8 @@ fun SettingsScreen(navController: NavController) {
                 if (result.isSuccess) {
                     try {
                         authRepository.currentUser?.reload()?.await()
-                        profilePhotoUrl = authRepository.currentUser?.photoUrl
+                        user = authRepository.currentUser
+                        profilePhotoUrl = user?.photoUrl
                         Toast.makeText(context, "Profile picture updated!", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
                         Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -89,161 +111,171 @@ fun SettingsScreen(navController: NavController) {
             )
         }
     ) { innerPadding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                loadData()
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(Color(0xFF121212))
         ) {
-            // Profile Picture Section
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clickable(enabled = !isUploading) { imagePickerLauncher.launch("image/*") },
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (isUploading) {
-                    CircularProgressIndicator(color = Color.White)
-                } else {
-                    Box(modifier = Modifier.fillMaxSize().clip(CircleShape)) {
-                        ProfileImageInternal(displayName, profilePhotoUrl)
-                    }
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.BottomEnd).size(36.dp).offset(x = 4.dp, y = 4.dp),
-                        shadowElevation = 4.dp
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Change Picture",
-                            tint = Color.White,
-                            modifier = Modifier.padding(8.dp).fillMaxSize()
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // User Info Display (Display Name and Email)
-            Text(
-                text = displayName.ifEmpty { "Trading User" },
-                color = Color.White,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = user?.email ?: "N/A",
-                color = Color.Gray,
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // User Profile Section
-            SettingsSection(title = "Profile") {
-                SettingsItem(
-                    icon = Icons.Default.Edit,
-                    label = "Identity",
-                    value = "Edit account details",
-                    onClick = { navController.navigate(Screen.EditProfile.route) }
-                )
-                SettingsItem(
-                    icon = Icons.Default.Email,
-                    label = "Verification",
-                    value = if (user?.isEmailVerified == true) "Email verified" else "Email not verified",
-                    trailing = {
-                        if (user?.isEmailVerified == true) {
-                            Icon(Icons.Default.Verified, contentDescription = "Verified", tint = Color.Green, modifier = Modifier.size(20.dp))
-                        } else {
-                            TextButton(onClick = {
-                                coroutineScope.launch {
-                                    authRepository.sendEmailVerification()
-                                    Toast.makeText(context, "Verification email sent!", Toast.LENGTH_SHORT).show()
-                                }
-                            }) {
-                                Text("Verify Now", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
-                            }
+                // Profile Picture Section
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clickable(enabled = !isUploading) { imagePickerLauncher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isUploading) {
+                        CircularProgressIndicator(color = Color.White)
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize().clip(CircleShape)) {
+                            ProfileImageInternal(displayName, profilePhotoUrl)
+                        }
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.align(Alignment.BottomEnd).size(36.dp).offset(x = 4.dp, y = 4.dp),
+                            shadowElevation = 4.dp
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Change Picture",
+                                tint = Color.White,
+                                modifier = Modifier.padding(8.dp).fillMaxSize()
+                            )
                         }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // User Info Display (Display Name and Email)
+                Text(
+                    text = displayName.ifEmpty { "Trading User" },
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
                 )
-            }
+                Text(
+                    text = user?.email ?: "N/A",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // Notifications Section
-            SettingsSection(title = "Notifications") {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Use notifications", color = Color.White)
-                    Switch(
-                        checked = notifSettings.masterEnabled,
-                        onCheckedChange = { 
-                            val updated = notifSettings.copy(masterEnabled = it)
-                            notifSettings = updated
-                            coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                // User Profile Section
+                SettingsSection(title = "Profile") {
+                    SettingsItem(
+                        icon = Icons.Default.Edit,
+                        label = "Identity",
+                        value = "Edit account details",
+                        onClick = { navController.navigate(Screen.EditProfile.route) }
+                    )
+                    SettingsItem(
+                        icon = Icons.Default.Email,
+                        label = "Verification",
+                        value = if (user?.isEmailVerified == true) "Email verified" else "Email not verified",
+                        trailing = {
+                            if (user?.isEmailVerified == true) {
+                                Icon(Icons.Default.Verified, contentDescription = "Verified", tint = Color.Green, modifier = Modifier.size(20.dp))
+                            } else {
+                                TextButton(onClick = {
+                                    coroutineScope.launch {
+                                        authRepository.sendEmailVerification()
+                                        Toast.makeText(context, "Verification email sent!", Toast.LENGTH_SHORT).show()
+                                    }
+                                }) {
+                                    Text("Verify Now", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                                }
+                            }
                         }
                     )
                 }
-                
-                if (notifSettings.masterEnabled) {
-                    HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Notify me when:", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Notifications Section
+                SettingsSection(title = "Notifications") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Use notifications", color = Color.White)
+                        Switch(
+                            checked = notifSettings.masterEnabled,
+                            onCheckedChange = { 
+                                val updated = notifSettings.copy(masterEnabled = it)
+                                notifSettings = updated
+                                coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                            }
+                        )
+                    }
                     
-                    NotificationCheckbox("Large stock drop (>5%)", notifSettings.notifyLargeDrop) { 
-                        val updated = notifSettings.copy(notifyLargeDrop = it)
-                        notifSettings = updated
-                        coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
-                    }
-                    NotificationCheckbox("Low balance alert", notifSettings.notifyLowBalance) { 
-                        val updated = notifSettings.copy(notifyLowBalance = it)
-                        notifSettings = updated
-                        coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
-                    }
-                    NotificationCheckbox("New sign-in detected", notifSettings.notifyNewSignIn) { 
-                        val updated = notifSettings.copy(notifyNewSignIn = it)
-                        notifSettings = updated
-                        coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                    if (notifSettings.masterEnabled) {
+                        HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Notify me when:", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp))
+                        
+                        NotificationCheckbox("Large stock drop", notifSettings.notifyLargeDrop) {
+                            val updated = notifSettings.copy(notifyLargeDrop = it)
+                            notifSettings = updated
+                            coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                        }
+                        NotificationCheckbox("Low balance", notifSettings.notifyLowBalance) {
+                            val updated = notifSettings.copy(notifyLowBalance = it)
+                            notifSettings = updated
+                            coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                        }
+                        NotificationCheckbox("New sign-in detected", notifSettings.notifyNewSignIn) { 
+                            val updated = notifSettings.copy(notifyNewSignIn = it)
+                            notifSettings = updated
+                            coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Account Security Section
-            SettingsSection(title = "Security") {
-                SettingsItem(
-                    icon = Icons.Default.Lock,
-                    label = "Security Credentials",
-                    value = "Update password",
-                    onClick = { navController.navigate(Screen.PasswordSetup.createRoute(true)) }
-                )
-            }
+                // Account Security Section
+                SettingsSection(title = "Security") {
+                    SettingsItem(
+                        icon = Icons.Default.Lock,
+                        label = "Security Credentials",
+                        value = "Update password",
+                        onClick = { navController.navigate(Screen.PasswordSetup.createRoute(true)) }
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // Logout Button
-            Button(
-                onClick = {
-                    authRepository.logout()
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Main.route) { inclusive = true }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000))
-            ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Logout", fontWeight = FontWeight.Bold)
+                // Logout Button
+                Button(
+                    onClick = {
+                        authRepository.logout()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Main.route) { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000))
+                ) {
+                    Icon(Icons.Default.ExitToApp, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Logout", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

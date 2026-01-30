@@ -22,7 +22,12 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean = false) {
+fun PasswordSetupScreen(
+    navController: NavController, 
+    isChangePassword: Boolean = false,
+    initialName: String? = null,
+    initialEmail: String? = null
+) {
     val authRepository = AuthRepository()
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -46,12 +51,10 @@ fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean 
         containerColor = Color(0xFF121212),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(if (isChangePassword) "Change Password" else "Set Your Password", color = Color.White) },
+                title = { Text(if (isChangePassword) "Change Password" else "Security Setup", color = Color.White) },
                 navigationIcon = {
-                    if (isChangePassword) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                        }
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF121212))
@@ -63,19 +66,40 @@ fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean 
                     if (isPasswordValid) {
                         isLoading = true
                         coroutineScope.launch {
-                            val result = authRepository.updatePassword(password)
-                            
-                            isLoading = false
-                            if (result.isSuccess) {
-                                if (isChangePassword) {
-                                    navController.popBackStack()
+                            if (isChangePassword) {
+                                val result = authRepository.updatePassword(password)
+                                isLoading = false
+                                if (result.isSuccess) navController.popBackStack()
+                                else snackbarHostState.showSnackbar("Error: ${result.exceptionOrNull()?.localizedMessage}")
+                            } else {
+                                // NEW USER REGISTRATION CASE
+                                if (initialEmail != null) {
+                                    authRepository.register(initialEmail, password) { success, error ->
+                                        if (success) {
+                                            coroutineScope.launch {
+                                                if (initialName != null) authRepository.updateDisplayName(initialName)
+                                                isLoading = false
+                                                navController.navigate(Screen.BalanceSelection.route) {
+                                                    popUpTo(Screen.Register.route) { inclusive = true }
+                                                }
+                                            }
+                                        } else {
+                                            isLoading = false
+                                            coroutineScope.launch { snackbarHostState.showSnackbar(error ?: "Registration failed") }
+                                        }
+                                    }
                                 } else {
-                                    navController.navigate(Screen.BalanceSelection.route) {
-                                        popUpTo(Screen.PasswordSetup.route) { inclusive = true }
+                                    // GOOGLE NEW USER CASE (Update existing auth password)
+                                    val result = authRepository.updatePassword(password)
+                                    isLoading = false
+                                    if (result.isSuccess) {
+                                        navController.navigate(Screen.BalanceSelection.route) {
+                                            popUpTo(Screen.Register.route) { inclusive = true }
+                                        }
+                                    } else {
+                                        snackbarHostState.showSnackbar("Error: ${result.exceptionOrNull()?.localizedMessage}")
                                     }
                                 }
-                            } else {
-                                snackbarHostState.showSnackbar("Error: ${result.exceptionOrNull()?.localizedMessage}")
                             }
                         }
                     }
@@ -99,8 +123,8 @@ fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean 
         ) {
             Text(
                 text = if (isChangePassword) 
-                    "Update your account password. Make sure it's strong and unique." 
-                    else "To keep your account secure, please create a password. You can use this to sign in with your Google email later.",
+                    "Confirm your current identity and choose a new secure password." 
+                    else "Create a secure password for your account. You can use this to sign in later with your email.",
                 color = Color.Gray,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -129,7 +153,7 @@ fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean 
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text(if (isChangePassword) "New Password" else "Password") },
+                label = { Text(if (isChangePassword) "New Password" else "Choose Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -148,7 +172,7 @@ fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean 
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = { Text(if (isChangePassword) "Confirm New Password" else "Confirm Password") },
+                label = { Text("Confirm Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -164,8 +188,7 @@ fun PasswordSetupScreen(navController: NavController, isChangePassword: Boolean 
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Requirements List
-            Text("Requirements:", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text("Password Requirements:", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             RequirementItem("At least 8 characters", hasMinLength)
             RequirementItem("At least one uppercase letter", hasUppercase)
             RequirementItem("At least one digit", hasDigit)

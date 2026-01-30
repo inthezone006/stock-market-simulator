@@ -48,7 +48,7 @@ fun EditProfileScreen(navController: NavController) {
         containerColor = Color(0xFF121212),
         topBar = {
             TopAppBar(
-                title = { Text("Edit", color = Color.White) },
+                title = { Text("Edit Profile", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
@@ -235,7 +235,7 @@ fun EditProfileScreen(navController: NavController) {
                                 navController.navigate(Screen.Login.route) {
                                     popUpTo(Screen.Main.route) { inclusive = true }
                                 }
-                                Toast.makeText(context, "Account Deleted", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Account deleted", Toast.LENGTH_LONG).show()
                             } else {
                                 Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                             }

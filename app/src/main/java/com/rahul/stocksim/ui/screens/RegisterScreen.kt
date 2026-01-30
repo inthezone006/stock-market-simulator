@@ -3,16 +3,16 @@ package com.rahul.stocksim.ui.screens
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,14 +22,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
-import androidx.credentials.exceptions.NoCredentialException
 import androidx.navigation.NavController
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -56,17 +54,10 @@ fun RegisterScreen(navController: NavController) {
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    // Validation Logic
-    val hasMinLength = password.length >= 8
-    val hasUppercase = password.any { it.isUpperCase() }
-    val hasDigit = password.any { it.isDigit() }
-    val hasSpecial = password.any { !it.isLetterOrDigit() }
-    val passwordsMatch = password.isNotEmpty() && password == confirmPassword
-    val isFormValid = name.isNotEmpty() && email.contains("@") && hasMinLength && hasUppercase && hasDigit && hasSpecial && passwordsMatch
+    // Simplified Validation for initial step
+    val isFormValid = name.isNotEmpty() && email.contains("@") && email.contains(".")
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -90,6 +81,21 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            Text(
+                text = "Join the Simulator",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Text(
+                text = "Enter your details to get started",
+                color = Color.Gray,
+                fontSize = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -109,11 +115,15 @@ fun RegisterScreen(navController: NavController) {
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
-                label = { Text(text = "Email", color = Color.LightGray) },
+                onValueChange = { email = it.lowercase() }, // Force lowercase to prevent unwanted capitalization
+                label = { Text(text = "Email Address", color = Color.LightGray) },
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    keyboardType = KeyboardType.Email
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
@@ -122,55 +132,7 @@ fun RegisterScreen(navController: NavController) {
                 ),
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text(text = "Password", color = Color.LightGray) },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.DarkGray
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text(text = "Confirm Password", color = Color.LightGray) },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.DarkGray
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Requirements List
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                Text("Requirements:", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                RequirementItem("At least 8 characters", hasMinLength)
-                RequirementItem("At least one uppercase letter", hasUppercase)
-                RequirementItem("At least one digit", hasDigit)
-                RequirementItem("At least one special character", hasSpecial)
-                RequirementItem("Passwords must match", passwordsMatch)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -179,20 +141,13 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedButton(
                     onClick = {
                         isLoading = true
-                        authRepository.register(email, password) { success, error ->
-                            if (success) {
-                                coroutineScope.launch {
-                                    authRepository.updateDisplayName(name)
-                                    isLoading = false
-                                    navController.navigate(Screen.BalanceSelection.route) {
-                                        popUpTo(Screen.Register.route) { inclusive = true }
-                                    }
-                                }
+                        coroutineScope.launch {
+                            val exists = authRepository.checkEmailExists(email)
+                            isLoading = false
+                            if (exists) {
+                                snackbarHostState.showSnackbar("This email is already in use.")
                             } else {
-                                isLoading = false
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar(error ?: "Registration failed")
-                                }
+                                navController.navigate(Screen.PasswordSetup.createRoute(isChangePassword = false, name = name, email = email))
                             }
                         }
                     },
@@ -210,12 +165,12 @@ fun RegisterScreen(navController: NavController) {
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.PersonAdd,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Sign up", fontWeight = FontWeight.Medium)
+                            Text("Continue", fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -233,7 +188,6 @@ fun RegisterScreen(navController: NavController) {
                                 authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success, isNewUser ->
                                     if (success) {
                                         if (isNewUser) {
-                                            // Pass the display name from Google to PasswordSetup if it's a new user
                                             navController.navigate(Screen.PasswordSetup.createRoute(false)) {
                                                 popUpTo(Screen.Register.route) { inclusive = true }
                                             }
@@ -256,6 +210,12 @@ fun RegisterScreen(navController: NavController) {
                     border = BorderStroke(1.dp, Color.DarkGray),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.android_light_rd_na),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Google", fontWeight = FontWeight.Medium)
                 }
             }

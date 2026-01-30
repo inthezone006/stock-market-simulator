@@ -43,7 +43,8 @@ class AuthRepository {
                 if (task.isSuccessful) {
                     onResult(true, null)
                 } else {
-                    onResult(false, "Registration failed.")
+                    val error = task.exception?.localizedMessage ?: "Registration failed."
+                    onResult(false, error)
                 }
             }
     }
@@ -57,6 +58,19 @@ class AuthRepository {
             }
     }
 
+    suspend fun checkEmailExists(email: String): Boolean {
+        return try {
+            // Note: This requires "Email enumeration protection" to be DISABLED 
+            // in Firebase Console -> Authentication -> Settings -> User actions.
+            // If it's enabled, this will always return an empty list or throw an error.
+            val result = auth.fetchSignInMethodsForEmail(email).await()
+            result.signInMethods?.isNotEmpty() == true
+        } catch (e: Exception) {
+            // If API fails or is restricted, we fallback to false and handle it during actual registration
+            false
+        }
+    }
+
     suspend fun sendEmailVerification(): Result<Unit> {
         return try {
             currentUser?.sendEmailVerification()?.await()
@@ -67,12 +81,16 @@ class AuthRepository {
     }
 
     suspend fun updateDisplayName(newName: String): Result<Unit> {
-        val user = currentUser ?: return Result.failure(Exception("Not authenticated"))
+        val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {
             val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(newName).build()
             user.updateProfile(profileUpdates).await()
-            // Sync to Firestore for leaderboard
-            firestore.collection("users").document(user.uid).update("displayName", newName).await()
+            // Sync to Firestore if the document exists
+            try {
+                firestore.collection("users").document(user.uid).update("displayName", newName).await()
+            } catch (e: Exception) {
+                // Ignore if document doesn't exist yet (still in onboarding)
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -80,7 +98,7 @@ class AuthRepository {
     }
 
     suspend fun updatePassword(newPassword: String): Result<Unit> {
-        val user = currentUser ?: return Result.failure(Exception("Not authenticated"))
+        val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {
             user.updatePassword(newPassword).await()
             Result.success(Unit)
@@ -116,14 +134,14 @@ class AuthRepository {
     }
 
     suspend fun setUserBalance(balance: Double, level: Int): Result<Unit> {
-        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Session expired."))
+        val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {
-            val userRef = firestore.collection("users").document(userId)
+            val userRef = firestore.collection("users").document(user.uid)
             val userData = hashMapOf(
                 "balance" to balance,
                 "level" to level,
-                "email" to auth.currentUser?.email,
-                "displayName" to auth.currentUser?.displayName
+                "email" to user.email,
+                "displayName" to user.displayName
             )
             userRef.set(userData).await()
             Result.success(Unit)
@@ -133,7 +151,7 @@ class AuthRepository {
     }
 
     suspend fun updateProfilePicture(imageUri: Uri): Result<Unit> {
-        val user = currentUser ?: return Result.failure(Exception("Auth error"))
+        val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {
             val storageRef = storage.reference.child("profile_pictures/${user.uid}")
             storageRef.putFile(imageUri).await()
@@ -149,9 +167,9 @@ class AuthRepository {
     }
 
     suspend fun getNotificationSettings(): NotificationSettings {
-        val userId = auth.currentUser?.uid ?: return NotificationSettings()
+        val user = auth.currentUser ?: return NotificationSettings()
         return try {
-            val snapshot = firestore.collection("users").document(userId).get().await()
+            val snapshot = firestore.collection("users").document(user.uid).get().await()
             val data = snapshot.data ?: return NotificationSettings()
             NotificationSettings(
                 masterEnabled = data["notif_master"] as? Boolean ?: true,
@@ -166,7 +184,7 @@ class AuthRepository {
     }
 
     suspend fun saveNotificationSettings(settings: NotificationSettings): Result<Unit> {
-        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not authenticated"))
+        val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {
             val data = hashMapOf(
                 "notif_master" to settings.masterEnabled,
@@ -175,7 +193,7 @@ class AuthRepository {
                 "notif_low_balance" to settings.notifyLowBalance,
                 "notif_new_signin" to settings.notifyNewSignIn
             )
-            firestore.collection("users").document(userId).update(data as Map<String, Any>).await()
+            firestore.collection("users").document(user.uid).update(data as Map<String, Any>).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -1,38 +1,54 @@
 # 📈 Stock Market Simulator 🚀
 
-Welcome to the **Stock Market Simulator**, a high-performance, modern Android application built with **Jetpack Compose** and **Firebase**. Whether you're a seasoned trader or just starting, this app provides a risk-free environment to master the stock market with real-time data! 💸
+Welcome to the **Stock Market Simulator**, a high-performance, modern Android application built with **Jetpack Compose** and **Firebase**. Master the art of trading in a risk-free, real-time environment designed with a sleek fintech aesthetic! 💸
 
 ## ✨ Features
 
-- **🔐 Secure Authentication**: Sign up with Email/Password or use **Google One Tap Sign-in** for a seamless experience.
-- **🖼️ Customizable Profiles**: Upload your profile picture using Firebase Storage and Coil.
-- **🎮 Difficulty Levels**: Choose your starting capital from Level 1 ($100,000) to Level 7 ($100) to test your skills!
-- **🔍 Live NASDAQ Search**: Find any stock on the NASDAQ exchange with a powerful, integrated Search Bar.
-- **📊 Real-time Data**: Powered by the **Finnhub API** for live quotes and market movements.
-- **❤️ Personal Watchlist**: Save your favorite stocks to a personalized watchlist synced across devices via Firestore.
-- **💼 Portfolio Management**: Track your "Total Account Value," see your "Buying Power," and manage active positions with a sleek fintech UI.
-- **🔄 Smart Refresh**: Stay up-to-date with **Pull-to-Refresh** functionality on all major screens.
-- **⚡ Atomic Trading**: High-integrity "Buy" and "Sell" transactions using Firestore's "Read-Before-Write" pattern.
+### 🔐 Advanced Security & Auth
+- **Multi-Method Login**: Sign up with Email/Password or use **Google One Tap Sign-in**.
+- **Secure Onboarding**: Mandatory password setup for all users (including Google) and a strict 5-point password validation system.
+- **Identity Protection**: Re-authentication required for sensitive actions like account deletion.
+
+### 🎮 Gamified Experience
+- **Difficulty Levels**: Choose your starting capital from **Level 1 ($100,000)** to **Level 7 ($100)**.
+- **Global Leaderboard 🏆**: Compete for the top spot! Both "Global" and "Level-specific" rankings show the **Top 5** traders.
+- **Personal Recognition**: Your name gets a **Royal Crown (👑)** and primary-colored highlight when you make the leaderboard.
+
+### 💼 Portfolio & Trading
+- **Live Market Data**: Powered by the **Finnhub API** for real-time NASDAQ quotes and statistics.
+- **Fintech Dashboard**: Track your **Total Account Value**, **Cash Balance**, and **Live Equity** in a professional UI.
+- **Comprehensive Trade History**: View your **Active Positions** and **Old Positions** (full trading history) in one place.
+- **Atomic Transactions**: High-integrity "Buy" and "Sell" operations using Firestore's "Read-Before-Write" patterns.
+
+### 🔍 Market Intelligence
+- **Unified Search Bar**: A powerful Material 3 search interface that takes over the full screen for an immersive experience.
+- **Personal Watchlist ❤️**: Save your favorite stocks to a persistent list synced across all your devices.
+- **Deep Insights**: View Open, Prev Close, Day High/Low, and Percent Change for any stock.
+
+### ⚙️ Account Management
+- **Customizable Profiles**: Upload and change your profile picture via Firebase Storage.
+- **Smart Notifications 🔔**: Granular Push Notification controls for Large Stock Drops, Low Balances, and New Sign-ins.
+- **Immersive Settings**: A clean, dark-themed account management hub to edit your display name, password, or verification status.
 
 ## 🛠️ Tech Stack
 
 - **UI**: [Jetpack Compose](https://developer.android.com/jetpack/compose) (Material 3 🎨)
-- **Navigation**: [Compose Navigation](https://developer.android.com/jetpack/compose/navigation)
-- **Networking**: [Retrofit](https://square.github.io/retrofit/) & [Gson](https://github.com/google/gson) 🌐
+- **Architecture**: Modern MVVM Pattern with Repository logic.
+- **Networking**: [Retrofit](https://square.github.io/retrofit/) & [Gson](https://github.com/google/gson) for real-time API calls.
 - **Backend**: [Firebase](https://firebase.google.com/) 🔥
-  - **Auth**: Secure login & Google Sign-in.
-  - **Firestore**: Real-time DB for portfolios & watchlists.
-  - **Storage**: Image hosting for profile pictures.
-- **Images**: [Coil](https://coil-kt.github.io/coil/) 🖼️
-- **API**: [Finnhub.io](https://finnhub.io/) 💹
+  - **Auth**: Real-time authentication and account linking.
+  - **Firestore**: Scalable NoSQL database for portfolios, watchlists, and leaderboards.
+  - **Storage**: Secure image hosting for user profiles.
+- **Images**: [Coil](https://coil-kt.github.io/coil/) for fast, asynchronous image loading.
+- **Refresh**: Material 3 **Pull-to-Refresh** integrated on all data-heavy screens.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - Android Studio Jellyfish or newer.
-- A Firebase project.
-- A Finnhub API Key (it's free!).
+- A Firebase project (Free **Spark** Tier compatible).
+- A [Finnhub.io](https://finnhub.io/) API Key.
 
 ### Setup
 
@@ -42,26 +58,25 @@ Welcome to the **Stock Market Simulator**, a high-performance, modern Android ap
    ```
 
 2. **Firebase Configuration**:
-   - Add your `google-services.json` to the `app/` directory.
-   - Enable **Auth**, **Firestore**, and **Storage** in the Firebase Console.
-   - Set Firestore rules to allow authenticated users to read/write their own `/users/{userId}` documents.
+   - Download your `google-services.json` from the console and place it in the `app/` folder.
+   - Enable **Auth** (Email & Google), **Firestore**, and **Storage**.
+   - **Crucial**: Set up a Firestore Composite Index for the `users` collection on fields `level` (Ascending) and `balance` (Descending) to enable leaderboard filtering.
 
-3. **API Keys**:
-   - Open `MarketRepository.kt` and replace the placeholder with your **Finnhub API Key**.
-   - Open `Navigation.kt` and update the `WEB_CLIENT_ID` with your Firebase Web Client ID for Google Sign-in.
+3. **API Integration**:
+   - Replace the API key in `MarketRepository.kt` with your own Finnhub key.
+   - Update `WEB_CLIENT_ID` in `Navigation.kt` with your Firebase Web Client ID.
 
-4. **Build & Run**:
-   Hit the **Run** button in Android Studio and start trading! 🏁
+4. **Build & Run**: 🏁 Launch the app and start building your empire!
 
 ## 📸 Screenshots
 
-| Login | Difficulty Selection | Market | Portfolio |
+| Onboarding | Market | Portfolio | Leaderboard |
 | :---: | :---: | :---: | :---: |
-| ![Login](https://via.placeholder.com/150) | ![Difficulty](https://via.placeholder.com/150) | ![Market](https://via.placeholder.com/150) | ![Portfolio](https://via.placeholder.com/150) |
+| ![Onboarding](https://via.placeholder.com/150) | ![Market](https://via.placeholder.com/150) | ![Portfolio](https://via.placeholder.com/150) | ![Leaderboard](https://via.placeholder.com/150) |
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/yourusername/stock-market-simulator/issues).
+This project is a labor of love for fintech and mobile development. Contributions and suggestions are always welcome!
 
 ## 📝 License
 

@@ -1,15 +1,48 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+# Built artifacts
+*.apk
+*.ap_
+*.aab
+*.dex
 /build
-/captures
+
+# Java/Kotlin
+*.class
+*.iml
+
+# Android Studio / IntelliJ
+.idea/
+.gradle/
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+/.idea/caches
+/.idea/assetWizardSettings.xml
+/.idea/modules.xml
+/.idea/navEditor.xml
+*.ipr
+*.iws
+
+# Secrets & Configs
+# It is recommended to keep your Firebase config and signing keys out of public repos
+google-services.json
+*.jks
+*.keystore
+*.p12
+signing.properties
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Native
 .externalNativeBuild
 .cxx
-local.properties
+/captures

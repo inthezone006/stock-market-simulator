@@ -75,6 +75,3 @@ This project is a labor of love for fintech and mobile development. Contribution
 ## 📝 License
 
 This project is licensed under the MIT License. 📄
-
----
-Developed with ❤️ by [Rahul](https://github.com/yourusername) 👨‍💻

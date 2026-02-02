@@ -45,7 +45,7 @@ private fun Context.findActivity(): Activity? {
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    val authRepository = AuthRepository() //TODO: Implement dependency injection
+    val authRepository = AuthRepository()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }

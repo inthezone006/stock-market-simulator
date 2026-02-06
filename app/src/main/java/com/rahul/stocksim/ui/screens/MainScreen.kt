@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -30,6 +31,8 @@ import coil.request.ImageRequest
 import com.rahul.stocksim.data.AuthRepository
 import com.rahul.stocksim.data.MarketRepository
 import com.rahul.stocksim.model.Stock
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,15 +46,19 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
         BottomNavItem.Leaderboard
     )
     
-    val authRepository = AuthRepository()
-    val marketRepository = MarketRepository()
+    val authRepository = remember { AuthRepository() }
+    val marketRepository = remember { MarketRepository() }
     val user = authRepository.currentUser
     val coroutineScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
     var searchQuery by remember { mutableStateOf("") }
     var searchActive by remember { mutableStateOf(false) }
     var searchResults by remember { mutableStateOf<List<Stock>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
+    
+    // Debounce Job to prevent rate limiting
+    var searchJob by remember { mutableStateOf<Job?>(null) }
 
     Scaffold(
         containerColor = Color(0xFF121212),
@@ -60,9 +67,12 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                 query = searchQuery,
                 onQueryChange = { 
                     searchQuery = it
+                    searchJob?.cancel() // Cancel previous search request
+                    
                     if (it.isNotEmpty()) {
-                        isSearching = true
-                        coroutineScope.launch {
+                        searchJob = coroutineScope.launch {
+                            delay(500) // Wait 500ms after user stops typing
+                            isSearching = true
                             searchResults = marketRepository.searchStocks(it, nasdaqOnly = true)
                             isSearching = false
                         }
@@ -70,7 +80,9 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                         searchResults = emptyList()
                     }
                 },
-                onSearch = { searchActive = false },
+                onSearch = { 
+                    focusManager.clearFocus()
+                },
                 active = searchActive,
                 onActiveChange = { searchActive = it },
                 placeholder = { Text("Search stocks...") },

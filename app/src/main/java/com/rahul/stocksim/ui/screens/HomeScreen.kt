@@ -107,7 +107,7 @@ fun HomeScreen(navController: NavController, onStockClick: (Stock) -> Unit) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: Add stock logic */ },
+                onClick = { /* Add stock logic */ },
                 containerColor = Color.White,
                 contentColor = Color.Black
             ) {

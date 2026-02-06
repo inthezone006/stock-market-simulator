@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rahul.stocksim.model.Stock
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
@@ -82,21 +83,25 @@ class MarketRepository {
         }
     }
 
-    suspend fun searchStocks(query: String, nasdaqOnly: Boolean = false): List<Stock> {
-        return try {
+    suspend fun searchStocks(query: String, nasdaqOnly: Boolean = false): List<Stock> = coroutineScope {
+        try {
             val response = api.searchSymbol(query, apiKey)
-            response.result
+            
+            val filteredResults = response.result
                 .filter { result ->
                     val isStock = result.type == "Common Stock" || result.type == "ADR"
                     val isNasdaq = !nasdaqOnly || result.symbol.all { it.isLetter() }
                     isStock && isNasdaq
                 }
                 .take(10)
-                .map { result ->
+
+            // Parallelizing the price fetching for each search result
+            filteredResults.map { result ->
+                async {
                     val quote = getStockQuote(result.symbol)
                     Stock(
                         symbol = result.symbol,
-                        name = result.description,
+                        name = result.description, // Uses the company name from search
                         price = quote?.price ?: 0.0,
                         change = quote?.change ?: 0.0,
                         percentChange = quote?.percentChange ?: 0.0,
@@ -106,6 +111,7 @@ class MarketRepository {
                         prevClose = quote?.prevClose ?: 0.0
                     )
                 }
+            }.awaitAll()
         } catch (e: Exception) {
             emptyList()
         }

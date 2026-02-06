@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -34,4 +35,5 @@ sealed class BottomNavItem(val route: String, val label: String, val icon: Image
     object Market : BottomNavItem("market_screen", "Market", Icons.Default.BarChart)
     object Trade : BottomNavItem("trade_screen", "Trade", Icons.Default.AttachMoney)
     object Leaderboard : BottomNavItem("leaderboard_screen", "Leaders", Icons.Default.Leaderboard)
+    object Guide : BottomNavItem("guide_screen", "Guide", Icons.Default.Help)
 }

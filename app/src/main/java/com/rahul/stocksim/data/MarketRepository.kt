@@ -3,6 +3,7 @@ package com.rahul.stocksim.data
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.rahul.stocksim.model.Stock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -26,16 +27,24 @@ interface FinnhubApi {
         @Query("q") query: String,
         @Query("token") apiKey: String
     ): FinnhubSearchResponse
+
+    @GET("company-news")
+    suspend fun getCompanyNews(
+        @Query("symbol") symbol: String,
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("token") apiKey: String
+    ): List<FinnhubNewsArticle>
 }
 
 data class FinnhubQuoteResponse(
     val c: Double, // Current price
     val d: Double, // Change
     val dp: Double, // Percent change
-    val h: Double, // High
-    val l: Double, // Low
-    val o: Double, // Open
-    val pc: Double // Prev Close
+    val h: Double,
+    val l: Double,
+    val o: Double,
+    val pc: Double
 )
 
 data class FinnhubSearchResponse(
@@ -48,6 +57,18 @@ data class FinnhubSearchResult(
     val displaySymbol: String,
     val symbol: String,
     val type: String
+)
+
+data class FinnhubNewsArticle(
+    val category: String,
+    val datetime: Long,
+    val headline: String,
+    val id: Long,
+    val image: String,
+    val related: String,
+    val source: String,
+    val summary: String,
+    val url: String
 )
 
 data class WatchlistItem(val symbol: String)
@@ -83,6 +104,16 @@ class MarketRepository {
         }
     }
 
+    suspend fun getCompanyNews(symbol: String): List<FinnhubNewsArticle> {
+        return try {
+            val today = java.time.LocalDate.now().toString()
+            val weekAgo = java.time.LocalDate.now().minusDays(7).toString()
+            api.getCompanyNews(symbol, weekAgo, today, apiKey).take(5)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     suspend fun searchStocks(query: String, nasdaqOnly: Boolean = false): List<Stock> = coroutineScope {
         try {
             val response = api.searchSymbol(query, apiKey)
@@ -95,13 +126,12 @@ class MarketRepository {
                 }
                 .take(10)
 
-            // Parallelizing the price fetching for each search result
             filteredResults.map { result ->
                 async {
                     val quote = getStockQuote(result.symbol)
                     Stock(
                         symbol = result.symbol,
-                        name = result.description, // Uses the company name from search
+                        name = result.description,
                         price = quote?.price ?: 0.0,
                         change = quote?.change ?: 0.0,
                         percentChange = quote?.percentChange ?: 0.0,
@@ -117,7 +147,6 @@ class MarketRepository {
         }
     }
 
-    // Watchlist methods
     suspend fun getWatchlist(): List<WatchlistItem> {
         val userId = auth.currentUser?.uid ?: return emptyList()
         return try {
@@ -206,7 +235,6 @@ class MarketRepository {
                     
                     transaction.update(userRef, "balance", currentBalance + totalGain)
                     
-                    // Instead of deleting, we update to keep "old" positions
                     transaction.update(portfolioRef, "quantity", currentQty - quantity)
                     null
                 } else {

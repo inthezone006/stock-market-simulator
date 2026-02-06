@@ -43,7 +43,8 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
         BottomNavItem.Portfolio,
         BottomNavItem.Market,
         BottomNavItem.Trade,
-        BottomNavItem.Leaderboard
+        BottomNavItem.Leaderboard,
+        BottomNavItem.Guide
     )
     
     val authRepository = remember { AuthRepository() }
@@ -240,6 +241,9 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                 }
                 composable(BottomNavItem.Leaderboard.route) {
                     LeaderboardScreen(mainNavController)
+                }
+                composable(BottomNavItem.Guide.route) {
+                    GuideScreen()
                 }
             }
         }

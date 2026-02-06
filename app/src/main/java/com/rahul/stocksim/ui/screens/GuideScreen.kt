@@ -1,18 +1,20 @@
 package com.rahul.stocksim.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -24,6 +26,14 @@ fun GuideScreen() {
             .background(Color(0xFF121212))
             .padding(16.dp)
     ) {
+        Text(
+            text = "Simulator Guide",
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
@@ -32,7 +42,8 @@ fun GuideScreen() {
                 GuideSection(
                     title = "Getting Started",
                     icon = Icons.Default.RocketLaunch,
-                    content = "Welcome to the Stock Market Simulator! Start by choosing your difficulty level. This determines your initial virtual balance, ranging from $100 to $100,000. Your goal is to grow this capital through strategic trading."
+                    content = "Welcome to the Stock Market Simulator! Start by choosing your difficulty level.",
+                    detailedContent = "Difficulty levels affect your starting cash. Beginner ($100,000) gives you plenty of room for error and experimentation, while Impossible ($100) requires extreme precision and market timing. Choose wisely, as this sets the baseline for your rank on the leaderboard."
                 )
             }
 
@@ -40,7 +51,8 @@ fun GuideScreen() {
                 GuideSection(
                     title = "How to Trade",
                     icon = Icons.Default.SwapHoriz,
-                    content = "Use the search bar at the top to find stocks by ticker symbol (e.g., AAPL) or company name. On the stock detail screen, you can see live prices and market stats. Use the 'BUY' and 'SELL' buttons to execute trades using your virtual balance."
+                    content = "Use the search bar at the top to find stocks and execute BUY or SELL orders.",
+                    detailedContent = "Search by symbol (e.g., AAPL) or company name. On the detail screen, you'll see live prices and statistics. When you BUY, cash is deducted from your balance. When you SELL, the current market value is added back. Note: Market data is real-time but may vary slightly between exchanges."
                 )
             }
 
@@ -48,7 +60,8 @@ fun GuideScreen() {
                 GuideSection(
                     title = "Managing Your Portfolio",
                     icon = Icons.Default.AccountBalanceWallet,
-                    content = "The Portfolio tab shows your total account value, combining your cash balance and the real-time value of your stock holdings. The Trade tab keeps track of your active and past positions."
+                    content = "The Portfolio tab shows your total account value and active assets.",
+                    detailedContent = "Total Account Value = Cash Balance + Total Equity Value. Your equity is calculated by multiplying your shares by the current market price. Use the Trade tab to see your full history, including positions you've sold out of entirely."
                 )
             }
 
@@ -56,7 +69,8 @@ fun GuideScreen() {
                 GuideSection(
                     title = "How the Market Works",
                     icon = Icons.Default.TrendingUp,
-                    content = "Stock prices fluctuate based on supply and demand, influenced by company news, economic reports, and global events. A ticker symbol is a unique code for a company. Prices shown are real-time quotes from the NASDAQ and other major exchanges."
+                    content = "Stock prices fluctuate based on supply, demand, and global news.",
+                    detailedContent = "A stock represents partial ownership in a company. Prices move based on earnings reports, economic news, and investor sentiment. The NASDAQ, which this app prioritizes, is a global electronic marketplace for buying and selling securities."
                 )
             }
 
@@ -64,7 +78,8 @@ fun GuideScreen() {
                 GuideSection(
                     title = "App Architecture",
                     icon = Icons.Default.Memory,
-                    content = "This app uses the Finnhub API for live market data and news. Your profile, balance, and trading history are securely stored in Firebase Firestore, ensuring your simulation persists across sessions."
+                    content = "This app uses the Finnhub API and Firebase for a modern, real-time experience.",
+                    detailedContent = "Finnhub provides the high-fidelity market data and news articles you see. Firebase Firestore stores your personal trading data securely, while Firebase Storage hosts your profile pictures. Kotlin Coroutines and Flows keep the data streaming without lag."
                 )
             }
 
@@ -88,9 +103,13 @@ fun GuideScreen() {
 }
 
 @Composable
-fun GuideSection(title: String, icon: ImageVector, content: String) {
+fun GuideSection(title: String, icon: ImageVector, content: String, detailedContent: String) {
+    var showDialog by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { showDialog = true },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -117,6 +136,49 @@ fun GuideSection(title: String, icon: ImageVector, content: String) {
                 color = Color.LightGray,
                 lineHeight = 20.sp
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Tap to learn more →",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
+            )
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            containerColor = Color(0xFF1F1F1F),
+            titleContentColor = Color.White,
+            textContentColor = Color.LightGray,
+            icon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = detailedContent,
+                    style = MaterialTheme.typography.bodyLarge,
+                    lineHeight = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Got it!", color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        )
     }
 }

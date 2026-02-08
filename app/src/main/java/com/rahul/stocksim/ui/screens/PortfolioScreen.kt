@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PortfolioScreen(navController: NavController) {
-    val marketRepository = MarketRepository()
+    val marketRepository = remember { MarketRepository() }
     val balance by marketRepository.getUserBalance().collectAsState(initial = 0.0)
     var portfolioItems by remember { mutableStateOf<List<Pair<Stock, Long>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -33,20 +33,20 @@ fun PortfolioScreen(navController: NavController) {
     val refreshData = {
         coroutineScope.launch {
             if (!isRefreshing) isLoading = true
-            val rawPortfolio = marketRepository.getPortfolio()
-            portfolioItems = rawPortfolio
-                .filter { it.second > 0 } // Only show assets with more than 0 shares
-                .mapNotNull { (symbol, qty) ->
-                    val stock = marketRepository.getStockQuote(symbol)
-                    if (stock != null) stock to qty else null
-                }
+            portfolioItems = marketRepository.getPortfolioWithQuotes(forceRefresh = true)
             isLoading = false
             isRefreshing = false
         }
     }
 
     LaunchedEffect(Unit) {
-        isLoading = true
+        // Try to load from cache immediately
+        val cached = marketRepository.getPortfolioWithQuotes(forceRefresh = false)
+        if (cached.isNotEmpty()) {
+            portfolioItems = cached
+            isLoading = false
+        }
+        // Then refresh in the background
         refreshData()
     }
 
@@ -106,7 +106,7 @@ fun PortfolioScreen(navController: NavController) {
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            if (isLoading && !isRefreshing) {
+            if (isLoading && portfolioItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Color.White)
                 }

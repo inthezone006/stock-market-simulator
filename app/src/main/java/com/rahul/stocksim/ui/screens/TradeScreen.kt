@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TradeScreen(mainNavController: NavController) {
-    val marketRepository = MarketRepository()
+    val marketRepository = remember { MarketRepository() }
     val balance by marketRepository.getUserBalance().collectAsState(initial = 0.0)
     var portfolioItems by remember { mutableStateOf<List<Pair<Stock, Long>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -31,18 +31,21 @@ fun TradeScreen(mainNavController: NavController) {
 
     val refreshData = {
         coroutineScope.launch {
-            val rawPortfolio = marketRepository.getPortfolio()
-            portfolioItems = rawPortfolio.mapNotNull { (symbol, qty) ->
-                val stock = marketRepository.getStockQuote(symbol)
-                if (stock != null) stock to qty else null
-            }
+            if (!isRefreshing) isLoading = true
+            portfolioItems = marketRepository.getPortfolioWithQuotes(forceRefresh = true)
             isLoading = false
             isRefreshing = false
         }
     }
 
     LaunchedEffect(Unit) {
-        isLoading = true
+        // Try to load from cache immediately
+        val cached = marketRepository.getPortfolioWithQuotes(forceRefresh = false)
+        if (cached.isNotEmpty()) {
+            portfolioItems = cached
+            isLoading = false
+        }
+        // Then refresh in the background
         refreshData()
     }
 
@@ -79,7 +82,7 @@ fun TradeScreen(mainNavController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (isLoading && !isRefreshing) {
+            if (isLoading && portfolioItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Color.White)
                 }
@@ -119,7 +122,7 @@ fun TradeScreen(mainNavController: NavController) {
                         }
                     }
 
-                    if (activePositions.isEmpty() && oldPositions.isEmpty()) {
+                    if (activePositions.isEmpty() && oldPositions.isEmpty() && !isLoading) {
                         item {
                             Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                                 Text(text = "You don't have any trading history yet.", color = Color.Gray)

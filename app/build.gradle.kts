@@ -13,8 +13,8 @@ android {
         applicationId = "com.rahul.stocksim"
         minSdk = 24
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.8"
+        versionCode = 11
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,6 +29,9 @@ android {
             )
             ndk {
                 debugSymbolLevel = "FULL"
+            }
+            firebaseCrashlytics {
+                mappingFileUploadEnabled = true
             }
         }
     }
@@ -67,6 +70,7 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-config")
     
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
@@ -81,6 +85,8 @@ dependencies {
     
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -2,17 +2,19 @@ package com.rahul.stocksim.data
 
 import android.os.Bundle
 import android.util.Log
+import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.google.firebase.ktx.Firebase
 import com.rahul.stocksim.model.Stock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
@@ -81,11 +83,25 @@ class MarketRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val analytics = Firebase.analytics
+    private val crashlytics = Firebase.crashlytics
     
     private val apiKey = "d38davhr01qlbdj4vutgd38davhr01qlbdj4vuu0"
 
+    private val loggingInterceptor = HttpLoggingInterceptor { message ->
+        // Log everything to Crashlytics and Logcat always
+        crashlytics.log(message)
+        Log.d("API_LOG", message)
+    }.apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
+
+    private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(loggingInterceptor)
+        .build()
+
     private val api = Retrofit.Builder()
         .baseUrl("https://finnhub.io/api/v1/")
+        .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(FinnhubApi::class.java)
@@ -105,6 +121,7 @@ class MarketRepository {
                 prevClose = response.pc
             )
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             null
         }
     }
@@ -115,6 +132,7 @@ class MarketRepository {
             val weekAgo = java.time.LocalDate.now().minusDays(7).toString()
             api.getCompanyNews(symbol, weekAgo, today, apiKey).take(5)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             emptyList()
         }
     }
@@ -148,6 +166,7 @@ class MarketRepository {
                 }
             }.awaitAll()
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             emptyList()
         }
     }
@@ -159,6 +178,7 @@ class MarketRepository {
                 .collection("watchlist").get().await()
             snapshot.documents.map { WatchlistItem(it.getString("symbol") ?: "") }
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             emptyList()
         }
     }
@@ -170,12 +190,12 @@ class MarketRepository {
                 .collection("watchlist").document(symbol)
                 .set(mapOf("symbol" to symbol)).await()
             
-            // Analytics log
             val bundle = Bundle().apply { putString(FirebaseAnalytics.Param.ITEM_ID, symbol) }
             analytics.logEvent(FirebaseAnalytics.Event.ADD_TO_WISHLIST, bundle)
             
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -188,6 +208,7 @@ class MarketRepository {
                 .delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -221,7 +242,6 @@ class MarketRepository {
                 }
             }.await()
             
-            // Analytics log
             val bundle = Bundle().apply {
                 putString(FirebaseAnalytics.Param.CURRENCY, "USD")
                 putDouble(FirebaseAnalytics.Param.VALUE, totalCost)
@@ -231,6 +251,7 @@ class MarketRepository {
             
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -260,6 +281,7 @@ class MarketRepository {
             }.await()
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -271,7 +293,7 @@ class MarketRepository {
                 val snapshot = firestore.collection("users").document(userId).get().await()
                 emit(snapshot.getDouble("balance") ?: 0.0)
             } catch (e: Exception) {
-                Log.e("MarketRepo", "Error fetching balance: ${e.message}")
+                crashlytics.recordException(e)
                 emit(0.0)
             }
             kotlinx.coroutines.delay(5000)
@@ -286,6 +308,7 @@ class MarketRepository {
                 it.getString("symbol").orEmpty() to (it.getLong("quantity") ?: 0L)
             }
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             emptyList()
         }
     }

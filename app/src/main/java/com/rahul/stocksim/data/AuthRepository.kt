@@ -2,6 +2,7 @@ package com.rahul.stocksim.data
 
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.EmailAuthProvider
@@ -38,14 +39,19 @@ class AuthRepository {
         "INTC", "CSCO", "ADBE", "CRM", "QCOM"
     )
 
-    private fun logEventWithUser(eventName: String, bundle: Bundle = Bundle()) {
+    fun logEventWithUser(eventName: String, bundle: Bundle = Bundle()) {
         val user = auth.currentUser
         bundle.apply {
             putString("user_id", user?.uid ?: "anonymous")
             putString("user_name", user?.displayName ?: "anonymous")
             putString("user_email", user?.email ?: "anonymous")
         }
+        // Always log to Firebase Analytics
         analytics.logEvent(eventName, bundle)
+        
+        // Always log to Logcat for "Full Always On" visibility
+        val params = bundle.keySet().joinToString(", ") { "$it=${bundle.get(it)}" }
+        Log.d("APP_EVENT", "Event: $eventName | Params: $params")
     }
 
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {

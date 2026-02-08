@@ -68,6 +68,30 @@
 
 4. **Build & Run**: 🏁 Launch the app and start building your empire!
 
+## 🗒️ Logs
+
+This app also logs various different user data.
+
+- **Financial & Market Events**
+  - `purchase`: Logged whenever a user buys a stock and includes the **Ticker Symbol** and the **Total USD Value** of the trade.
+  - `add_to_wishlist`: Logged when a user hearts a stock. Tracks which companies are trending among users.
+  - `select_difficulty_level`: Logged during onboarding. Tracks the Level (1-7) and the **Starting Balance** chosen.
+
+- **User Behavior & Navigation**
+  - `screen_view`: Logged every time a user switches tabs or opens a detail page. Includes the **Screen Name** (e.g., `portfolio_screen`, `leaderboard_screen`).
+  - `login` & `sign_up`: Tracks how users join (Google vs. Email).
+  - `logout` & `delete_account`: Tracks user churn and session length.
+
+- **Account Management**
+  - `update_display_name`: Logs the new name chosen by the user.
+  - `update_profile_picture`: Tracks engagement with profile customization.
+  - `update_password`: Logs when a user strengthens their account security.
+  - `send_email_verification`: Tracks users attempting to verify their accounts.
+  - `update_notification_settings`: Tracks how users customize their push alerts.
+
+**For High-Level Stats**: Go to **Analytics > Dashboard**.
+**For Specific Actions**: Go to **Analytics > Events**. And **For Technical Logs**: Go to **Release & Monitor > Crashlytics** to click on any non-fatal log to see the **Logs** tab, which contains the full **API_LOG** (OkHttp Request/Response).
+
 ## 🔨 Updating
 
 For each update to the app for production, make sure to update the `versionCode` and `versionName` in `build.gradle.kts`.

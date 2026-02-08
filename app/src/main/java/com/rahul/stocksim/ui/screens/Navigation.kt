@@ -32,7 +32,7 @@ sealed class Screen(val route: String) {
 
 sealed class BottomNavItem(val route: String, val label: String, val icon: ImageVector) {
     object Portfolio : BottomNavItem("portfolio_screen", "Portfolio", Icons.Default.AccountBalanceWallet)
-    object Market : BottomNavItem("market_screen", "Market", Icons.Default.BarChart)
+    object Market : BottomNavItem("market_screen", "Stocks", Icons.Default.BarChart)
     object Trade : BottomNavItem("trade_screen", "Trade", Icons.Default.AttachMoney)
     object Leaderboard : BottomNavItem("leaderboard_screen", "Leaders", Icons.Default.Leaderboard)
     object Guide : BottomNavItem("guide_screen", "Guide", Icons.Default.Help)

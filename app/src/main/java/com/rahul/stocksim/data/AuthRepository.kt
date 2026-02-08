@@ -4,9 +4,10 @@ import android.net.Uri
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 
@@ -25,6 +26,12 @@ class AuthRepository {
 
     val currentUser: FirebaseUser?
         get() = auth.currentUser
+
+    private val defaultWatchlistSymbols = listOf(
+        "AAPL", "GOOGL", "MSFT", "AMZN", "TSLA",
+        "META", "NVDA", "NFLX", "AMD", "PYPL",
+        "INTC", "CSCO", "ADBE", "CRM", "QCOM"
+    )
 
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
@@ -60,13 +67,9 @@ class AuthRepository {
 
     suspend fun checkEmailExists(email: String): Boolean {
         return try {
-            // Note: This requires "Email enumeration protection" to be DISABLED 
-            // in Firebase Console -> Authentication -> Settings -> User actions.
-            // If it's enabled, this will always return an empty list or throw an error.
             val result = auth.fetchSignInMethodsForEmail(email).await()
             result.signInMethods?.isNotEmpty() == true
         } catch (e: Exception) {
-            // If API fails or is restricted, we fallback to false and handle it during actual registration
             false
         }
     }
@@ -85,12 +88,8 @@ class AuthRepository {
         return try {
             val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(newName).build()
             user.updateProfile(profileUpdates).await()
-            // Sync to Firestore if the document exists
-            try {
-                firestore.collection("users").document(user.uid).update("displayName", newName).await()
-            } catch (e: Exception) {
-                // Ignore if document doesn't exist yet (still in onboarding)
-            }
+            firestore.collection("users").document(user.uid)
+                .set(mapOf("displayName" to newName), SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -110,22 +109,16 @@ class AuthRepository {
     suspend fun deleteAccount(password: String): Result<Unit> {
         val user = currentUser ?: return Result.failure(Exception("Not authenticated"))
         return try {
-            // Re-authenticate user before deletion (industry standard)
             val credential = EmailAuthProvider.getCredential(user.email!!, password)
             user.reauthenticate(credential).await()
             
             val uid = user.uid
-            // 1. Delete Firestore Data
             firestore.collection("users").document(uid).delete().await()
             
-            // 2. Delete Storage Data (Profile Pic)
             try {
                 storage.reference.child("profile_pictures/$uid").delete().await()
-            } catch (e: Exception) {
-                // Ignore if no profile pic exists
-            }
+            } catch (e: Exception) {}
             
-            // 3. Delete Firebase Auth User
             user.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -141,9 +134,19 @@ class AuthRepository {
                 "balance" to balance,
                 "level" to level,
                 "email" to user.email,
-                "displayName" to user.displayName
+                "displayName" to user.displayName,
+                "photoUrl" to user.photoUrl?.toString()
             )
-            userRef.set(userData).await()
+            userRef.set(userData, SetOptions.merge()).await()
+
+            // Initialize default watchlist
+            val batch = firestore.batch()
+            defaultWatchlistSymbols.forEach { symbol ->
+                val watchlistRef = userRef.collection("watchlist").document(symbol)
+                batch.set(watchlistRef, mapOf("symbol" to symbol))
+            }
+            batch.commit().await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -158,8 +161,9 @@ class AuthRepository {
             val downloadUrl = storageRef.downloadUrl.await()
             val profileUpdates = UserProfileChangeRequest.Builder().setPhotoUri(downloadUrl).build()
             user.updateProfile(profileUpdates).await()
-            // Sync to Firestore for leaderboard
-            firestore.collection("users").document(user.uid).update("photoUrl", downloadUrl.toString()).await()
+            
+            firestore.collection("users").document(user.uid)
+                .set(mapOf("photoUrl" to downloadUrl.toString()), SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

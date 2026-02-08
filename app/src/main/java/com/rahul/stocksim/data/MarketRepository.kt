@@ -13,6 +13,8 @@ import com.rahul.stocksim.model.Stock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -21,6 +23,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.sin
 
 // Interface for Finnhub API
@@ -111,6 +114,20 @@ class MarketRepository {
     
     private val apiKey = "d38davhr01qlbdj4vutgd38davhr01qlbdj4vuu0"
 
+    // Simple in-memory cache to stay within Finnhub free tier limits (60 calls/min)
+    private val quoteCache = ConcurrentHashMap<String, Pair<Stock, Long>>()
+    private val CACHE_EXPIRATION_MS = 300_000L // 5 minutes
+    
+    // Mutex to throttle outgoing requests
+    private val apiMutex = Mutex()
+    private var lastRequestTime = 0L
+    private val MIN_DELAY_MS = 100L
+
+    companion object {
+        private var globalWatchlistCache: List<Stock>? = null
+        private var globalPortfolioCache: List<Pair<Stock, Long>>? = null
+    }
+
     private val loggingInterceptor = HttpLoggingInterceptor { message ->
         crashlytics.log(message)
         Log.d("API_LOG", message)
@@ -130,23 +147,83 @@ class MarketRepository {
         .create(FinnhubApi::class.java)
 
     suspend fun getStockQuote(symbol: String): Stock? {
-        return try {
-            val response = api.getQuote(symbol, apiKey)
-            Stock(
-                symbol = symbol,
-                name = symbol,
-                price = response.c,
-                change = response.d,
-                percentChange = response.dp,
-                high = response.h,
-                low = response.l,
-                open = response.o,
-                prevClose = response.pc
-            )
-        } catch (e: Exception) {
-            crashlytics.recordException(e)
-            null
+        val cached = quoteCache[symbol]
+        if (cached != null && System.currentTimeMillis() - cached.second < CACHE_EXPIRATION_MS) {
+            return cached.first
         }
+
+        return apiMutex.withLock {
+            val reCached = quoteCache[symbol]
+            if (reCached != null && System.currentTimeMillis() - reCached.second < CACHE_EXPIRATION_MS) {
+                return reCached.first
+            }
+
+            val timeSinceLast = System.currentTimeMillis() - lastRequestTime
+            if (timeSinceLast < MIN_DELAY_MS) {
+                delay(MIN_DELAY_MS - timeSinceLast)
+            }
+
+            try {
+                val response = api.getQuote(symbol, apiKey)
+                lastRequestTime = System.currentTimeMillis()
+                
+                val stock = Stock(
+                    symbol = symbol,
+                    name = symbol,
+                    price = response.c,
+                    change = response.d,
+                    percentChange = response.dp,
+                    high = response.h,
+                    low = response.l,
+                    open = response.o,
+                    prevClose = response.pc
+                )
+                quoteCache[symbol] = stock to System.currentTimeMillis()
+                stock
+            } catch (e: Exception) {
+                crashlytics.recordException(e)
+                cached?.first
+            }
+        }
+    }
+
+    suspend fun getStocksQuotes(symbols: List<String>): List<Stock> = coroutineScope {
+        symbols.map { symbol ->
+            async { getStockQuote(symbol) }
+        }.awaitAll().filterNotNull()
+    }
+
+    suspend fun getWatchlistWithQuotes(forceRefresh: Boolean = false): List<Stock> {
+        if (!forceRefresh && globalWatchlistCache != null) {
+            return globalWatchlistCache!!
+        }
+
+        val symbols = getWatchlist().map { it.symbol }
+        if (symbols.isEmpty()) return emptyList()
+
+        val stocks = getStocksQuotes(symbols)
+        globalWatchlistCache = stocks
+        return stocks
+    }
+
+    suspend fun getPortfolioWithQuotes(forceRefresh: Boolean = false): List<Pair<Stock, Long>> {
+        if (!forceRefresh && globalPortfolioCache != null) {
+            return globalPortfolioCache!!
+        }
+
+        val rawPortfolio = getPortfolio()
+        if (rawPortfolio.isEmpty()) return emptyList()
+
+        val symbols = rawPortfolio.map { it.first }
+        val stocks = getStocksQuotes(symbols)
+        
+        val portfolioWithQuotes = rawPortfolio.mapNotNull { (symbol, qty) ->
+            val stock = stocks.find { it.symbol == symbol }
+            if (stock != null) stock to qty else null
+        }
+        
+        globalPortfolioCache = portfolioWithQuotes
+        return portfolioWithQuotes
     }
 
     suspend fun getStockHistory(symbol: String, period: String): List<StockPricePoint> {
@@ -172,15 +249,25 @@ class MarketRepository {
             if (response.s == "ok" && response.c != null && response.t != null) {
                 response.t.zip(response.c).map { StockPricePoint(it.first, it.second) }
             } else {
-                // FALLBACK: Generate simulated points if API status is not OK
-                val quote = api.getQuote(symbol, apiKey)
-                generateSimulatedPoints(quote, to)
+                val quote = getStockQuote(symbol)
+                if (quote != null) {
+                    val simulatedQuote = FinnhubQuoteResponse(
+                        c = quote.price, d = quote.change, dp = quote.percentChange,
+                        h = quote.high, l = quote.low, o = quote.open, pc = quote.prevClose
+                    )
+                    generateSimulatedPoints(simulatedQuote, to)
+                } else emptyList()
             }
         } catch (e: Exception) {
-            // CRITICAL FIX: The 403 error throws an exception. We must catch it and trigger simulation.
             try {
-                val quote = api.getQuote(symbol, apiKey)
-                generateSimulatedPoints(quote, to)
+                val quote = getStockQuote(symbol)
+                if (quote != null) {
+                    val simulatedQuote = FinnhubQuoteResponse(
+                        c = quote.price, d = quote.change, dp = quote.percentChange,
+                        h = quote.high, l = quote.low, o = quote.open, pc = quote.prevClose
+                    )
+                    generateSimulatedPoints(simulatedQuote, to)
+                } else emptyList()
             } catch (innerEx: Exception) {
                 crashlytics.recordException(innerEx)
                 emptyList()
@@ -195,19 +282,16 @@ class MarketRepository {
         val high = quote.h
         val low = quote.l
         
-        // Generate 10 points that logically move between Open, Low, High, and Close
         for (i in 0..10) {
             val timestamp = endTime - ((10 - i) * 3600)
-            
-            // Create a "natural" looking oscillation
             val noise = (sin(i.toDouble() * 1.5) * (high - low) * 0.15)
             
             val basePrice = when {
                 i == 0 -> startPrice
                 i == 10 -> endPrice
-                i < 4 -> startPrice + (low - startPrice) * (i / 4.0) // Moving toward low
-                i < 8 -> low + (high - low) * ((i - 4) / 4.0) // Moving toward high
-                else -> high + (endPrice - high) * ((i - 8) / 2.0) // Closing at current
+                i < 4 -> startPrice + (low - startPrice) * (i / 4.0)
+                i < 8 -> low + (high - low) * ((i - 4) / 4.0)
+                else -> high + (endPrice - high) * ((i - 8) / 2.0)
             }
             
             points.add(StockPricePoint(timestamp, basePrice + noise))
@@ -239,21 +323,20 @@ class MarketRepository {
                 .take(10)
 
             filteredResults.map { result ->
-                async {
-                    val quote = getStockQuote(result.symbol)
+                getStockQuote(result.symbol)?.let { quote ->
                     Stock(
                         symbol = result.symbol,
                         name = result.description,
-                        price = quote?.price ?: 0.0,
-                        change = quote?.change ?: 0.0,
-                        percentChange = quote?.percentChange ?: 0.0,
-                        high = quote?.high ?: 0.0,
-                        low = quote?.low ?: 0.0,
-                        open = quote?.open ?: 0.0,
-                        prevClose = quote?.prevClose ?: 0.0
+                        price = quote.price,
+                        change = quote.change,
+                        percentChange = quote.percentChange,
+                        high = quote.high,
+                        low = quote.low,
+                        open = quote.open,
+                        prevClose = quote.prevClose
                     )
                 }
-            }.awaitAll()
+            }.filterNotNull()
         } catch (e: Exception) {
             emptyList()
         }

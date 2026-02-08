@@ -24,50 +24,50 @@ fun MarketScreen(
     onStockClick: (Stock) -> Unit,
     onSettingsClick: () -> Unit
 ) {
-    val marketRepository = MarketRepository()
+    val marketRepository = remember { MarketRepository() }
     var stockList by remember { mutableStateOf<List<Stock>>(emptyList()) }
     var portfolio by remember { mutableStateOf<Map<String, Long>>(emptyMap()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    val refreshData = {
+    // Load cached data instantly if available
+    LaunchedEffect(Unit) {
+        val cached = marketRepository.getWatchlistWithQuotes(forceRefresh = false)
+        if (cached.isNotEmpty()) {
+            stockList = cached
+            isLoading = false
+        }
+        // Then trigger a background update
         coroutineScope.launch {
-            if (!isRefreshing) isLoading = true
-            
-            // Fetch watchlist and portfolio in parallel if possible, or sequentially
-            val watchlist = marketRepository.getWatchlist()
             val rawPortfolio = marketRepository.getPortfolio()
             portfolio = rawPortfolio.toMap()
-            
-            stockList = watchlist.mapNotNull { item ->
-                marketRepository.getStockQuote(item.symbol)
-            }
+            stockList = marketRepository.getWatchlistWithQuotes(forceRefresh = true)
             isLoading = false
-            isRefreshing = false
         }
-    }
-
-    LaunchedEffect(Unit) {
-        refreshData()
     }
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = {
             isRefreshing = true
-            refreshData()
+            coroutineScope.launch {
+                val rawPortfolio = marketRepository.getPortfolio()
+                portfolio = rawPortfolio.toMap()
+                stockList = marketRepository.getWatchlistWithQuotes(forceRefresh = true)
+                isRefreshing = false
+            }
         },
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF121212)),
         contentAlignment = Alignment.TopCenter
     ) {
-        if (isLoading && !isRefreshing) {
+        if (isLoading && stockList.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = Color.White)
             }
-        } else if (stockList.isEmpty()) {
+        } else if (stockList.isEmpty() && !isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Watchlist is empty. Search for stocks to add them!",

@@ -1,9 +1,13 @@
 package com.rahul.stocksim.data
 
+import android.os.Bundle
 import android.util.Log
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.ktx.Firebase
 import com.rahul.stocksim.model.Stock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -76,6 +80,7 @@ data class WatchlistItem(val symbol: String)
 class MarketRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val analytics = Firebase.analytics
     
     private val apiKey = "d38davhr01qlbdj4vutgd38davhr01qlbdj4vuu0"
 
@@ -164,6 +169,11 @@ class MarketRepository {
             firestore.collection("users").document(userId)
                 .collection("watchlist").document(symbol)
                 .set(mapOf("symbol" to symbol)).await()
+            
+            // Analytics log
+            val bundle = Bundle().apply { putString(FirebaseAnalytics.Param.ITEM_ID, symbol) }
+            analytics.logEvent(FirebaseAnalytics.Event.ADD_TO_WISHLIST, bundle)
+            
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -210,6 +220,15 @@ class MarketRepository {
                     throw Exception("Insufficient balance")
                 }
             }.await()
+            
+            // Analytics log
+            val bundle = Bundle().apply {
+                putString(FirebaseAnalytics.Param.CURRENCY, "USD")
+                putDouble(FirebaseAnalytics.Param.VALUE, totalCost)
+                putString(FirebaseAnalytics.Param.TRANSACTION_ID, symbol)
+            }
+            analytics.logEvent(FirebaseAnalytics.Event.PURCHASE, bundle)
+            
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -232,9 +251,7 @@ class MarketRepository {
 
                 if (currentQty >= quantity) {
                     val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
-                    
                     transaction.update(userRef, "balance", currentBalance + totalGain)
-                    
                     transaction.update(portfolioRef, "quantity", currentQty - quantity)
                     null
                 } else {

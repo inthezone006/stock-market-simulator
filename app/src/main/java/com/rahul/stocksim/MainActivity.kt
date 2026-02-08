@@ -7,10 +7,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 import com.rahul.stocksim.ui.theme.StockMarketSimulatorTheme
 import com.rahul.stocksim.ui.screens.*
 import androidx.navigation.compose.NavHost
@@ -29,11 +33,26 @@ class MainActivity : ComponentActivity() {
             )
         )
         super.onCreate(savedInstanceState)
+        val analytics = Firebase.analytics
+        
         setContent {
             val navController = rememberNavController()
             val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
             
             val startDest = if (auth.currentUser != null) Screen.Main.route else Screen.Login.route
+
+            // Track screen views
+            LaunchedEffect(navController) {
+                navController.currentBackStackEntryFlow.collect { backStackEntry ->
+                    val route = backStackEntry.destination.route
+                    if (route != null) {
+                        analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, Bundle().apply {
+                            putString(FirebaseAnalytics.Param.SCREEN_NAME, route)
+                            putString(FirebaseAnalytics.Param.SCREEN_CLASS, "MainActivity")
+                        })
+                    }
+                }
+            }
 
             StockMarketSimulatorTheme() {
                 Surface(

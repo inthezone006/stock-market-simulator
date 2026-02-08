@@ -1,6 +1,9 @@
 package com.rahul.stocksim.data
 
 import android.net.Uri
+import android.os.Bundle
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -8,6 +11,7 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 
@@ -23,6 +27,7 @@ class AuthRepository {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+    private val analytics = Firebase.analytics
 
     val currentUser: FirebaseUser?
         get() = auth.currentUser
@@ -33,10 +38,23 @@ class AuthRepository {
         "INTC", "CSCO", "ADBE", "CRM", "QCOM"
     )
 
+    private fun logEventWithUser(eventName: String, bundle: Bundle = Bundle()) {
+        val user = auth.currentUser
+        bundle.apply {
+            putString("user_id", user?.uid ?: "anonymous")
+            putString("user_name", user?.displayName ?: "anonymous")
+            putString("user_email", user?.email ?: "anonymous")
+        }
+        analytics.logEvent(eventName, bundle)
+    }
+
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    logEventWithUser(FirebaseAnalytics.Event.LOGIN, Bundle().apply {
+                        putString(FirebaseAnalytics.Param.METHOD, "email")
+                    })
                     onResult(true, null)
                 } else {
                     onResult(false, "Invalid credentials.")
@@ -48,6 +66,9 @@ class AuthRepository {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    logEventWithUser(FirebaseAnalytics.Event.SIGN_UP, Bundle().apply {
+                        putString(FirebaseAnalytics.Param.METHOD, "email")
+                    })
                     onResult(true, null)
                 } else {
                     val error = task.exception?.localizedMessage ?: "Registration failed."
@@ -61,6 +82,12 @@ class AuthRepository {
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 val isNewUser = task.result?.additionalUserInfo?.isNewUser ?: false
+                if (task.isSuccessful) {
+                    val event = if (isNewUser) FirebaseAnalytics.Event.SIGN_UP else FirebaseAnalytics.Event.LOGIN
+                    logEventWithUser(event, Bundle().apply {
+                        putString(FirebaseAnalytics.Param.METHOD, "google")
+                    })
+                }
                 onResult(task.isSuccessful, isNewUser)
             }
     }
@@ -77,6 +104,7 @@ class AuthRepository {
     suspend fun sendEmailVerification(): Result<Unit> {
         return try {
             currentUser?.sendEmailVerification()?.await()
+            logEventWithUser("send_email_verification")
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -90,6 +118,9 @@ class AuthRepository {
             user.updateProfile(profileUpdates).await()
             firestore.collection("users").document(user.uid)
                 .set(mapOf("displayName" to newName), SetOptions.merge()).await()
+            logEventWithUser("update_display_name", Bundle().apply {
+                putString("new_name", newName)
+            })
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -100,6 +131,7 @@ class AuthRepository {
         val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {
             user.updatePassword(newPassword).await()
+            logEventWithUser("update_password")
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -113,6 +145,7 @@ class AuthRepository {
             user.reauthenticate(credential).await()
             
             val uid = user.uid
+            logEventWithUser("delete_account")
             firestore.collection("users").document(uid).delete().await()
             
             try {
@@ -139,13 +172,17 @@ class AuthRepository {
             )
             userRef.set(userData, SetOptions.merge()).await()
 
-            // Initialize default watchlist
             val batch = firestore.batch()
             defaultWatchlistSymbols.forEach { symbol ->
                 val watchlistRef = userRef.collection("watchlist").document(symbol)
                 batch.set(watchlistRef, mapOf("symbol" to symbol))
             }
             batch.commit().await()
+
+            logEventWithUser("select_difficulty_level", Bundle().apply {
+                putInt("level", level)
+                putDouble("initial_balance", balance)
+            })
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -164,6 +201,7 @@ class AuthRepository {
             
             firestore.collection("users").document(user.uid)
                 .set(mapOf("photoUrl" to downloadUrl.toString()), SetOptions.merge()).await()
+            logEventWithUser("update_profile_picture")
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -198,6 +236,7 @@ class AuthRepository {
                 "notif_new_signin" to settings.notifyNewSignIn
             )
             firestore.collection("users").document(user.uid).update(data as Map<String, Any>).await()
+            logEventWithUser("update_notification_settings")
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -205,6 +244,7 @@ class AuthRepository {
     }
 
     fun logout() {
+        logEventWithUser("logout")
         auth.signOut()
     }
 }

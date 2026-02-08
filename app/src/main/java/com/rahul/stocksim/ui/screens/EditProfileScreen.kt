@@ -66,7 +66,12 @@ fun EditProfileScreen(navController: NavController) {
                 .padding(16.dp)
         ) {
             // Edit Name Section
-            Text("Identity", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                "Identity",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
@@ -81,7 +86,11 @@ fun EditProfileScreen(navController: NavController) {
                         trailingIcon = {
                             if (name.isNotEmpty() && name != user?.displayName) {
                                 if (isUpdatingName) {
-                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
                                 } else {
                                     IconButton(onClick = {
                                         isUpdatingName = true
@@ -89,13 +98,25 @@ fun EditProfileScreen(navController: NavController) {
                                             val result = authRepository.updateDisplayName(name)
                                             isUpdatingName = false
                                             if (result.isSuccess) {
-                                                Toast.makeText(context, "Name updated successfully", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Name updated successfully",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             } else {
-                                                Toast.makeText(context, "Update failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Update failed: ${result.exceptionOrNull()?.message}",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
                                             }
                                         }
                                     }) {
-                                        Icon(Icons.Default.Check, contentDescription = "Confirm", tint = Color.Green)
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = "Confirm",
+                                            tint = Color.Green
+                                        )
                                     }
                                 }
                             }
@@ -113,13 +134,19 @@ fun EditProfileScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             // Edit Password Section
-            Text("Security", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                "Security",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
             ) {
-                val canUpdatePassword = newPassword.length >= 8 && newPassword == confirmPassword && oldPassword.isNotEmpty()
-                
+                val canUpdatePassword =
+                    newPassword.length >= 8 && newPassword == confirmPassword && oldPassword.isNotEmpty()
+
                 Column(modifier = Modifier.padding(16.dp)) {
                     OutlinedTextField(
                         value = oldPassword,
@@ -128,7 +155,12 @@ fun EditProfileScreen(navController: NavController) {
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.DarkGray
+                        )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
@@ -138,7 +170,12 @@ fun EditProfileScreen(navController: NavController) {
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.DarkGray
+                        )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
@@ -151,7 +188,11 @@ fun EditProfileScreen(navController: NavController) {
                         trailingIcon = {
                             if (canUpdatePassword) {
                                 if (isUpdatingPassword) {
-                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
                                 } else {
                                     IconButton(onClick = {
                                         isUpdatingPassword = true
@@ -159,19 +200,37 @@ fun EditProfileScreen(navController: NavController) {
                                             val result = authRepository.updatePassword(newPassword)
                                             isUpdatingPassword = false
                                             if (result.isSuccess) {
-                                                Toast.makeText(context, "Password updated!", Toast.LENGTH_SHORT).show()
-                                                oldPassword = ""; newPassword = ""; confirmPassword = ""
+                                                Toast.makeText(
+                                                    context,
+                                                    "Password updated!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                oldPassword = ""; newPassword =
+                                                    ""; confirmPassword = ""
                                             } else {
-                                                Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Error: ${result.exceptionOrNull()?.message}",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
                                             }
                                         }
                                     }) {
-                                        Icon(Icons.Default.Check, contentDescription = "Confirm", tint = Color.Green)
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = "Confirm",
+                                            tint = Color.Green
+                                        )
                                     }
                                 }
                             }
                         },
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.DarkGray
+                        )
                     )
                 }
             }
@@ -186,7 +245,11 @@ fun EditProfileScreen(navController: NavController) {
                 border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.3f))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Once you delete your account, there is no going back. Please be certain.", color = Color.Gray, fontSize = 12.sp)
+                    Text(
+                        "Once you delete your account, there is no going back. Please be certain.",
+                        color = Color.Gray,
+                        fontSize = 12.sp
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = { showDeleteDialog = true },

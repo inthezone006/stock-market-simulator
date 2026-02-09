@@ -81,6 +81,12 @@ This app also logs various different user data.
   - `screen_view`: Logged every time a user switches tabs or opens a detail page. Includes the **Screen Name** (e.g., `portfolio_screen`, `leaderboard_screen`).
   - `login` & `sign_up`: Tracks how users join (Google vs. Email).
   - `logout` & `delete_account`: Tracks user churn and session length.
+  - `first_open`: Logged the first time a user launches the app after downloading it.
+  - `session_start`: Tracks when user re-opens app after 30 minutes.
+  - `user_engagement`: Standard event that measures how long the app is in the foreground and is being used.
+  - `app_exception`: Tracks major errors or crashes.
+  - `app_remove`: Triggered when app is uninstalled on device.
+  - `app_update`: Triggered when user updates app and then opens it.
 
 - **Account Management**
   - `update_display_name`: Logs the new name chosen by the user.

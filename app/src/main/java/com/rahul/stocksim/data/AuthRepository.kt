@@ -3,16 +3,17 @@ package com.rahul.stocksim.data
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 
@@ -29,6 +30,7 @@ class AuthRepository {
     private val storage = FirebaseStorage.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val analytics = Firebase.analytics
+    private val crashlytics = Firebase.crashlytics
 
     val currentUser: FirebaseUser?
         get() = auth.currentUser
@@ -41,15 +43,21 @@ class AuthRepository {
 
     fun logEventWithUser(eventName: String, bundle: Bundle = Bundle()) {
         val user = auth.currentUser
+        
+        // Ensure user is identified in Crashlytics Keys tab
+        user?.let {
+            crashlytics.setUserId(it.uid)
+            crashlytics.setCustomKey("user_email", it.email ?: "anonymous")
+            crashlytics.setCustomKey("user_name", it.displayName ?: "anonymous")
+        }
+
         bundle.apply {
             putString("user_id", user?.uid ?: "anonymous")
             putString("user_name", user?.displayName ?: "anonymous")
             putString("user_email", user?.email ?: "anonymous")
         }
-        // Always log to Firebase Analytics
-        analytics.logEvent(eventName, bundle)
         
-        // Always log to Logcat for "Full Always On" visibility
+        analytics.logEvent(eventName, bundle)
         val params = bundle.keySet().joinToString(", ") { "$it=${bundle.get(it)}" }
         Log.d("APP_EVENT", "Event: $eventName | Params: $params")
     }

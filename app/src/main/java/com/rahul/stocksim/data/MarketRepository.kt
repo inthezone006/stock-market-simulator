@@ -126,6 +126,26 @@ class MarketRepository {
     companion object {
         private var globalWatchlistCache: List<Stock>? = null
         private var globalPortfolioCache: List<Pair<Stock, Long>>? = null
+        
+        // Persist company names to ensure symbols show full names instead of ticker duplicates
+        private val companyNameMap = ConcurrentHashMap<String, String>().apply {
+            // Seed with common symbols to ensure they show up correctly even before first search
+            put("AAPL", "Apple Inc.")
+            put("GOOGL", "Alphabet Inc.")
+            put("MSFT", "Microsoft Corp.")
+            put("AMZN", "Amazon.com Inc.")
+            put("TSLA", "Tesla Inc.")
+            put("META", "Meta Platforms Inc.")
+            put("NVDA", "NVIDIA Corp.")
+            put("NFLX", "Netflix Inc.")
+            put("AMD", "Advanced Micro Devices Inc.")
+            put("PYPL", "PayPal Holdings Inc.")
+            put("INTC", "Intel Corp.")
+            put("CSCO", "Cisco Systems Inc.")
+            put("ADBE", "Adobe Inc.")
+            put("CRM", "Salesforce Inc.")
+            put("QCOM", "Qualcomm Inc.")
+        }
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor { message ->
@@ -167,9 +187,22 @@ class MarketRepository {
                 val response = api.getQuote(symbol, apiKey)
                 lastRequestTime = System.currentTimeMillis()
                 
+                // If name is missing in map, try a quick search to find it (don't block for long)
+                if (!companyNameMap.containsKey(symbol)) {
+                    coroutineScope {
+                        launch {
+                            try {
+                                val searchRes = api.searchSymbol(symbol, apiKey)
+                                val match = searchRes.result.find { it.symbol == symbol }
+                                if (match != null) companyNameMap[symbol] = match.description
+                            } catch (e: Exception) {}
+                        }
+                    }
+                }
+
                 val stock = Stock(
                     symbol = symbol,
-                    name = symbol,
+                    name = companyNameMap[symbol] ?: symbol,
                     price = response.c,
                     change = response.d,
                     percentChange = response.dp,
@@ -202,8 +235,11 @@ class MarketRepository {
         if (symbols.isEmpty()) return emptyList()
 
         val stocks = getStocksQuotes(symbols)
-        globalWatchlistCache = stocks
-        return stocks
+        
+        if (stocks.isNotEmpty()) {
+            globalWatchlistCache = stocks
+        }
+        return globalWatchlistCache ?: emptyList()
     }
 
     suspend fun getPortfolioWithQuotes(forceRefresh: Boolean = false): List<Pair<Stock, Long>> {
@@ -222,8 +258,10 @@ class MarketRepository {
             if (stock != null) stock to qty else null
         }
         
-        globalPortfolioCache = portfolioWithQuotes
-        return portfolioWithQuotes
+        if (portfolioWithQuotes.isNotEmpty()) {
+            globalPortfolioCache = portfolioWithQuotes
+        }
+        return globalPortfolioCache ?: emptyList()
     }
 
     suspend fun getStockHistory(symbol: String, period: String): List<StockPricePoint> {
@@ -323,6 +361,8 @@ class MarketRepository {
                 .take(10)
 
             filteredResults.map { result ->
+                companyNameMap[result.symbol] = result.description
+                
                 getStockQuote(result.symbol)?.let { quote ->
                     Stock(
                         symbol = result.symbol,
@@ -417,6 +457,8 @@ class MarketRepository {
             }
             analytics.logEvent(FirebaseAnalytics.Event.PURCHASE, bundle)
             
+            globalPortfolioCache = null
+            
             Result.success(Unit)
         } catch (e: Exception) {
             crashlytics.recordException(e)
@@ -448,6 +490,9 @@ class MarketRepository {
                     throw Exception("Insufficient quantity")
                 }
             }.await()
+            
+            globalPortfolioCache = null
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

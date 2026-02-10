@@ -118,7 +118,7 @@ class MarketRepository {
     private val quoteCache = ConcurrentHashMap<String, Pair<Stock, Long>>()
     private val CACHE_EXPIRATION_MS = 300_000L // 5 minutes
     
-    // Mutex to throttle outgoing requests
+    // Mutex to throttle outgoing requests and prevent burst 429s
     private val apiMutex = Mutex()
     private var lastRequestTime = 0L
     private val MIN_DELAY_MS = 100L
@@ -129,7 +129,6 @@ class MarketRepository {
         
         // Persist company names to ensure symbols show full names instead of ticker duplicates
         private val companyNameMap = ConcurrentHashMap<String, String>().apply {
-            // Seed with common symbols to ensure they show up correctly even before first search
             put("AAPL", "Apple Inc.")
             put("GOOGL", "Alphabet Inc.")
             put("MSFT", "Microsoft Corp.")
@@ -166,7 +165,13 @@ class MarketRepository {
         .build()
         .create(FinnhubApi::class.java)
 
+    // Helper to log errors
+    private fun recordError(e: Exception) {
+        crashlytics.recordException(e)
+    }
+
     suspend fun getStockQuote(symbol: String): Stock? {
+        // Check cache first
         val cached = quoteCache[symbol]
         if (cached != null && System.currentTimeMillis() - cached.second < CACHE_EXPIRATION_MS) {
             return cached.first
@@ -187,7 +192,6 @@ class MarketRepository {
                 val response = api.getQuote(symbol, apiKey)
                 lastRequestTime = System.currentTimeMillis()
                 
-                // If name is missing in map, try a quick search to find it (don't block for long)
                 if (!companyNameMap.containsKey(symbol)) {
                     coroutineScope {
                         launch {
@@ -214,7 +218,7 @@ class MarketRepository {
                 quoteCache[symbol] = stock to System.currentTimeMillis()
                 stock
             } catch (e: Exception) {
-                crashlytics.recordException(e)
+                recordError(e)
                 cached?.first
             }
         }
@@ -234,12 +238,16 @@ class MarketRepository {
         val symbols = getWatchlist().map { it.symbol }
         if (symbols.isEmpty()) return emptyList()
 
-        val stocks = getStocksQuotes(symbols)
-        
-        if (stocks.isNotEmpty()) {
-            globalWatchlistCache = stocks
+        return try {
+            val stocks = getStocksQuotes(symbols)
+            if (stocks.isNotEmpty()) {
+                globalWatchlistCache = stocks
+            }
+            globalWatchlistCache ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e)
+            globalWatchlistCache ?: emptyList()
         }
-        return globalWatchlistCache ?: emptyList()
     }
 
     suspend fun getPortfolioWithQuotes(forceRefresh: Boolean = false): List<Pair<Stock, Long>> {
@@ -247,21 +255,26 @@ class MarketRepository {
             return globalPortfolioCache!!
         }
 
-        val rawPortfolio = getPortfolio()
-        if (rawPortfolio.isEmpty()) return emptyList()
+        return try {
+            val rawPortfolio = getPortfolio()
+            if (rawPortfolio.isEmpty()) return emptyList()
 
-        val symbols = rawPortfolio.map { it.first }
-        val stocks = getStocksQuotes(symbols)
-        
-        val portfolioWithQuotes = rawPortfolio.mapNotNull { (symbol, qty) ->
-            val stock = stocks.find { it.symbol == symbol }
-            if (stock != null) stock to qty else null
+            val symbols = rawPortfolio.map { it.first }
+            val stocks = getStocksQuotes(symbols)
+            
+            val portfolioWithQuotes = rawPortfolio.mapNotNull { (symbol, qty) ->
+                val stock = stocks.find { it.symbol == symbol }
+                if (stock != null) stock to qty else null
+            }
+            
+            if (portfolioWithQuotes.isNotEmpty()) {
+                globalPortfolioCache = portfolioWithQuotes
+            }
+            globalPortfolioCache ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e)
+            globalPortfolioCache ?: emptyList()
         }
-        
-        if (portfolioWithQuotes.isNotEmpty()) {
-            globalPortfolioCache = portfolioWithQuotes
-        }
-        return globalPortfolioCache ?: emptyList()
     }
 
     suspend fun getStockHistory(symbol: String, period: String): List<StockPricePoint> {
@@ -307,7 +320,7 @@ class MarketRepository {
                     generateSimulatedPoints(simulatedQuote, to)
                 } else emptyList()
             } catch (innerEx: Exception) {
-                crashlytics.recordException(innerEx)
+                recordError(innerEx)
                 emptyList()
             }
         }
@@ -343,7 +356,7 @@ class MarketRepository {
             val weekAgo = java.time.LocalDate.now().minusDays(7).toString()
             api.getCompanyNews(symbol, weekAgo, today, apiKey).take(5)
         } catch (e: Exception) {
-            crashlytics.recordException(e)
+            recordError(e)
             emptyList()
         }
     }
@@ -378,6 +391,7 @@ class MarketRepository {
                 }
             }.filterNotNull()
         } catch (e: Exception) {
+            recordError(e)
             emptyList()
         }
     }
@@ -389,6 +403,7 @@ class MarketRepository {
                 .collection("watchlist").get().await()
             snapshot.documents.map { WatchlistItem(it.getString("symbol") ?: "") }
         } catch (e: Exception) {
+            recordError(e)
             emptyList()
         }
     }
@@ -405,6 +420,7 @@ class MarketRepository {
             
             Result.success(Unit)
         } catch (e: Exception) {
+            recordError(e)
             Result.failure(e)
         }
     }
@@ -417,6 +433,7 @@ class MarketRepository {
                 .delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
+            recordError(e)
             Result.failure(e)
         }
     }
@@ -461,8 +478,12 @@ class MarketRepository {
             
             Result.success(Unit)
         } catch (e: Exception) {
-            crashlytics.recordException(e)
-            Result.failure(e)
+            if (e.message == "Insufficient balance") {
+                Result.failure(e)
+            } else {
+                recordError(e)
+                Result.failure(e)
+            }
         }
     }
 
@@ -495,6 +516,7 @@ class MarketRepository {
 
             Result.success(Unit)
         } catch (e: Exception) {
+            recordError(e)
             Result.failure(e)
         }
     }
@@ -506,7 +528,7 @@ class MarketRepository {
                 val snapshot = firestore.collection("users").document(userId).get().await()
                 emit(snapshot.getDouble("balance") ?: 0.0)
             } catch (e: Exception) {
-                crashlytics.recordException(e)
+                recordError(e)
                 emit(0.0)
             }
             kotlinx.coroutines.delay(5000)
@@ -521,6 +543,7 @@ class MarketRepository {
                 it.getString("symbol").orEmpty() to (it.getLong("quantity") ?: 0L)
             }
         } catch (e: Exception) {
+            recordError(e)
             emptyList()
         }
     }

@@ -55,9 +55,13 @@ class AuthRepository {
             putString("user_id", user?.uid ?: "anonymous")
             putString("user_name", user?.displayName ?: "anonymous")
             putString("user_email", user?.email ?: "anonymous")
+            putString("device_model", android.os.Build.MODEL)
+            putString("android_version", android.os.Build.VERSION.RELEASE)
         }
         
         analytics.logEvent(eventName, bundle)
+        
+        // Always log to Logcat for "Full Always On" visibility
         val params = bundle.keySet().joinToString(", ") { "$it=${bundle.get(it)}" }
         Log.d("APP_EVENT", "Event: $eventName | Params: $params")
     }

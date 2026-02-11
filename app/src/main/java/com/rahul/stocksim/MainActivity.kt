@@ -20,10 +20,13 @@ import com.rahul.stocksim.ui.screens.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.firebase.auth.auth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+        
+        // Proper Edge-to-Edge configuration
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(
                 scrim = android.graphics.Color.TRANSPARENT
@@ -32,16 +35,17 @@ class MainActivity : ComponentActivity() {
                 scrim = android.graphics.Color.TRANSPARENT
             )
         )
+        
         super.onCreate(savedInstanceState)
-        val analytics = Firebase.analytics
         
         setContent {
             val navController = rememberNavController()
-            val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+            val auth = Firebase.auth
+            val analytics = Firebase.analytics
             
             val startDest = if (auth.currentUser != null) Screen.Main.route else Screen.Login.route
 
-            // Track screen views
+            // Track screen views in a way that doesn't interfere with UI transactions
             LaunchedEffect(navController) {
                 navController.currentBackStackEntryFlow.collect { backStackEntry ->
                     val route = backStackEntry.destination.route
@@ -54,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            StockMarketSimulatorTheme() {
+            StockMarketSimulatorTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

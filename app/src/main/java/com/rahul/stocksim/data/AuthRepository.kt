@@ -95,19 +95,39 @@ class AuthRepository {
             }
     }
 
-    fun signInWithGoogle(idToken: String, onResult: (Boolean, Boolean) -> Unit) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener { task ->
-                val isNewUser = task.result?.additionalUserInfo?.isNewUser ?: false
-                if (task.isSuccessful) {
-                    val event = if (isNewUser) FirebaseAnalytics.Event.SIGN_UP else FirebaseAnalytics.Event.LOGIN
-                    logEventWithUser(event, Bundle().apply {
-                        putString(FirebaseAnalytics.Param.METHOD, "google")
-                    })
+    suspend fun signInWithGoogle(idToken: String): Result<Boolean> { // Return Result<isNewUser>
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val result = auth.signInWithCredential(credential).await()
+            val user = result.user
+            val isNewUser = result.additionalUserInfo?.isNewUser ?: false
+
+            user?.let { firebaseUser ->
+                // Log the event
+                val event = if (isNewUser) FirebaseAnalytics.Event.SIGN_UP else FirebaseAnalytics.Event.LOGIN
+                logEventWithUser(event, Bundle().apply {
+                    putString(FirebaseAnalytics.Param.METHOD, "google")
+                })
+
+                // Update profile picture from Google if available
+                firebaseUser.photoUrl?.let { photoUri ->
+                    // Only update if the photoUrl is different from what's currently set in FirebaseUser
+                    // to avoid unnecessary profile updates. toString() comparison is a simple check.
+                    if (firebaseUser.photoUrl.toString() != photoUri.toString()) {
+                        val profileUpdates = UserProfileChangeRequest.Builder().setPhotoUri(photoUri).build()
+                        firebaseUser.updateProfile(profileUpdates).await()
+
+                        // Also update Firestore with the photo URL
+                        firestore.collection("users").document(firebaseUser.uid)
+                            .set(mapOf("photoUrl" to photoUri.toString()), SetOptions.merge()).await()
+                        logEventWithUser("set_google_profile_picture")
+                    }
                 }
-                onResult(task.isSuccessful, isNewUser)
             }
+            Result.success(isNewUser)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun checkEmailExists(email: String): Boolean {
@@ -208,6 +228,7 @@ class AuthRepository {
         }
     }
 
+    /*
     suspend fun updateProfilePicture(imageUri: Uri): Result<Unit> {
         val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {
@@ -225,6 +246,7 @@ class AuthRepository {
             Result.failure(e)
         }
     }
+    */
 
     suspend fun getNotificationSettings(): NotificationSettings {
         val user = auth.currentUser ?: return NotificationSettings()

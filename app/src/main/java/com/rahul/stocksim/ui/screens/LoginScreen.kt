@@ -181,20 +181,19 @@ fun LoginScreen(navController: NavController) {
                                     context = activity
                                 )
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-                                authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success, isNewUser ->
-                                    if (success) {
-                                        if (isNewUser) {
-                                            navController.navigate(Screen.PasswordSetup.createRoute(false)) {
-                                                popUpTo(Screen.Login.route) { inclusive = true }
-                                            }
-                                        } else {
-                                            navController.navigate(Screen.Main.route) {
-                                                popUpTo(Screen.Login.route) { inclusive = true }
-                                            }
+                                val signInResult = authRepository.signInWithGoogle(googleIdTokenCredential.idToken)
+                                signInResult.onSuccess { isNewUser ->
+                                    if (isNewUser) {
+                                        navController.navigate(Screen.PasswordSetup.createRoute(false)) {
+                                            popUpTo(Screen.Login.route) { inclusive = true }
                                         }
                                     } else {
-                                        errorMessage = "Firebase Google Auth Failed"
+                                        navController.navigate(Screen.Main.route) {
+                                            popUpTo(Screen.Login.route) { inclusive = true }
+                                        }
                                     }
+                                }.onFailure { e ->
+                                    errorMessage = "Firebase Google Auth Failed: ${e.message}"
                                 }
                             } catch (e: GetCredentialException) {
                                 Log.e("Auth", "Google Sign-in failed", e)

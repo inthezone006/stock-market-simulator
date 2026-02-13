@@ -185,23 +185,22 @@ fun RegisterScreen(navController: NavController) {
                                 val activity = context.findActivity() ?: return@launch
                                 val result = credentialManager.getCredential(request = request, context = activity)
                                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-                                authRepository.signInWithGoogle(googleIdTokenCredential.idToken) { success, isNewUser ->
-                                    if (success) {
-                                        if (isNewUser) {
-                                            navController.navigate(Screen.PasswordSetup.createRoute(false)) {
-                                                popUpTo(Screen.Register.route) { inclusive = true }
-                                            }
-                                        } else {
-                                            navController.navigate(Screen.Main.route) {
-                                                popUpTo(Screen.Register.route) { inclusive = true }
-                                            }
+                                val signInResult = authRepository.signInWithGoogle(googleIdTokenCredential.idToken)
+                                signInResult.onSuccess { isNewUser ->
+                                    if (isNewUser) {
+                                        navController.navigate(Screen.PasswordSetup.createRoute(false)) {
+                                            popUpTo(Screen.Register.route) { inclusive = true }
                                         }
                                     } else {
-                                        coroutineScope.launch { snackbarHostState.showSnackbar("Google Sign-in failed") }
+                                        navController.navigate(Screen.Main.route) {
+                                            popUpTo(Screen.Register.route) { inclusive = true }
+                                        }
                                     }
+                                }.onFailure { e ->
+                                    coroutineScope.launch { snackbarHostState.showSnackbar("Google Sign-in failed: ${e.message}") }
                                 }
                             } catch (e: Exception) {
-                                snackbarHostState.showSnackbar("Error: ${e.localizedMessage}")
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Error: ${e.localizedMessage}") }
                             }
                         }
                     },

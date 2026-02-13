@@ -16,7 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.runtime.*
+import androidx.compose.runtime.* 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +47,7 @@ fun SettingsScreen(navController: NavController) {
     var user by remember { mutableStateOf(authRepository.currentUser) }
     var isRefreshing by remember { mutableStateOf(false) }
     
-    var isUploading by remember { mutableStateOf(false) }
+    // var isUploading by remember { mutableStateOf(false) } // Removed as manual upload is disabled
     var profilePhotoUrl by remember { mutableStateOf(user?.photoUrl) }
     var displayName by remember { mutableStateOf(user?.displayName ?: "") }
     var notifSettings by remember { mutableStateOf(NotificationSettings()) }
@@ -73,6 +73,8 @@ fun SettingsScreen(navController: NavController) {
         loadData()
     }
 
+    // Removed imagePickerLauncher as manual upload is disabled
+    /*
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -96,6 +98,7 @@ fun SettingsScreen(navController: NavController) {
             }
         }
     }
+    */
 
     Scaffold(
         containerColor = Color(0xFF121212),
@@ -129,33 +132,30 @@ fun SettingsScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile Picture Section
+                // Profile Picture Section (Display only, no upload functionality)
                 Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clickable(enabled = !isUploading) { imagePickerLauncher.launch("image/*") },
+                    modifier = Modifier.size(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (isUploading) {
-                        CircularProgressIndicator(color = Color.White)
-                    } else {
-                        Box(modifier = Modifier.fillMaxSize().clip(CircleShape)) {
-                            ProfileImageInternal(displayName, profilePhotoUrl)
-                        }
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.align(Alignment.BottomEnd).size(36.dp).offset(x = 4.dp, y = 4.dp),
-                            shadowElevation = 4.dp
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = "Change Picture",
-                                tint = Color.White,
-                                modifier = Modifier.padding(8.dp).fillMaxSize()
-                            )
-                        }
+                    Box(modifier = Modifier.fillMaxSize().clip(CircleShape)) {
+                        ProfileImageInternal(displayName, profilePhotoUrl)
                     }
+                    // Removed CameraAlt icon as manual upload is disabled
+                    /*
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.BottomEnd).size(36.dp).offset(x = 4.dp, y = 4.dp),
+                        shadowElevation = 4.dp
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Change Picture",
+                            tint = Color.White,
+                            modifier = Modifier.padding(8.dp).fillMaxSize()
+                        )
+                    }
+                    */
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

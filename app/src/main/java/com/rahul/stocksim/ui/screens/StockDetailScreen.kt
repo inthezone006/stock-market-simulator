@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +38,9 @@ import com.rahul.stocksim.data.MarketRepository
 import com.rahul.stocksim.data.StockPricePoint
 import com.rahul.stocksim.model.Stock
 import kotlinx.coroutines.launch
+import android.graphics.Paint
+import android.graphics.Typeface
+import androidx.compose.ui.graphics.toArgb
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,7 +112,27 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
         containerColor = Color(0xFF121212),
         topBar = {
             TopAppBar(
-                title = { Text(stockSymbol ?: "Stock Details", color = Color.White) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stockSymbol ?: "Stock Details", color = Color.White)
+                        if (stock?.isCrypto == true) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFFFFA726).copy(alpha = 0.2f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "CRYPTO",
+                                    color = Color(0xFFFFA726),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
@@ -157,6 +181,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(text = stock!!.symbol, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(text = stock!!.name, style = MaterialTheme.typography.bodyLarge, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
                         Text(text = "$${String.format("%.2f", stock!!.price)}", style = MaterialTheme.typography.displaySmall, color = if (stock!!.change >= 0) Color.Green else Color.Red)
                         Text(
                             text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
@@ -168,7 +193,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
 
                 // --- STOCK GRAPH SECTION (Optimized) ---
                 item {
-                    Column(modifier = Modifier.fillMaxWidth().height(240.dp)) {
+                    Column(modifier = Modifier.fillMaxWidth().height(280.dp).padding(vertical = 16.dp)) {
                         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                             if (isGraphLoading) {
                                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.Gray)
@@ -184,7 +209,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                             text = "Last 24 Hours",
                             color = Color.Gray,
                             fontSize = 12.sp,
-                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                             textAlign = TextAlign.Center
                         )
                     }
@@ -216,7 +241,8 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                 item {
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
                         Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Quantity", color = Color.Gray)
+                            val unitLabel = if (stock?.isCrypto == true) "Units" else "Shares"
+                            Text(unitLabel, color = Color.Gray)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { if (quantity > 1) quantity-- }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
                                 Text(text = quantity.toString(), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 24.dp))
@@ -294,34 +320,35 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
 
 @Composable
 fun StockLineChart(data: List<StockPricePoint>, modifier: Modifier, color: Color) {
-    // Memoize the path to prevent expensive re-calculation on every frame
-    val path = remember(data) {
-        if (data.size < 2) Path()
-        else {
-            Path().apply {
-                val maxPrice = data.maxOf { it.price }
-                val minPrice = data.minOf { it.price }
-                val priceRange = (maxPrice - minPrice).coerceAtLeast(0.1)
-                
-                data.forEachIndexed { index, point ->
-                    // These will be multiplied by Canvas size during draw
-                    val xRatio = index.toFloat() / (data.size - 1)
-                    val yRatio = 1f - ((point.price - minPrice) / priceRange).toFloat()
-                    
-                    // We'll scale these in the drawWithCache or during draw phase
-                    // For simplicity in this Canvas call, we'll use a placeholder and scale below
-                }
-            }
+    val textPaint = remember {
+        Paint().apply {
+            this.color = Color.Gray.toArgb()
+            this.textSize = 24f
+            this.typeface = Typeface.DEFAULT
+            this.textAlign = Paint.Align.RIGHT
         }
     }
 
-    Canvas(modifier = modifier) {
+    Canvas(modifier = modifier.padding(end = 48.dp, top = 16.dp, bottom = 16.dp)) {
         if (data.size < 2) return@Canvas
         
         val maxPrice = data.maxOf { it.price }
         val minPrice = data.minOf { it.price }
         val priceRange = (maxPrice - minPrice).coerceAtLeast(0.1)
         
+        // Draw Y-axis price labels
+        val stepCount = 4
+        for (i in 0..stepCount) {
+            val price = maxPrice - (i * (priceRange / stepCount))
+            val y = (i * (size.height / stepCount)).toFloat()
+            drawContext.canvas.nativeCanvas.drawText(
+                "$${String.format("%.2f", price)}",
+                size.width + 44.dp.toPx(),
+                y + 12f,
+                textPaint
+            )
+        }
+
         val chartPath = Path()
         data.forEachIndexed { index, point ->
             val x = index * (size.width / (data.size - 1))

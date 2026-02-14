@@ -39,6 +39,22 @@ fun StockRow(stock: Stock, ownedQuantity: Long = 0, onRowClick: (Stock) -> Unit)
                           fontWeight = FontWeight.Bold,
                           color = Color.White
                       )
+                      if (stock.isCrypto) {
+                          Spacer(modifier = Modifier.width(8.dp))
+                          Box(
+                              modifier = Modifier
+                                  .clip(RoundedCornerShape(4.dp))
+                                  .background(Color(0xFFFFA726).copy(alpha = 0.2f)) // Orange color for crypto tag
+                                  .padding(horizontal = 6.dp, vertical = 2.dp)
+                          ) {
+                              Text(
+                                  text = "CRYPTO",
+                                  color = Color(0xFFFFA726),
+                                  fontSize = 10.sp,
+                                  fontWeight = FontWeight.Bold
+                              )
+                          }
+                      }
                       if (ownedQuantity > 0) {
                           Spacer(modifier = Modifier.width(8.dp))
                           Box(

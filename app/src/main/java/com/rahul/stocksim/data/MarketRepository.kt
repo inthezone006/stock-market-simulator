@@ -144,7 +144,15 @@ class MarketRepository {
             put("ADBE", "Adobe Inc.")
             put("CRM", "Salesforce Inc.")
             put("QCOM", "Qualcomm Inc.")
+            put("BINANCE:BTCUSDT", "Bitcoin / Tether")
+            put("BINANCE:ETHUSDT", "Ethereum / Tether")
+            put("BINANCE:XRPUSDT", "Ripple / Tether")
         }
+
+        // List of known cryptocurrency symbols
+        private val cryptoSymbols = setOf(
+            "BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:XRPUSDT"
+        )
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor { message ->
@@ -204,6 +212,7 @@ class MarketRepository {
                     }
                 }
 
+                val isCrypto = cryptoSymbols.contains(symbol)
                 val stock = Stock(
                     symbol = symbol,
                     name = companyNameMap[symbol] ?: symbol,
@@ -213,7 +222,8 @@ class MarketRepository {
                     high = response.h,
                     low = response.l,
                     open = response.o,
-                    prevClose = response.pc
+                    prevClose = response.pc,
+                    isCrypto = isCrypto
                 )
                 quoteCache[symbol] = stock to System.currentTimeMillis()
                 stock
@@ -303,8 +313,13 @@ class MarketRepository {
                 val quote = getStockQuote(symbol)
                 if (quote != null) {
                     val simulatedQuote = FinnhubQuoteResponse(
-                        c = quote.price, d = quote.change, dp = quote.percentChange,
-                        h = quote.high, l = quote.low, o = quote.open, pc = quote.prevClose
+                        c = quote.price, 
+                        d = quote.change, 
+                        dp = quote.percentChange,
+                        h = quote.high, 
+                        l = quote.low, 
+                        o = quote.open, 
+                        pc = quote.prevClose
                     )
                     generateSimulatedPoints(simulatedQuote, to)
                 } else emptyList()
@@ -314,8 +329,13 @@ class MarketRepository {
                 val quote = getStockQuote(symbol)
                 if (quote != null) {
                     val simulatedQuote = FinnhubQuoteResponse(
-                        c = quote.price, d = quote.change, dp = quote.percentChange,
-                        h = quote.high, l = quote.low, o = quote.open, pc = quote.prevClose
+                        c = quote.price, 
+                        d = quote.change, 
+                        dp = quote.percentChange,
+                        h = quote.high, 
+                        l = quote.low, 
+                        o = quote.open, 
+                        pc = quote.prevClose
                     )
                     generateSimulatedPoints(simulatedQuote, to)
                 } else emptyList()
@@ -369,12 +389,15 @@ class MarketRepository {
                 .filter { result ->
                     val isStock = result.type == "Common Stock" || result.type == "ADR"
                     val isNasdaq = !nasdaqOnly || result.symbol.all { it.isLetter() }
-                    isStock && isNasdaq
+                    // Consider cryptocurrencies in search as well
+                    val isCrypto = cryptoSymbols.contains(result.symbol)
+                    (isStock && isNasdaq) || isCrypto
                 }
                 .take(10)
 
             filteredResults.map { result ->
                 companyNameMap[result.symbol] = result.description
+                val isCrypto = cryptoSymbols.contains(result.symbol)
                 
                 getStockQuote(result.symbol)?.let { quote ->
                     Stock(
@@ -386,7 +409,8 @@ class MarketRepository {
                         high = quote.high,
                         low = quote.low,
                         open = quote.open,
-                        prevClose = quote.prevClose
+                        prevClose = quote.prevClose,
+                        isCrypto = isCrypto
                     )
                 }
             }.filterNotNull()

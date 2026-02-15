@@ -56,6 +56,25 @@ interface FinnhubApi {
         @Query("to") to: Long,
         @Query("token") apiKey: String
     ): FinnhubCandleResponse
+
+    @GET("stock/profile2")
+    suspend fun getCompanyProfile(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): FinnhubProfileResponse
+
+    @GET("stock/metric")
+    suspend fun getBasicFinancials(
+        @Query("symbol") symbol: String,
+        @Query("metric") metric: String = "all",
+        @Query("token") apiKey: String
+    ): FinnhubFinancialsResponse
+
+    @GET("news")
+    suspend fun getMarketNews(
+        @Query("category") category: String = "general",
+        @Query("token") apiKey: String
+    ): List<FinnhubNewsArticle>
 }
 
 data class FinnhubQuoteResponse(
@@ -100,6 +119,23 @@ data class FinnhubCandleResponse(
     val s: String,        // Status
     val t: List<Long>?,   // Timestamps
     val v: List<Long>?    // Volume
+)
+
+data class FinnhubProfileResponse(
+    val country: String?,
+    val currency: String?,
+    val exchange: String?,
+    val name: String?,
+    val ticker: String?,
+    val logo: String?,
+    val marketCapitalization: Double?,
+    val finnhubIndustry: String?,
+    val shareOutstanding: Double?
+)
+
+data class FinnhubFinancialsResponse(
+    val symbol: String,
+    val metric: Map<String, Double>?
 )
 
 data class StockPricePoint(val timestamp: Long, val price: Double)
@@ -566,6 +602,33 @@ class MarketRepository {
             snapshot.documents.map { 
                 it.getString("symbol").orEmpty() to (it.getLong("quantity") ?: 0L)
             }
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getCompanyProfile(symbol: String): FinnhubProfileResponse? {
+        return try {
+            api.getCompanyProfile(symbol, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getBasicFinancials(symbol: String): FinnhubFinancialsResponse? {
+        return try {
+            api.getBasicFinancials(symbol, "all", apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getMarketNews(): List<FinnhubNewsArticle> {
+        return try {
+            api.getMarketNews("general", apiKey).take(10)
         } catch (e: Exception) {
             recordError(e)
             emptyList()

@@ -1,6 +1,8 @@
 package com.rahul.stocksim.ui.screens
 
 import android.content.Intent
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
@@ -12,10 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -34,13 +34,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.rahul.stocksim.data.FinnhubNewsArticle
+import com.rahul.stocksim.data.FinnhubProfileResponse
+import com.rahul.stocksim.data.FinnhubFinancialsResponse
 import com.rahul.stocksim.data.MarketRepository
 import com.rahul.stocksim.data.StockPricePoint
 import com.rahul.stocksim.model.Stock
 import kotlinx.coroutines.launch
-import android.graphics.Paint
-import android.graphics.Typeface
-import androidx.compose.ui.graphics.toArgb
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +49,8 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
     val context = LocalContext.current
     
     var stock by remember { mutableStateOf<Stock?>(null) }
+    var profile by remember { mutableStateOf<FinnhubProfileResponse?>(null) }
+    var financials by remember { mutableStateOf<FinnhubFinancialsResponse?>(null) }
     var newsArticles by remember { mutableStateOf<List<FinnhubNewsArticle>>(emptyList()) }
     var history by remember { mutableStateOf<List<StockPricePoint>>(emptyList()) }
     
@@ -71,7 +72,12 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                         return@launch
                     }
                     stock = stockResult
-                    newsArticles = marketRepository.getCompanyNews(stockSymbol)
+                    
+                    // Fetch metadata in parallel
+                    launch { profile = marketRepository.getCompanyProfile(stockSymbol) }
+                    launch { financials = marketRepository.getBasicFinancials(stockSymbol) }
+                    launch { newsArticles = marketRepository.getCompanyNews(stockSymbol) }
+                    
                     val watchlist = marketRepository.getWatchlist()
                     isInWatchlist = watchlist.any { it.symbol == stockSymbol }
                     
@@ -114,6 +120,15 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (profile?.logo?.isNotEmpty() == true) {
+                            AsyncImage(
+                                model = profile?.logo,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp).clip(RoundedCornerShape(4.dp)).background(Color.White),
+                                contentScale = ContentScale.Fit
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
                         Text(stockSymbol ?: "Stock Details", color = Color.White)
                         if (stock?.isCrypto == true) {
                             Spacer(modifier = Modifier.width(8.dp))
@@ -181,7 +196,18 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(text = stock!!.symbol, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
-                        Text(text = stock!!.name, style = MaterialTheme.typography.bodyLarge, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
+                        Text(text = stock!!.name, style = MaterialTheme.typography.bodyLarge, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
+                        
+                        if (profile?.finnhubIndustry != null) {
+                            Text(
+                                text = profile?.finnhubIndustry!!,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+
                         Text(text = "$${String.format("%.2f", stock!!.price)}", style = MaterialTheme.typography.displaySmall, color = if (stock!!.change >= 0) Color.Green else Color.Red)
                         Text(
                             text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
@@ -191,7 +217,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                     }
                 }
 
-                // --- STOCK GRAPH SECTION (Optimized) ---
+                // --- STOCK GRAPH SECTION ---
                 item {
                     Column(modifier = Modifier.fillMaxWidth().height(280.dp).padding(vertical = 16.dp)) {
                         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -282,19 +308,46 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                     }
                 }
 
+                // Financials & Stats Section
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("Market Stats", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                            
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 StatItem("Open", "$${String.format("%.2f", stock!!.open)}")
                                 StatItem("Prev Close", "$${String.format("%.2f", stock!!.prevClose)}")
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 StatItem("High", "$${String.format("%.2f", stock!!.high)}")
                                 StatItem("Low", "$${String.format("%.2f", stock!!.low)}")
+                            }
+                            
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
+                            
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                StatItem("Market Cap", profile?.marketCapitalization?.let { "${String.format("%.2f", it / 1000)}B" } ?: "N/A")
+                                StatItem("Shares Out.", profile?.shareOutstanding?.let { "${String.format("%.2f", it)}M" } ?: "N/A")
+                            }
+                            
+                            if (financials?.metric != null) {
+                                val metrics = financials!!.metric!!
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    StatItem("52W High", metrics["52WeekHigh"]?.let { "$${String.format("%.2f", it)}" } ?: "N/A")
+                                    StatItem("52W Low", metrics["52WeekLow"]?.let { "$${String.format("%.2f", it)}" } ?: "N/A")
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    StatItem("Beta", metrics["beta"]?.let { String.format("%.2f", it) } ?: "N/A")
+                                    StatItem("P/E Ratio", metrics["peNormalizedAnnual"]?.let { String.format("%.2f", it) } ?: "N/A")
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    StatItem("Div. Yield", metrics["dividendYieldIndicatedAnnual"]?.let { "${String.format("%.2f", it)}%" } ?: "0.00%")
+                                }
                             }
                         }
                     }

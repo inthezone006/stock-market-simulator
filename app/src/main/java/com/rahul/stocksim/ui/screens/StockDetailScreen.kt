@@ -72,8 +72,12 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
     var peers by remember { mutableStateOf<List<String>>(emptyList()) }
     var earnings by remember { mutableStateOf<FinnhubEarningsCalendarResponse?>(null) }
     var rsiData by remember { mutableStateOf<FinnhubIndicatorResponse?>(null) }
+    var sma50Data by remember { mutableStateOf<FinnhubIndicatorResponse?>(null) }
+    var sma200Data by remember { mutableStateOf<FinnhubIndicatorResponse?>(null) }
     var dividends by remember { mutableStateOf<List<FinnhubDividendResponse>>(emptyList()) }
     var newsSentiment by remember { mutableStateOf<FinnhubNewsSentimentResponse?>(null) }
+    var marketStatus by remember { mutableStateOf<FinnhubMarketStatusResponse?>(null) }
+    var esgScores by remember { mutableStateOf<FinnhubEsgResponse?>(null) }
     
     var isLoading by remember { mutableStateOf(true) }
     var isGraphLoading by remember { mutableStateOf(false) }
@@ -102,8 +106,12 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     launch { peers = marketRepository.getPeers(stockSymbol) }
                     launch { earnings = marketRepository.getEarningsCalendar(stockSymbol) }
                     launch { rsiData = marketRepository.getTechnicalIndicator(stockSymbol, "rsi") }
+                    launch { sma50Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 50) }
+                    launch { sma200Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 200) }
                     launch { dividends = marketRepository.getDividends(stockSymbol) }
                     launch { newsSentiment = marketRepository.getNewsSentiment(stockSymbol) }
+                    launch { marketStatus = marketRepository.getMarketStatus() }
+                    launch { if (stockResult.isCrypto == false) esgScores = marketRepository.getEsgScores(stockSymbol) }
                     
                     val watchlist = marketRepository.getWatchlist()
                     isInWatchlist = watchlist.any { it.symbol == stockSymbol }
@@ -145,7 +153,27 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
         containerColor = Color(0xFF121212),
         topBar = {
             TopAppBar(
-                title = { Text(stockSymbol ?: "Stock Details", color = Color.White) },
+                title = { 
+                    Column {
+                        Text(stockSymbol ?: "Stock Details", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                        marketStatus?.let { status ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(if (status.isOpen) Color.Green else Color.Red)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (status.isOpen) "Market Open" else "Market Closed",
+                                    color = Color.Gray,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
@@ -228,42 +256,58 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
 
                 // Sentiment & Technical Indicators Row
                 item {
-                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (newsSentiment?.sentiment != null) {
-                                val bullish = newsSentiment!!.sentiment?.bullishPercent ?: 0.0
-                                val sentimentColor = if (bullish > 50) Color.Green else Color.Red
-                                Icon(
-                                    imageVector = if (bullish > 50) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
-                                    contentDescription = null,
-                                    tint = sentimentColor,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Sentiment: ${String.format("%.0f%%", bullish)} Bullish",
-                                    color = sentimentColor,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (newsSentiment?.sentiment != null) {
+                                    val bullish = newsSentiment!!.sentiment?.bullishPercent ?: 0.0
+                                    val sentimentColor = if (bullish > 50) Color.Green else Color.Red
+                                    Icon(
+                                        imageVector = if (bullish > 50) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
+                                        contentDescription = null,
+                                        tint = sentimentColor,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Sentiment: ${String.format("%.0f%%", bullish)} Bullish",
+                                        color = sentimentColor,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                            
+                            if (rsiData?.rsi?.isNotEmpty() == true) {
+                                val currentRsi = rsiData!!.rsi!!.last()
+                                val rsiStatus = when {
+                                    currentRsi > 70 -> "Overbought"
+                                    currentRsi < 30 -> "Oversold"
+                                    else -> "Neutral"
+                                }
+                                val rsiColor = when {
+                                    currentRsi > 70 -> Color.Red
+                                    currentRsi < 30 -> Color.Green
+                                    else -> Color.Gray
+                                }
+                                Row {
+                                    Text("RSI: ", color = Color.Gray, fontSize = 12.sp)
+                                    Text("${String.format("%.1f", currentRsi)} ($rsiStatus)", color = rsiColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                         
-                        if (rsiData?.rsi?.isNotEmpty() == true) {
-                            val currentRsi = rsiData!!.rsi!!.last()
-                            val rsiStatus = when {
-                                currentRsi > 70 -> "Overbought"
-                                currentRsi < 30 -> "Oversold"
-                                else -> "Neutral"
-                            }
-                            val rsiColor = when {
-                                currentRsi > 70 -> Color.Red
-                                currentRsi < 30 -> Color.Green
-                                else -> Color.Gray
-                            }
-                            Row {
-                                Text("RSI: ", color = Color.Gray, fontSize = 12.sp)
-                                Text("${String.format("%.1f", currentRsi)} ($rsiStatus)", color = rsiColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        if (sma50Data?.sma?.isNotEmpty() == true && sma200Data?.sma?.isNotEmpty() == true) {
+                            val currentSma50 = sma50Data!!.sma!!.last()
+                            val currentSma200 = sma200Data!!.sma!!.last()
+                            val trend = if (currentSma50 > currentSma200) "Bullish Cross" else "Bearish Cross"
+                            val trendColor = if (currentSma50 > currentSma200) Color.Green else Color.Red
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = "50D SMA: $${String.format("%.2f", currentSma50)}", color = Color.Gray, fontSize = 11.sp)
+                                Text(text = trend, color = trendColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(text = "200D SMA: $${String.format("%.2f", currentSma200)}", color = Color.Gray, fontSize = 11.sp)
                             }
                         }
                     }
@@ -297,6 +341,22 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                 RecItem("Buy", rec.buy + rec.strongBuy, Color.Green)
                                 RecItem("Hold", rec.hold, Color.Gray)
                                 RecItem("Sell", rec.sell + rec.strongSell, Color.Red)
+                            }
+                        }
+                    }
+                }
+
+                // ESG Scores Section
+                esgScores?.let { esg ->
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text("Sustainability (ESG)", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
+                            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                StatItem("Total Score", esg.totalScore?.toString() ?: "N/A")
+                                StatItem("Env", esg.environmentScore?.toString() ?: "N/A")
+                                StatItem("Social", esg.socialScore?.toString() ?: "N/A")
+                                StatItem("Gov", esg.governanceScore?.toString() ?: "N/A")
                             }
                         }
                     }

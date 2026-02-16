@@ -105,7 +105,8 @@ interface FinnhubApi {
         @Query("from") from: Long,
         @Query("to") to: Long,
         @Query("indicator") indicator: String,
-        @Query("token") apiKey: String
+        @Query("token") apiKey: String,
+        @Query("timeperiod") timeperiod: Int? = null
     ): FinnhubIndicatorResponse
 
     @GET("stock/dividend")
@@ -134,6 +135,30 @@ interface FinnhubApi {
         @Query("base") base: String = "USD",
         @Query("token") apiKey: String
     ): FinnhubForexRatesResponse
+
+    @GET("stock/market-status")
+    suspend fun getMarketStatus(
+        @Query("exchange") exchange: String,
+        @Query("token") apiKey: String
+    ): FinnhubMarketStatusResponse
+
+    @GET("stock/esg")
+    suspend fun getEsgScores(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): FinnhubEsgResponse
+
+    @GET("stock/price-target")
+    suspend fun getPriceTarget(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): FinnhubPriceTargetResponse
+
+    @GET("stock/earnings")
+    suspend fun getEarningsSurprises(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): List<FinnhubEarningsSurpriseResponse>
 }
 
 data class FinnhubQuoteResponse(
@@ -226,6 +251,8 @@ data class FinnhubIndicatorResponse(
     val macd: List<Double>?,
     val macdSignal: List<Double>?,
     val macdHist: List<Double>?,
+    val sma: List<Double>?,
+    val ema: List<Double>?,
     val s: String
 )
 
@@ -278,6 +305,41 @@ data class FinnhubSentiment(
 data class FinnhubForexRatesResponse(
     val base: String,
     val quote: Map<String, Double>
+)
+
+data class FinnhubMarketStatusResponse(
+    val exchange: String,
+    val holiday: String?,
+    val isOpen: Boolean,
+    val session: String?,
+    val timezone: String?
+)
+
+data class FinnhubEsgResponse(
+    val symbol: String,
+    val totalScore: Double?,
+    val environmentScore: Double?,
+    val socialScore: Double?,
+    val governanceScore: Double?,
+    val data: Map<String, Any?>?
+)
+
+data class FinnhubPriceTargetResponse(
+    val symbol: String,
+    val targetHigh: Double?,
+    val targetLow: Double?,
+    val targetMean: Double?,
+    val targetMedian: Double?,
+    val lastUpdate: String?
+)
+
+data class FinnhubEarningsSurpriseResponse(
+    val actual: Double?,
+    val estimate: Double?,
+    val period: String?,
+    val symbol: String?,
+    val surprise: Double?,
+    val surprisePercent: Double?
 )
 
 data class StockPricePoint(val timestamp: Long, val price: Double)
@@ -812,11 +874,11 @@ class MarketRepository {
         }
     }
 
-    suspend fun getTechnicalIndicator(symbol: String, indicator: String): FinnhubIndicatorResponse? {
+    suspend fun getTechnicalIndicator(symbol: String, indicator: String, timeperiod: Int? = null): FinnhubIndicatorResponse? {
         val to = Instant.now().epochSecond
-        val from = to - (30 * 24 * 3600) // Last 30 days
+        val from = to - (365 * 24 * 3600) // Need 1 year for 200-day SMA
         return try {
-            api.getTechnicalIndicator(symbol, "D", from, to, indicator, apiKey)
+            api.getTechnicalIndicator(symbol, "D", from, to, indicator, apiKey, timeperiod)
         } catch (e: Exception) {
             recordError(e)
             null
@@ -866,6 +928,42 @@ class MarketRepository {
         } catch (e: Exception) {
             recordError(e)
             null
+        }
+    }
+
+    suspend fun getMarketStatus(exchange: String = "US"): FinnhubMarketStatusResponse? {
+        return try {
+            api.getMarketStatus(exchange, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getEsgScores(symbol: String): FinnhubEsgResponse? {
+        return try {
+            api.getEsgScores(symbol, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getPriceTarget(symbol: String): FinnhubPriceTargetResponse? {
+        return try {
+            api.getPriceTarget(symbol, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getEarningsSurprises(symbol: String): List<FinnhubEarningsSurpriseResponse> {
+        return try {
+            api.getEarningsSurprises(symbol, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
         }
     }
 }

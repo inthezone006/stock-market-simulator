@@ -10,5 +10,6 @@ data class Stock(
     val low: Double = 0.0,
     val open: Double = 0.0,
     val prevClose: Double = 0.0,
-    val isCrypto: Boolean = false
+    val isCrypto: Boolean = false,
+    val isForex: Boolean = false
 )

@@ -40,19 +40,28 @@ fun GuideScreen() {
         ) {
             item {
                 GuideSection(
-                    title = "Getting Started",
-                    icon = Icons.Default.RocketLaunch,
-                    content = "Welcome to the Stock Market Simulator! Start by choosing your difficulty level.",
-                    detailedContent = "Difficulty levels affect your starting cash. Beginner ($100,000) gives you plenty of room for error and experimentation, while Impossible ($100) requires extreme precision and market timing. Choose wisely, as this sets the baseline for your rank on the leaderboard."
+                    title = "The Life of a Stock",
+                    icon = Icons.Default.Factory,
+                    content = "How a private idea becomes a public asset traded by millions.",
+                    detailedContent = "It starts with a Private Company. To grow, they seek 'Seeding' from Angel Investors. As they scale, 'Venture Capitalists' provide series A/B/C funding. Finally, the company goes through an IPO (Initial Public Offering) to list on exchanges like NASDAQ. At this point, the public (you!) can buy shares, which represent partial ownership of that company's future."
                 )
             }
 
             item {
                 GuideSection(
-                    title = "How to Trade",
-                    icon = Icons.Default.SwapHoriz,
-                    content = "Use the search bar at the top to find stocks and execute BUY or SELL orders.",
-                    detailedContent = "Search by symbol (e.g., AAPL) or company name. On the detail screen, you'll see live prices and statistics. When you BUY, cash is deducted from your balance. When you SELL, the current market value is added back. Note: Market data is real-time but may vary slightly between exchanges."
+                    title = "How the Market Works",
+                    icon = Icons.Default.Public,
+                    content = "An invisible auction that never stops during business hours.",
+                    detailedContent = "The Stock Market is essentially a giant auction house. For every buyer, there must be a seller. The 'Price' you see is the last agreed-upon value. If more people want to buy (Demand) than sell (Supply), the price goes up. News, earnings, and global events shift this balance every second."
+                )
+            }
+
+            item {
+                GuideSection(
+                    title = "Portfolio Analytics",
+                    icon = Icons.Default.QueryStats,
+                    content = "Understanding your top performers and investment concentration.",
+                    detailedContent = "Your Portfolio card now shows 'Concentration' (how much of your wealth is in one stock) and 'Diversification'. A 'High Diversification' means you've spread your risk across many companies. 'Day Return' shows your total profit or loss specifically for the current trading day."
                 )
             }
 
@@ -68,7 +77,7 @@ fun GuideScreen() {
             item {
                 GuideSection(
                     title = "Technical Indicators (RSI)",
-                    icon = Icons.Default.QueryStats,
+                    icon = Icons.Default.LegendToggle,
                     content = "Use the RSI indicator to identify if a stock is overvalued or undervalued.",
                     detailedContent = "RSI (Relative Strength Index) is a momentum oscillator measured on a scale of 0 to 100. Generally, an RSI above 70 indicates a stock is 'Overbought' (may be due for a price drop), and an RSI below 30 indicates it is 'Oversold' (may be due for a price bounce)."
                 )
@@ -76,28 +85,19 @@ fun GuideScreen() {
 
             item {
                 GuideSection(
-                    title = "Earnings & Similar Stocks",
-                    icon = Icons.Default.Lightbulb,
-                    content = "Discover new opportunities by looking at peer companies and earnings dates.",
-                    detailedContent = "The 'Next Earnings' date tells you when a company will report its profits—this often leads to high volatility! 'Similar Stocks' shows you competitors in the same industry. Tapping on a similar stock lets you quickly jump to its data for comparison."
+                    title = "Moving Averages (SMA)",
+                    icon = Icons.Default.TrendingUp,
+                    content = "Identifying long-term trends using 50-day and 200-day averages.",
+                    detailedContent = "The SMA (Simple Moving Average) smooths out price spikes. A 'Bullish Cross' occurs when the short-term 50-day average moves above the long-term 200-day average, suggesting a strong upward trend. The opposite is a 'Bearish Cross'."
                 )
             }
 
             item {
                 GuideSection(
-                    title = "Managing Your Portfolio",
-                    icon = Icons.Default.AccountBalanceWallet,
-                    content = "The Portfolio tab shows your total account value and active assets.",
-                    detailedContent = "Total Account Value = Cash Balance + Total Equity Value. Your equity is calculated by multiplying your shares by the current market price. Use the Trade tab to see your full history, including positions you've sold out of entirely."
-                )
-            }
-
-            item {
-                GuideSection(
-                    title = "Market Data Sources",
-                    icon = Icons.Default.Memory,
-                    content = "This app uses the Finnhub API and Firebase for a modern, real-time experience.",
-                    detailedContent = "Finnhub provides the institutional-grade market data, analyst ratings, and news. Firebase Firestore stores your personal trading data securely. This combination ensures that the simulator behaves like a real trading platform while keeping your data safe."
+                    title = "ESG & Sustainability",
+                    icon = Icons.Default.Eco,
+                    content = "Invest ethically by checking a company's ESG scores.",
+                    detailedContent = "ESG stands for Environmental, Social, and Governance. It measures a company's impact on the planet and its ethical standards. Higher scores suggest the company is well-managed and prepared for a sustainable future."
                 )
             }
 
@@ -108,7 +108,7 @@ fun GuideScreen() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Good luck, Trader! 📈",
+                        text = "Knowledge is the best asset! 📈",
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp

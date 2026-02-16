@@ -159,6 +159,18 @@ interface FinnhubApi {
         @Query("symbol") symbol: String,
         @Query("token") apiKey: String
     ): List<FinnhubEarningsSurpriseResponse>
+
+    @GET("forex/symbol")
+    suspend fun getForexSymbols(
+        @Query("exchange") exchange: String = "oanda",
+        @Query("token") apiKey: String
+    ): List<FinnhubSymbolResult>
+
+    @GET("crypto/symbol")
+    suspend fun getCryptoSymbols(
+        @Query("exchange") exchange: String = "binance",
+        @Query("token") apiKey: String
+    ): List<FinnhubSymbolResult>
 }
 
 data class FinnhubQuoteResponse(
@@ -181,6 +193,12 @@ data class FinnhubSearchResult(
     val displaySymbol: String,
     val symbol: String,
     val type: String
+)
+
+data class FinnhubSymbolResult(
+    val description: String,
+    val displaySymbol: String,
+    val symbol: String
 )
 
 data class FinnhubNewsArticle(
@@ -346,6 +364,10 @@ data class StockPricePoint(val timestamp: Long, val price: Double)
 
 data class WatchlistItem(val symbol: String)
 
+enum class AssetFilter {
+    STOCKS, CRYPTO, FOREX, OTHERS
+}
+
 class MarketRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -384,14 +406,24 @@ class MarketRepository {
             put("ADBE", "Adobe Inc.")
             put("CRM", "Salesforce Inc.")
             put("QCOM", "Qualcomm Inc.")
+            put("SPY", "SPDR S&P 500 ETF Trust")
+            put("OANDA:EUR_USD", "Euro / US Dollar")
+            put("OANDA:GBP_USD", "British Pound / US Dollar")
+            put("OANDA:USD_JPY", "US Dollar / Japanese Yen")
             put("BINANCE:BTCUSDT", "Bitcoin / Tether")
             put("BINANCE:ETHUSDT", "Ethereum / Tether")
             put("BINANCE:XRPUSDT", "Ripple / Tether")
+            put("BINANCE:SOLUSDT", "Solana / Tether")
         }
 
         // List of known cryptocurrency symbols
         private val cryptoSymbols = setOf(
-            "BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:XRPUSDT"
+            "BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:XRPUSDT", "BINANCE:SOLUSDT"
+        )
+
+        // List of known forex symbols
+        private val forexSymbols = setOf(
+            "OANDA:EUR_USD", "OANDA:GBP_USD", "OANDA:USD_JPY"
         )
     }
 
@@ -452,7 +484,9 @@ class MarketRepository {
                     }
                 }
 
-                val isCrypto = cryptoSymbols.contains(symbol)
+                val isCrypto = symbol.startsWith("BINANCE:") || cryptoSymbols.contains(symbol)
+                val isForex = symbol.startsWith("OANDA:") || forexSymbols.contains(symbol)
+                
                 val stock = Stock(
                     symbol = symbol,
                     name = companyNameMap[symbol] ?: symbol,
@@ -463,7 +497,8 @@ class MarketRepository {
                     low = response.l,
                     open = response.o,
                     prevClose = response.pc,
-                    isCrypto = isCrypto
+                    isCrypto = isCrypto,
+                    isForex = isForex
                 )
                 quoteCache[symbol] = stock to System.currentTimeMillis()
                 stock
@@ -624,23 +659,33 @@ class MarketRepository {
         }
     }
 
-    suspend fun searchStocks(query: String, nasdaqOnly: Boolean = false): List<Stock> = coroutineScope {
+    suspend fun searchStocks(query: String, filter: AssetFilter = AssetFilter.STOCKS): List<Stock> = coroutineScope {
         try {
             val response = api.searchSymbol(query, apiKey)
             
             val filteredResults = response.result
                 .filter { result ->
-                    val isStock = result.type == "Common Stock" || result.type == "ADR"
-                    val isNasdaq = !nasdaqOnly || result.symbol.all { it.isLetter() }
-                    // Consider cryptocurrencies in search as well
-                    val isCrypto = cryptoSymbols.contains(result.symbol)
-                    (isStock && isNasdaq) || isCrypto
+                    when (filter) {
+                        AssetFilter.STOCKS -> {
+                            val isStock = result.type == "Common Stock" || result.type == "ADR" || result.type == "ETF"
+                            val isNasdaq = result.symbol.all { it.isLetter() }
+                            isStock && isNasdaq
+                        }
+                        AssetFilter.CRYPTO -> {
+                            result.symbol.startsWith("BINANCE:") || cryptoSymbols.contains(result.symbol)
+                        }
+                        AssetFilter.FOREX -> {
+                            result.symbol.startsWith("OANDA:") || forexSymbols.contains(result.symbol)
+                        }
+                        AssetFilter.OTHERS -> true
+                    }
                 }
                 .take(10)
 
             filteredResults.map { result ->
                 companyNameMap[result.symbol] = result.description
-                val isCrypto = cryptoSymbols.contains(result.symbol)
+                val isCrypto = result.symbol.startsWith("BINANCE:") || cryptoSymbols.contains(result.symbol)
+                val isForex = result.symbol.startsWith("OANDA:") || forexSymbols.contains(result.symbol)
                 
                 getStockQuote(result.symbol)?.let { quote ->
                     Stock(
@@ -653,7 +698,8 @@ class MarketRepository {
                         low = quote.low,
                         open = quote.open,
                         prevClose = quote.prevClose,
-                        isCrypto = isCrypto
+                        isCrypto = isCrypto,
+                        isForex = isForex
                     )
                 }
             }.filterNotNull()

@@ -28,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.rahul.stocksim.data.AssetFilter
 import com.rahul.stocksim.data.AuthRepository
 import com.rahul.stocksim.data.MarketRepository
 import com.rahul.stocksim.model.Stock
@@ -61,115 +62,124 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
     // Debounce Job to prevent rate limiting
     var searchJob by remember { mutableStateOf<Job?>(null) }
 
+    val performSearch = { query: String ->
+        searchJob?.cancel()
+        if (query.isNotEmpty()) {
+            searchJob = coroutineScope.launch {
+                delay(500)
+                isSearching = true
+                // Always use STOCKS filter as requested
+                searchResults = marketRepository.searchStocks(query, AssetFilter.STOCKS)
+                isSearching = false
+            }
+        } else {
+            searchResults = emptyList()
+        }
+    }
+
     Scaffold(
         containerColor = Color(0xFF121212),
         topBar = {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { 
-                    searchQuery = it
-                    searchJob?.cancel() // Cancel previous search request
-                    
-                    if (it.isNotEmpty()) {
-                        searchJob = coroutineScope.launch {
-                            delay(500) // Wait 500ms after user stops typing
-                            isSearching = true
-                            searchResults = marketRepository.searchStocks(it, nasdaqOnly = true)
-                            isSearching = false
-                        }
-                    } else {
-                        searchResults = emptyList()
-                    }
-                },
-                onSearch = { 
-                    focusManager.clearFocus()
-                },
-                active = searchActive,
-                onActiveChange = { searchActive = it },
-                placeholder = { Text("Search stocks...") },
-                leadingIcon = { 
-                    if (searchActive) {
-                        IconButton(onClick = { searchActive = false }) {
+            Column {
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { 
+                        searchQuery = it
+                        performSearch(it)
+                    },
+                    onSearch = { 
+                        focusManager.clearFocus()
+                    },
+                    active = searchActive,
+                    onActiveChange = { searchActive = it },
+                    placeholder = { Text("Search stocks...") },
+                    leadingIcon = { 
+                        if (searchActive) {
+                            IconButton(onClick = { searchActive = false }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
+                                )
+                            }
+                        } else {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.padding(start = 8.dp)
                             )
                         }
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.padding(start = 8.dp)
+                    },
+                    trailingIcon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (searchActive && searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { 
+                                    searchQuery = ""
+                                    searchResults = emptyList()
+                                }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.White)
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 12.dp)
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.DarkGray)
+                                    .clickable { mainNavController.navigate(Screen.Settings.route) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val photoUrl = user?.photoUrl
+                                if (photoUrl != null) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(photoUrl)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "Profile",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    Text(
+                                        text = user?.email?.firstOrNull()?.toString()?.uppercase() ?: "?",
+                                        color = Color.White,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(if (!searchActive) Modifier.padding(horizontal = 16.dp, vertical = 8.dp) else Modifier),
+                    colors = SearchBarDefaults.colors(
+                        containerColor = Color(0xFF1F1F1F),
+                        inputFieldColors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
                         )
-                    }
-                },
-                trailingIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (searchActive && searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { 
-                                searchQuery = ""
-                                searchResults = emptyList()
-                            }) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.White)
-                            }
+                    )
+                ) {
+                    if (searchActive) {
+                        if (isSearching) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color.White)
                         }
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 12.dp)
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color.DarkGray)
-                                .clickable { mainNavController.navigate(Screen.Settings.route) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val photoUrl = user?.photoUrl
-                            if (photoUrl != null) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(photoUrl)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = "Profile",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else {
-                                Text(
-                                    text = user?.email?.firstOrNull()?.toString()?.uppercase() ?: "?",
-                                    color = Color.White,
-                                    fontSize = 12.sp
-                                )
-                            }
+                        
+                        searchResults.forEach { stock ->
+                            ListItem(
+                                headlineContent = { Text(stock.symbol, color = Color.White) },
+                                supportingContent = { Text(stock.name, color = Color.Gray) },
+                                trailingContent = { Text("$${String.format("%.2f", stock.price)}", color = Color.White) },
+                                modifier = Modifier.clickable {
+                                    searchActive = false
+                                    onStockClick(stock)
+                                },
+                                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                            )
                         }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .then(if (!searchActive) Modifier.padding(horizontal = 16.dp, vertical = 8.dp) else Modifier),
-                colors = SearchBarDefaults.colors(
-                    containerColor = Color(0xFF1F1F1F),
-                    inputFieldColors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    )
-                )
-            ) {
-                if (isSearching) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color.White)
-                }
-                searchResults.forEach { stock ->
-                    ListItem(
-                        headlineContent = { Text(stock.symbol, color = Color.White) },
-                        supportingContent = { Text(stock.name, color = Color.Gray) },
-                        trailingContent = { Text("$${String.format("%.2f", stock.price)}", color = Color.White) },
-                        modifier = Modifier.clickable {
-                            searchActive = false
-                            onStockClick(stock)
-                        },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-                    )
                 }
             }
         },

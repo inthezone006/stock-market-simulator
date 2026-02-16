@@ -111,7 +111,7 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     launch { dividends = marketRepository.getDividends(stockSymbol) }
                     launch { newsSentiment = marketRepository.getNewsSentiment(stockSymbol) }
                     launch { marketStatus = marketRepository.getMarketStatus() }
-                    launch { if (stockResult.isCrypto == false) esgScores = marketRepository.getEsgScores(stockSymbol) }
+                    launch { if (stockResult.isCrypto == false && stockResult.isForex == false) esgScores = marketRepository.getEsgScores(stockSymbol) }
                     
                     val watchlist = marketRepository.getWatchlist()
                     isInWatchlist = watchlist.any { it.symbol == stockSymbol }
@@ -240,6 +240,12 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFFFFA726).copy(alpha = 0.2f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                                             Text(text = "CRYPTO", color = Color(0xFFFFA726), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                    if (stock?.isForex == true) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFF2196F3).copy(alpha = 0.2f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                            Text(text = "FOREX", color = Color(0xFF2196F3), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
@@ -404,7 +410,11 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                 item {
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
                         Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            val unitLabel = if (stock?.isCrypto == true) "Units" else "Shares"
+                            val unitLabel = when {
+                                stock?.isCrypto == true -> "Units"
+                                stock?.isForex == true -> "Lots"
+                                else -> "Shares"
+                            }
                             Text(unitLabel, color = Color.Gray)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { if (quantity > 1) quantity-- }) { Icon(Icons.Default.Remove, null, tint = Color.White) }

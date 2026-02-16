@@ -25,6 +25,8 @@ import retrofit2.http.Query
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.sin
+import java.text.SimpleDateFormat
+import java.util.*
 
 // Interface for Finnhub API
 interface FinnhubApi {
@@ -75,6 +77,63 @@ interface FinnhubApi {
         @Query("category") category: String = "general",
         @Query("token") apiKey: String
     ): List<FinnhubNewsArticle>
+
+    @GET("stock/recommendation")
+    suspend fun getRecommendations(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): List<FinnhubRecommendationResponse>
+
+    @GET("stock/peers")
+    suspend fun getPeers(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): List<String>
+
+    @GET("calendar/earnings")
+    suspend fun getEarningsCalendar(
+        @Query("symbol") symbol: String,
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("token") apiKey: String
+    ): FinnhubEarningsCalendarResponse
+
+    @GET("indicator")
+    suspend fun getTechnicalIndicator(
+        @Query("symbol") symbol: String,
+        @Query("resolution") resolution: String,
+        @Query("from") from: Long,
+        @Query("to") to: Long,
+        @Query("indicator") indicator: String,
+        @Query("token") apiKey: String
+    ): FinnhubIndicatorResponse
+
+    @GET("stock/dividend")
+    suspend fun getDividends(
+        @Query("symbol") symbol: String,
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("token") apiKey: String
+    ): List<FinnhubDividendResponse>
+
+    @GET("calendar/ipo")
+    suspend fun getIpoCalendar(
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("token") apiKey: String
+    ): FinnhubIpoCalendarResponse
+
+    @GET("news-sentiment")
+    suspend fun getNewsSentiment(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): FinnhubNewsSentimentResponse
+
+    @GET("forex/rates")
+    suspend fun getForexRates(
+        @Query("base") base: String = "USD",
+        @Query("token") apiKey: String
+    ): FinnhubForexRatesResponse
 }
 
 data class FinnhubQuoteResponse(
@@ -135,7 +194,90 @@ data class FinnhubProfileResponse(
 
 data class FinnhubFinancialsResponse(
     val symbol: String,
-    val metric: Map<String, Double>?
+    val metric: Map<String, Any?>? // Use Any? to prevent crashes when API returns dates or strings
+)
+
+data class FinnhubRecommendationResponse(
+    val buy: Int,
+    val hold: Int,
+    val period: String,
+    val sell: Int,
+    val strongBuy: Int,
+    val strongSell: Int,
+    val symbol: String
+)
+
+data class FinnhubEarningsCalendarResponse(
+    val earningsCalendar: List<FinnhubEarningsEntry>
+)
+
+data class FinnhubEarningsEntry(
+    val date: String,
+    val epsActual: Double?,
+    val epsEstimate: Double?,
+    val hour: String,
+    val quarter: Int,
+    val symbol: String,
+    val year: Int
+)
+
+data class FinnhubIndicatorResponse(
+    val rsi: List<Double>?,
+    val macd: List<Double>?,
+    val macdSignal: List<Double>?,
+    val macdHist: List<Double>?,
+    val s: String
+)
+
+data class FinnhubDividendResponse(
+    val symbol: String,
+    val date: String,
+    val amount: Double,
+    val adjustedAmount: Double,
+    val payDate: String,
+    val recordDate: String,
+    val declarationDate: String,
+    val currency: String
+)
+
+data class FinnhubIpoCalendarResponse(
+    val ipoCalendar: List<FinnhubIpoEntry>
+)
+
+data class FinnhubIpoEntry(
+    val date: String,
+    val exchange: String,
+    val name: String,
+    val numberOfShares: Long,
+    val price: String,
+    val status: String,
+    val symbol: String,
+    val totalSharesValue: Long
+)
+
+data class FinnhubNewsSentimentResponse(
+    val buzz: FinnhubBuzz?,
+    val companyNewsScore: Double?,
+    val sectorAverageBullishPercent: Double?,
+    val sectorAverageNewsScore: Double?,
+    val sentiment: FinnhubSentiment?,
+    val symbol: String
+)
+
+data class FinnhubBuzz(
+    val articlesInLastWeek: Int?,
+    val buzz: Double?,
+    val weeklyAverage: Double?
+)
+
+data class FinnhubSentiment(
+    val bearishPercent: Double?,
+    val bullishPercent: Double?
+)
+
+data class FinnhubForexRatesResponse(
+    val base: String,
+    val quote: Map<String, Double>
 )
 
 data class StockPricePoint(val timestamp: Long, val price: Double)
@@ -408,8 +550,11 @@ class MarketRepository {
 
     suspend fun getCompanyNews(symbol: String): List<FinnhubNewsArticle> {
         return try {
-            val today = java.time.LocalDate.now().toString()
-            val weekAgo = java.time.LocalDate.now().minusDays(7).toString()
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val calendar = Calendar.getInstance()
+            val today = sdf.format(calendar.time)
+            calendar.add(Calendar.DAY_OF_YEAR, -7)
+            val weekAgo = sdf.format(calendar.time)
             api.getCompanyNews(symbol, weekAgo, today, apiKey).take(5)
         } catch (e: Exception) {
             recordError(e)
@@ -632,6 +777,95 @@ class MarketRepository {
         } catch (e: Exception) {
             recordError(e)
             emptyList()
+        }
+    }
+
+    suspend fun getRecommendations(symbol: String): List<FinnhubRecommendationResponse> {
+        return try {
+            api.getRecommendations(symbol, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getPeers(symbol: String): List<String> {
+        return try {
+            api.getPeers(symbol, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getEarningsCalendar(symbol: String): FinnhubEarningsCalendarResponse? {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        val today = sdf.format(calendar.time)
+        calendar.add(Calendar.MONTH, 6)
+        val sixMonthsLater = sdf.format(calendar.time)
+        return try {
+            api.getEarningsCalendar(symbol, today, sixMonthsLater, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getTechnicalIndicator(symbol: String, indicator: String): FinnhubIndicatorResponse? {
+        val to = Instant.now().epochSecond
+        val from = to - (30 * 24 * 3600) // Last 30 days
+        return try {
+            api.getTechnicalIndicator(symbol, "D", from, to, indicator, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getDividends(symbol: String): List<FinnhubDividendResponse> {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        val today = sdf.format(calendar.time)
+        calendar.add(Calendar.YEAR, -1)
+        val yearAgo = sdf.format(calendar.time)
+        return try {
+            api.getDividends(symbol, yearAgo, today, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getIpoCalendar(): List<FinnhubIpoEntry> {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        val today = sdf.format(calendar.time)
+        calendar.add(Calendar.MONTH, 1)
+        val monthAhead = sdf.format(calendar.time)
+        return try {
+            api.getIpoCalendar(today, monthAhead, apiKey).ipoCalendar
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getNewsSentiment(symbol: String): FinnhubNewsSentimentResponse? {
+        return try {
+            api.getNewsSentiment(symbol, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getForexRates(base: String = "USD"): FinnhubForexRatesResponse? {
+        return try {
+            api.getForexRates(base, apiKey)
+        } catch (e: Exception) {
+            recordError(e)
+            null
         }
     }
 }

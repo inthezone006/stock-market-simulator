@@ -130,6 +130,7 @@ class MainActivity : ComponentActivity() {
                             val symbol = backStackEntry.arguments?.getString("symbol")
                             StockDetailScreen(
                                 stockSymbol = symbol,
+                                navController = navController,
                                 onBackClick = {
                                     navController.popBackStack()
                                 }

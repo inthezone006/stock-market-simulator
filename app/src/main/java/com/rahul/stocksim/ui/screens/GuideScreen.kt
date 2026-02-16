@@ -58,6 +58,33 @@ fun GuideScreen() {
 
             item {
                 GuideSection(
+                    title = "Analyst Sentiment",
+                    icon = Icons.Default.Groups,
+                    content = "Learn what professional analysts think about a stock's future performance.",
+                    detailedContent = "The sentiment numbers come from major financial institutions (like JP Morgan, Goldman Sachs). They represent an aggregate of ratings: 'Strong Buy' and 'Buy' suggest a positive outlook, 'Hold' suggests neutral, and 'Sell' suggests analysts expect the price to drop. These are updated monthly."
+                )
+            }
+
+            item {
+                GuideSection(
+                    title = "Technical Indicators (RSI)",
+                    icon = Icons.Default.QueryStats,
+                    content = "Use the RSI indicator to identify if a stock is overvalued or undervalued.",
+                    detailedContent = "RSI (Relative Strength Index) is a momentum oscillator measured on a scale of 0 to 100. Generally, an RSI above 70 indicates a stock is 'Overbought' (may be due for a price drop), and an RSI below 30 indicates it is 'Oversold' (may be due for a price bounce)."
+                )
+            }
+
+            item {
+                GuideSection(
+                    title = "Earnings & Similar Stocks",
+                    icon = Icons.Default.Lightbulb,
+                    content = "Discover new opportunities by looking at peer companies and earnings dates.",
+                    detailedContent = "The 'Next Earnings' date tells you when a company will report its profits—this often leads to high volatility! 'Similar Stocks' shows you competitors in the same industry. Tapping on a similar stock lets you quickly jump to its data for comparison."
+                )
+            }
+
+            item {
+                GuideSection(
                     title = "Managing Your Portfolio",
                     icon = Icons.Default.AccountBalanceWallet,
                     content = "The Portfolio tab shows your total account value and active assets.",
@@ -67,19 +94,10 @@ fun GuideScreen() {
 
             item {
                 GuideSection(
-                    title = "How the Market Works",
-                    icon = Icons.Default.TrendingUp,
-                    content = "Stock prices fluctuate based on supply, demand, and global news.",
-                    detailedContent = "A stock represents partial ownership in a company. Prices move based on earnings reports, economic news, and investor sentiment. The NASDAQ, which this app prioritizes, is a global electronic marketplace for buying and selling securities."
-                )
-            }
-
-            item {
-                GuideSection(
-                    title = "App Architecture",
+                    title = "Market Data Sources",
                     icon = Icons.Default.Memory,
                     content = "This app uses the Finnhub API and Firebase for a modern, real-time experience.",
-                    detailedContent = "Finnhub provides the high-fidelity market data and news articles you see. Firebase Firestore stores your personal trading data securely, while Firebase Storage hosts your profile pictures. Kotlin Coroutines and Flows keep the data streaming without lag."
+                    detailedContent = "Finnhub provides the institutional-grade market data, analyst ratings, and news. Firebase Firestore stores your personal trading data securely. This combination ensures that the simulator behaves like a real trading platform while keeping your data safe."
                 )
             }
 

@@ -119,34 +119,7 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (profile?.logo?.isNotEmpty() == true) {
-                            AsyncImage(
-                                model = profile?.logo,
-                                contentDescription = null,
-                                modifier = Modifier.size(32.dp).clip(RoundedCornerShape(4.dp)).background(Color.White),
-                                contentScale = ContentScale.Fit
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                        }
-                        Text(stockSymbol ?: "Stock Details", color = Color.White)
-                        if (stock?.isCrypto == true) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(Color(0xFFFFA726).copy(alpha = 0.2f))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    text = "CRYPTO",
-                                    color = Color(0xFFFFA726),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
+                    Text(stockSymbol ?: "Stock Details", color = Color.White)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -191,29 +164,86 @@ fun StockDetailScreen(stockSymbol: String?, onBackClick: () -> Unit) {
                     .padding(horizontal = 16.dp)
             ) {
                 item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = stock!!.symbol, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
-                        Text(text = stock!!.name, style = MaterialTheme.typography.bodyLarge, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
-                        
-                        if (profile?.finnhubIndustry != null) {
-                            Text(
-                                text = profile?.finnhubIndustry!!,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (profile?.logo?.isNotEmpty() == true) {
+                                AsyncImage(
+                                    model = profile?.logo,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.White),
+                                    contentScale = ContentScale.Fit
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                            }
+                            
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = stock!!.symbol,
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    if (stock?.isCrypto == true) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(Color(0xFFFFA726).copy(alpha = 0.2f))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "CRYPTO",
+                                                color = Color(0xFFFFA726),
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = stock!!.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.Gray,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                if (profile?.finnhubIndustry != null) {
+                                    Text(
+                                        text = profile?.finnhubIndustry!!,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
                         }
 
-                        Text(text = "$${String.format("%.2f", stock!!.price)}", style = MaterialTheme.typography.displaySmall, color = if (stock!!.change >= 0) Color.Green else Color.Red)
-                        Text(
-                            text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
-                            color = if (stock!!.change >= 0) Color.Green else Color.Red,
-                            fontSize = 16.sp
-                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "$${String.format("%.2f", stock!!.price)}",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = if (stock!!.change >= 0) Color.Green else Color.Red,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
+                                color = if (stock!!.change >= 0) Color.Green else Color.Red,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
 

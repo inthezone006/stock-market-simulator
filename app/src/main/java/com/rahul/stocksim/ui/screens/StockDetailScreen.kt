@@ -42,8 +42,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Helper function to format dates from YYYY-MM-DD to MM/DD/YYYY
-fun formatDate(inputDate: String?): String {
+private fun formatDate(inputDate: String?): String {
     if (inputDate == null) return "N/A"
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -336,7 +335,54 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     }
                 }
 
-                // Analyst Recommendations
+                item {
+                    if (ownedQuantity > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Your Position",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    val unitLabel = when {
+                                        stock?.isCrypto == true -> "Units Owned"
+                                        stock?.isForex == true -> "Lots Owned"
+                                        else -> "Shares Owned"
+                                    }
+                                    Text(unitLabel, color = Color.Gray, fontSize = 12.sp)
+                                    Text(
+                                        text = "$ownedQuantity",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 22.sp
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Equity Value", color = Color.Gray, fontSize = 12.sp)
+                                    Text(
+                                        text = "$${String.format("%,.2f", ownedQuantity * stock!!.price)}",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 22.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (recommendations.isNotEmpty()) {
                     item {
                         val rec = recommendations.first()
@@ -352,7 +398,6 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     }
                 }
 
-                // ESG Scores Section
                 esgScores?.let { esg ->
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
@@ -368,7 +413,6 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     }
                 }
 
-                // Upcoming Earnings
                 earnings?.earningsCalendar?.firstOrNull()?.let { nextEarnings ->
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
@@ -377,13 +421,12 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                 Icon(Icons.Default.Event, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text("Next Earnings: ", color = Color.Gray, fontSize = 14.sp)
-                                Text(formatDate(nextEarnings.date), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(text = formatDate(nextEarnings.date), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             }
                         }
                     }
                 }
 
-                // Dividends Section
                 if (dividends.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
@@ -406,7 +449,6 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
 
-                // Trade Controls
                 item {
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
                         Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -455,7 +497,6 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     }
                 }
 
-                // Peers Section
                 if (peers.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
@@ -472,7 +513,6 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     }
                 }
 
-                // Financials & Stats Section
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
@@ -559,21 +599,17 @@ fun StockLineChart(data: List<StockPricePoint>, modifier: Modifier, color: Color
         val minPrice = data.minOf { it.price }
         val priceRange = (maxPrice - minPrice).coerceAtLeast(0.1)
         
-        // Draw Y-axis price labels
-        val stepCount = 4
-        for (i in 0..stepCount) {
-            val price = maxPrice - (i * (priceRange / stepCount))
-            val y = (i * (size.height / stepCount)).toFloat()
+        for (i in 0..4) {
+            val price = maxPrice - (i * (priceRange / 4))
+            val y = (i * (size.height / 4)).toFloat()
             drawContext.canvas.nativeCanvas.drawText("$${String.format("%.2f", price)}", size.width + 44.dp.toPx(), y + 8f, textPaint)
         }
 
-        // Draw X-axis time labels
         val timeSdf = SimpleDateFormat("h:mm a", Locale.getDefault())
-        val timeStepCount = 3
-        for (i in 0..timeStepCount) {
-            val index = (i * (data.size - 1) / timeStepCount)
+        for (i in 0..3) {
+            val index = (i * (data.size - 1) / 3)
             val point = data[index]
-            val x = i * (size.width / timeStepCount)
+            val x = i * (size.width / 3)
             val timeStr = timeSdf.format(Date(point.timestamp * 1000))
             drawContext.canvas.nativeCanvas.drawText(timeStr, x, size.height + 24.dp.toPx(), timePaint)
         }

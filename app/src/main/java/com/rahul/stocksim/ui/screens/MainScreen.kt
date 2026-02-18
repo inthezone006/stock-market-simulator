@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -127,6 +129,7 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                                     .size(32.dp)
                                     .clip(CircleShape)
                                     .background(Color.DarkGray)
+                                    .semantics { contentDescription = "Profile" }
                                     .clickable { mainNavController.navigate(Screen.Settings.route) },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -137,7 +140,7 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                                             .data(photoUrl)
                                             .crossfade(true)
                                             .build(),
-                                        contentDescription = "Profile",
+                                        contentDescription = null,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()
                                     )

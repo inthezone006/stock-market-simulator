@@ -5,6 +5,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -86,6 +89,13 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
     
     var errorOccurred by remember { mutableStateOf(false) }
 
+    val scrollState = rememberLazyListState()
+    val isCollapsed by remember {
+        derivedStateOf {
+            scrollState.firstVisibleItemIndex > 0 || scrollState.firstVisibleItemScrollOffset > 100
+        }
+    }
+
     val refreshStockData = {
         if (stockSymbol != null) {
             coroutineScope.launch {
@@ -153,22 +163,91 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
         topBar = {
             TopAppBar(
                 title = { 
-                    Column {
-                        Text(stockSymbol ?: "Stock Details", color = Color.White, style = MaterialTheme.typography.titleMedium)
-                        marketStatus?.let { status ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(if (status.isOpen) Color.Green else Color.Red)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = if (status.isOpen) "Market Open" else "Market Closed",
-                                    color = Color.Gray,
-                                    fontSize = 10.sp
-                                )
+                    AnimatedContent(
+                        targetState = isCollapsed,
+                        transitionSpec = {
+                            fadeIn() + slideInVertically { it / 2 } togetherWith fadeOut() + slideOutVertically { -it / 2 }
+                        },
+                        label = "HeaderTransition"
+                    ) { collapsed ->
+                        if (collapsed && stock != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(end = 8.dp)
+                            ) {
+                                if (profile?.logo?.isNotEmpty() == true) {
+                                    AsyncImage(
+                                        model = profile?.logo,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color.White),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (marketStatus != null) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(8.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (marketStatus!!.isOpen) Color.Green else Color.Red)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                        }
+                                        Text(
+                                            text = stock!!.symbol,
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1
+                                        )
+                                    }
+                                    Text(
+                                        text = stock!!.name,
+                                        color = Color.Gray,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "$${String.format("%.2f", stock!!.price)}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = if (stock!!.change >= 0) Color.Green else Color.Red,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)}",
+                                        color = if (stock!!.change >= 0) Color.Green else Color.Red,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            Column {
+                                Text(stockSymbol ?: "Stock Details", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                                marketStatus?.let { status ->
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(if (status.isOpen) Color.Green else Color.Red)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (status.isOpen) "Market Open" else "Market Closed",
+                                            color = Color.Gray,
+                                            fontSize = 10.sp
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -209,6 +288,7 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
             }
         } else if (stock != null) {
             LazyColumn(
+                state = scrollState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)

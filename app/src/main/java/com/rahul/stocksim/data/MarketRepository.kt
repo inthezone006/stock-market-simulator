@@ -416,6 +416,8 @@ class MarketRepository {
             put("BINANCE:SOLUSDT", "Solana / Tether")
         }
 
+        private val industryCache = ConcurrentHashMap<String, String>()
+
         // List of known cryptocurrency symbols
         private val cryptoSymbols = setOf(
             "BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:XRPUSDT", "BINANCE:SOLUSDT"
@@ -472,14 +474,19 @@ class MarketRepository {
                 val response = api.getQuote(symbol, apiKey)
                 lastRequestTime = System.currentTimeMillis()
                 
-                if (!companyNameMap.containsKey(symbol)) {
-                    coroutineScope {
-                        launch {
+                if (!companyNameMap.containsKey(symbol) || !industryCache.containsKey(symbol)) {
+                    try {
+                        val profileRes = api.getCompanyProfile(symbol, apiKey)
+                        if (profileRes.name != null) companyNameMap[symbol] = profileRes.name
+                        if (profileRes.finnhubIndustry != null) industryCache[symbol] = profileRes.finnhubIndustry!!
+                    } catch (e: Exception) {
+                        // Fallback to search if profile fails
+                        if (!companyNameMap.containsKey(symbol)) {
                             try {
                                 val searchRes = api.searchSymbol(symbol, apiKey)
                                 val match = searchRes.result.find { it.symbol == symbol }
                                 if (match != null) companyNameMap[symbol] = match.description
-                            } catch (e: Exception) {}
+                            } catch (e2: Exception) {}
                         }
                     }
                 }
@@ -498,7 +505,8 @@ class MarketRepository {
                     open = response.o,
                     prevClose = response.pc,
                     isCrypto = isCrypto,
-                    isForex = isForex
+                    isForex = isForex,
+                    industry = industryCache[symbol]
                 )
                 quoteCache[symbol] = stock to System.currentTimeMillis()
                 stock
@@ -573,8 +581,8 @@ class MarketRepository {
         }
         
         val resolution = when (period) {
-            "1D" -> "D"
-            "1W" -> "D"
+            "1D" -> "15"
+            "1W" -> "60"
             "1M" -> "D"
             "1Y" -> "W"
             else -> "D"
@@ -596,7 +604,7 @@ class MarketRepository {
                         o = quote.open, 
                         pc = quote.prevClose
                     )
-                    generateSimulatedPoints(simulatedQuote, to)
+                    generateSimulatedPoints(simulatedQuote, to, period)
                 } else emptyList()
             }
         } catch (e: Exception) {
@@ -612,7 +620,7 @@ class MarketRepository {
                         o = quote.open, 
                         pc = quote.prevClose
                     )
-                    generateSimulatedPoints(simulatedQuote, to)
+                    generateSimulatedPoints(simulatedQuote, to, period)
                 } else emptyList()
             } catch (innerEx: Exception) {
                 recordError(innerEx)
@@ -621,23 +629,32 @@ class MarketRepository {
         }
     }
 
-    private fun generateSimulatedPoints(quote: FinnhubQuoteResponse, endTime: Long): List<StockPricePoint> {
+    private fun generateSimulatedPoints(quote: FinnhubQuoteResponse, endTime: Long, period: String): List<StockPricePoint> {
         val points = mutableListOf<StockPricePoint>()
         val startPrice = quote.o
         val endPrice = quote.c
         val high = quote.h
         val low = quote.l
         
-        for (i in 0..10) {
-            val timestamp = endTime - ((10 - i) * 3600)
+        val intervalSeconds = when(period) {
+            "1D" -> 3600L
+            "1W" -> 3600L * 12
+            "1M" -> 3600L * 24 * 2
+            "1Y" -> 3600L * 24 * 30
+            else -> 3600L
+        }
+        
+        val steps = 15
+        for (i in 0..steps) {
+            val timestamp = endTime - ((steps - i) * intervalSeconds)
             val noise = (sin(i.toDouble() * 1.5) * (high - low) * 0.15)
             
             val basePrice = when {
                 i == 0 -> startPrice
-                i == 10 -> endPrice
-                i < 4 -> startPrice + (low - startPrice) * (i / 4.0)
-                i < 8 -> low + (high - low) * ((i - 4) / 4.0)
-                else -> high + (endPrice - high) * ((i - 8) / 2.0)
+                i == steps -> endPrice
+                i < steps / 3 -> startPrice + (low - startPrice) * (i / (steps / 3.0))
+                i < (steps * 2) / 3 -> low + (high - low) * ((i - (steps / 3.0)) / (steps / 3.0))
+                else -> high + (endPrice - high) * ((i - ((steps * 2) / 3.0)) / (steps / 3.0))
             }
             
             points.add(StockPricePoint(timestamp, basePrice + noise))

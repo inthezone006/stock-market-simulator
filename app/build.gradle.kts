@@ -13,8 +13,8 @@ android {
         applicationId = "com.rahul.stocksim"
         minSdk = 24
         targetSdk = 35
-        versionCode = 28
-        versionName = "3.7"
+        versionCode = 30
+        versionName = "3.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -68,7 +68,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     
     // Firebase - Using BOM for consistent versions
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
@@ -79,8 +79,8 @@ dependencies {
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation("com.google.firebase:firebase-appcheck-debug")
     
-    // WorkManager for background tasks
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    // WorkManager for background tasks (Updated for Android 15 / targetSdk 35 support)
+    implementation("androidx.work:work-runtime-ktx:2.11.1")
     
     // In-App Reviews
     implementation("com.google.android.play:review:2.0.1")

@@ -32,3 +32,18 @@
 
 # Navigation Rules
 -keep class androidx.navigation.** { *; }
+
+# Room & WorkManager (Fix for "Failed to create an instance of class androidx.work.impl.WorkDatabase")
+-keep class * extends androidx.room.RoomDatabase {
+    <init>(...);
+}
+-keep class androidx.work.impl.WorkDatabase_Impl {
+    public <init>(...);
+}
+-keep class androidx.work.impl.WorkDatabase_Impl { *; }
+-dontwarn androidx.work.impl.WorkDatabase_Impl
+
+# Startup / DataStore / Protobuf potential fixes
+-keep class androidx.startup.** { *; }
+-keep class androidx.datastore.** { *; }
+-keep class * extends androidx.startup.Initializer

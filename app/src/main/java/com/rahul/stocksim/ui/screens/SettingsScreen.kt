@@ -271,7 +271,7 @@ fun SettingsScreen(navController: NavController) {
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_SUBJECT, "Check out this Stock Simulator!")
-                                putExtra(Intent.EXTRA_TEXT, "I'm practicing my trading skills on the Stock Market Simulator app. Download it now on Google Play!")
+                                putExtra(Intent.EXTRA_TEXT, "I'm practicing my trading skills on the Stock Market Simulator app. Download it now on Google Play! https://play.google.com/store/apps/details?id=com.rahul.stocksim")
                             }
                             context.startActivity(Intent.createChooser(shareIntent, "Share via"))
                         }

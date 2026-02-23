@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -31,12 +32,8 @@ fun EditProfileScreen(navController: NavController) {
     val user = authRepository.currentUser
     
     var name by remember { mutableStateOf(user?.displayName ?: "") }
-    var oldPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     
     var isUpdatingName by remember { mutableStateOf(false) }
-    var isUpdatingPassword by remember { mutableStateOf(false) }
     var isDeletingAccount by remember { mutableStateOf(false) }
     
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -104,110 +101,6 @@ fun EditProfileScreen(navController: NavController) {
                                                 Toast.makeText(
                                                     context,
                                                     "Update failed: ${result.exceptionOrNull()?.message}",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                            }
-                                        }
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Check,
-                                            contentDescription = "Confirm",
-                                            tint = Color.Green
-                                        )
-                                    }
-                                }
-                            }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.DarkGray
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Edit Password Section
-            Text(
-                "Security",
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
-            ) {
-                val canUpdatePassword =
-                    newPassword.length >= 8 && newPassword == confirmPassword && oldPassword.isNotEmpty()
-
-                Column(modifier = Modifier.padding(16.dp)) {
-                    OutlinedTextField(
-                        value = oldPassword,
-                        onValueChange = { oldPassword = it },
-                        label = { Text("Current Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.DarkGray
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = newPassword,
-                        onValueChange = { newPassword = it },
-                        label = { Text("New Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.DarkGray
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        label = { Text("Confirm New Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        trailingIcon = {
-                            if (canUpdatePassword) {
-                                if (isUpdatingPassword) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = Color.White,
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    IconButton(onClick = {
-                                        isUpdatingPassword = true
-                                        coroutineScope.launch {
-                                            val result = authRepository.updatePassword(newPassword)
-                                            isUpdatingPassword = false
-                                            if (result.isSuccess) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Password updated!",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                oldPassword = ""; newPassword =
-                                                    ""; confirmPassword = ""
-                                            } else {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Error: ${result.exceptionOrNull()?.message}",
                                                     Toast.LENGTH_LONG
                                                 ).show()
                                             }

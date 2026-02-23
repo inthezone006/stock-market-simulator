@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.rahul.stocksim.data.*
 import com.rahul.stocksim.model.Stock
+import com.rahul.stocksim.util.NotificationHelper
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -60,9 +61,10 @@ private fun formatDate(inputDate: String?): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBackClick: () -> Unit) {
-    val marketRepository = MarketRepository()
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val marketRepository = remember { MarketRepository(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val notificationHelper = remember { NotificationHelper(context) }
     
     var stock by remember { mutableStateOf<Stock?>(null) }
     var profile by remember { mutableStateOf<FinnhubProfileResponse?>(null) }
@@ -548,9 +550,18 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                 Button(
                                     onClick = {
                                         coroutineScope.launch {
-                                            if (marketRepository.buyStock(stock!!.symbol, quantity, stock!!.price).isSuccess) {
+                                            val buyResult = marketRepository.buyStock(stock!!.symbol, quantity, stock!!.price)
+                                            if (buyResult.isSuccess) {
                                                 Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
                                                 refreshStockData()
+                                                
+                                                // Trigger notification if balance is low
+                                                val newBalance = buyResult.getOrNull() ?: 0.0
+                                                val authRepo = AuthRepository()
+                                                val settings = authRepo.getNotificationSettings()
+                                                if (settings.masterEnabled && settings.notifyLowBalance && newBalance < 10.0) {
+                                                    notificationHelper.showNotification("Portfolio Warning", "Your buying power is below $10.00.")
+                                                }
                                             }
                                         }
                                     },

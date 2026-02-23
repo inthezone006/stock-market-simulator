@@ -41,10 +41,20 @@ class AuthRepository {
         "INTC", "CSCO", "ADBE", "CRM", "QCOM"
     )
 
+    suspend fun saveFcmToken(token: String) {
+        val user = auth.currentUser ?: return
+        try {
+            firestore.collection("users").document(user.uid)
+                .set(mapOf("fcmToken" to token), SetOptions.merge()).await()
+            Log.d("AUTH_REPO", "FCM Token saved successfully")
+        } catch (e: Exception) {
+            Log.e("AUTH_REPO", "Error saving FCM Token", e)
+        }
+    }
+
     fun logEventWithUser(eventName: String, bundle: Bundle = Bundle()) {
         val user = auth.currentUser
         
-        // Ensure user is identified in Crashlytics Keys tab
         user?.let {
             crashlytics.setUserId(it.uid)
             crashlytics.setCustomKey("user_email", it.email ?: "anonymous")
@@ -61,7 +71,6 @@ class AuthRepository {
         
         analytics.logEvent(eventName, bundle)
         
-        // Always log to Logcat for "Full Always On" visibility
         val params = bundle.keySet().joinToString(", ") { "$it=${bundle.get(it)}" }
         Log.d("APP_EVENT", "Event: $eventName | Params: $params")
     }
@@ -95,7 +104,7 @@ class AuthRepository {
             }
     }
 
-    suspend fun signInWithGoogle(idToken: String): Result<Boolean> { // Return Result<isNewUser>
+    suspend fun signInWithGoogle(idToken: String): Result<Boolean> {
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = auth.signInWithCredential(credential).await()
@@ -103,21 +112,16 @@ class AuthRepository {
             val isNewUser = result.additionalUserInfo?.isNewUser ?: false
 
             user?.let { firebaseUser ->
-                // Log the event
                 val event = if (isNewUser) FirebaseAnalytics.Event.SIGN_UP else FirebaseAnalytics.Event.LOGIN
                 logEventWithUser(event, Bundle().apply {
                     putString(FirebaseAnalytics.Param.METHOD, "google")
                 })
 
-                // Update profile picture from Google if available
                 firebaseUser.photoUrl?.let { photoUri ->
-                    // Only update if the photoUrl is different from what's currently set in FirebaseUser
-                    // to avoid unnecessary profile updates. toString() comparison is a simple check.
                     if (firebaseUser.photoUrl.toString() != photoUri.toString()) {
                         val profileUpdates = UserProfileChangeRequest.Builder().setPhotoUri(photoUri).build()
                         firebaseUser.updateProfile(profileUpdates).await()
 
-                        // Also update Firestore with the photo URL
                         firestore.collection("users").document(firebaseUser.uid)
                             .set(mapOf("photoUrl" to photoUri.toString()), SetOptions.merge()).await()
                         logEventWithUser("set_google_profile_picture")
@@ -227,26 +231,6 @@ class AuthRepository {
             Result.failure(e)
         }
     }
-
-    /*
-    suspend fun updateProfilePicture(imageUri: Uri): Result<Unit> {
-        val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
-        return try {
-            val storageRef = storage.reference.child("profile_pictures/${user.uid}")
-            storageRef.putFile(imageUri).await()
-            val downloadUrl = storageRef.downloadUrl.await()
-            val profileUpdates = UserProfileChangeRequest.Builder().setPhotoUri(downloadUrl).build()
-            user.updateProfile(profileUpdates).await()
-            
-            firestore.collection("users").document(user.uid)
-                .set(mapOf("photoUrl" to downloadUrl.toString()), SetOptions.merge()).await()
-            logEventWithUser("update_profile_picture")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-    */
 
     suspend fun getNotificationSettings(): NotificationSettings {
         val user = auth.currentUser ?: return NotificationSettings()

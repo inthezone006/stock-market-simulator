@@ -1,5 +1,6 @@
 package com.rahul.stocksim.data
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import com.google.firebase.Firebase
@@ -10,6 +11,7 @@ import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.rahul.stocksim.model.Stock
+import com.rahul.stocksim.util.NotificationHelper
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -368,11 +370,12 @@ enum class AssetFilter {
     STOCKS, CRYPTO, FOREX, OTHERS
 }
 
-class MarketRepository {
+class MarketRepository(private val context: Context? = null) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val analytics = Firebase.analytics
     private val crashlytics = Firebase.crashlytics
+    private val notificationHelper = context?.let { NotificationHelper(it) }
     
     private val apiKey = "d38davhr01qlbdj4vutgd38davhr01qlbdj4vuu0"
 
@@ -768,11 +771,12 @@ class MarketRepository {
         }
     }
 
-    suspend fun buyStock(symbol: String, quantity: Int, pricePerShare: Double): Result<Unit> {
+    suspend fun buyStock(symbol: String, quantity: Int, pricePerShare: Double): Result<Double> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
         val totalCost = quantity * pricePerShare
 
         return try {
+            var newBalance = 0.0
             val userRef = firestore.collection("users").document(userId)
             val portfolioRef = userRef.collection("portfolio").document(symbol)
             
@@ -783,7 +787,8 @@ class MarketRepository {
                 val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
 
                 if (currentBalance >= totalCost) {
-                    transaction.update(userRef, "balance", currentBalance - totalCost)
+                    newBalance = currentBalance - totalCost
+                    transaction.update(userRef, "balance", newBalance)
                     
                     if (portfolioDoc.exists()) {
                         val currentQty = portfolioDoc.getLong("quantity") ?: 0L
@@ -806,7 +811,7 @@ class MarketRepository {
             
             globalPortfolioCache = null
             
-            Result.success(Unit)
+            Result.success(newBalance)
         } catch (e: Exception) {
             if (e.message == "Insufficient balance") {
                 Result.failure(e)

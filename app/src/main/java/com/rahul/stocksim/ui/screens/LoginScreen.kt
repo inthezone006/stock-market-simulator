@@ -3,6 +3,7 @@ package com.rahul.stocksim.ui.screens
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -31,6 +32,7 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.rahul.stocksim.R
 import com.rahul.stocksim.data.AuthRepository
+import com.rahul.stocksim.util.NotificationHelper
 import kotlinx.coroutines.launch
 
 // Helper function to safely find Activity from Context
@@ -54,6 +56,22 @@ fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = CredentialManager.create(context)
+    val notificationHelper = remember { NotificationHelper(context) }
+
+    val handlePostLogin = {
+        coroutineScope.launch {
+            val settings = authRepository.getNotificationSettings()
+            if (settings.masterEnabled && settings.notifyNewSignIn) {
+                notificationHelper.showNotification(
+                    "Security Alert", 
+                    "A new sign-in was detected on your account from a ${Build.MODEL}."
+                )
+            }
+            navController.navigate(Screen.Main.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize().background(Color(0xFF121212))
@@ -122,9 +140,7 @@ fun LoginScreen(navController: NavController) {
                         authRepository.login(email, password) { success, error ->
                             isLoading = false
                             if (success) {
-                                navController.navigate(Screen.Main.route) {
-                                    popUpTo(Screen.Login.route) { inclusive = true }
-                                }
+                                handlePostLogin()
                             } else {
                                 errorMessage = error ?: "Registration failed"
                             }
@@ -188,9 +204,7 @@ fun LoginScreen(navController: NavController) {
                                             popUpTo(Screen.Login.route) { inclusive = true }
                                         }
                                     } else {
-                                        navController.navigate(Screen.Main.route) {
-                                            popUpTo(Screen.Login.route) { inclusive = true }
-                                        }
+                                        handlePostLogin()
                                     }
                                 }.onFailure { e ->
                                     errorMessage = "Firebase Google Auth Failed: ${e.message}"

@@ -13,8 +13,8 @@ android {
         applicationId = "com.rahul.stocksim"
         minSdk = 24
         targetSdk = 35
-        versionCode = 27
-        versionName = "3.6"
+        versionCode = 28
+        versionName = "3.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -75,8 +75,16 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-config")
+    implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation("com.google.firebase:firebase-appcheck-debug")
+    
+    // WorkManager for background tasks
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    
+    // In-App Reviews
+    implementation("com.google.android.play:review:2.0.1")
+    implementation("com.google.android.play:review-ktx:2.0.1")
     
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.android.gms:play-services-auth:21.2.0")

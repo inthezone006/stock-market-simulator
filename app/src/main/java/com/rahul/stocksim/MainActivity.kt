@@ -1,14 +1,23 @@
 package com.rahul.stocksim
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
@@ -21,12 +30,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.google.firebase.auth.auth
+import com.google.firebase.messaging.messaging
+import com.rahul.stocksim.data.AuthRepository
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         
-        // Proper Edge-to-Edge configuration
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(
                 scrim = android.graphics.Color.TRANSPARENT
@@ -42,10 +53,46 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val auth = Firebase.auth
             val analytics = Firebase.analytics
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            val authRepository = AuthRepository()
+
+            val fetchAndSaveToken = {
+                Firebase.messaging.token.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val token = task.result
+                        Log.d("FCM_TOKEN", "Token: $token")
+                        coroutineScope.launch {
+                            authRepository.saveFcmToken(token)
+                        }
+                    }
+                }
+            }
+
+            // Notification Permission Request for Android 13+
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+                if (isGranted) {
+                    fetchAndSaveToken()
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                        fetchAndSaveToken()
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                } else {
+                    fetchAndSaveToken()
+                }
+            }
             
             val startDest = if (auth.currentUser != null) Screen.Main.route else Screen.Login.route
 
-            // Track screen views in a way that doesn't interfere with UI transactions
+            // Track screen views
             LaunchedEffect(navController) {
                 navController.currentBackStackEntryFlow.collect { backStackEntry ->
                     val route = backStackEntry.destination.route

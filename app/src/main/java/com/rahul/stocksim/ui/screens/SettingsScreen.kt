@@ -1,6 +1,10 @@
 package com.rahul.stocksim.ui.screens
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,11 +32,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.rahul.stocksim.BuildConfig
 import com.rahul.stocksim.data.AuthRepository
 import com.rahul.stocksim.data.NotificationSettings
+import com.rahul.stocksim.util.NotificationHelper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -47,20 +54,46 @@ fun SettingsScreen(navController: NavController) {
     var user by remember { mutableStateOf(authRepository.currentUser) }
     var isRefreshing by remember { mutableStateOf(false) }
     
-    // var isUploading by remember { mutableStateOf(false) } // Removed as manual upload is disabled
     var profilePhotoUrl by remember { mutableStateOf(user?.photoUrl) }
     var displayName by remember { mutableStateOf(user?.displayName ?: "") }
     var notifSettings by remember { mutableStateOf(NotificationSettings()) }
 
+    // Permission launcher to handle system-level permission request
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val updated = notifSettings.copy(masterEnabled = true)
+            notifSettings = updated
+            coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+        } else {
+            Toast.makeText(context, "Notifications permission denied.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val loadData = {
         coroutineScope.launch {
-            // Force reload the Firebase user to get the latest emailVerification status
             try {
                 user?.reload()?.await()
                 user = authRepository.currentUser
                 displayName = user?.displayName ?: ""
                 profilePhotoUrl = user?.photoUrl
-                notifSettings = authRepository.getNotificationSettings()
+                val settings = authRepository.getNotificationSettings()
+                
+                // Sync with system permission on Android 13+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                    if (!hasPermission && settings.masterEnabled) {
+                        // System permission was denied, force disable the app-level setting
+                        val updated = settings.copy(masterEnabled = false)
+                        notifSettings = updated
+                        authRepository.saveNotificationSettings(updated)
+                    } else {
+                        notifSettings = settings
+                    }
+                } else {
+                    notifSettings = settings
+                }
             } catch (e: Exception) {
                 // Handle potential errors
             } finally {
@@ -72,33 +105,6 @@ fun SettingsScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         loadData()
     }
-
-    // Removed imagePickerLauncher as manual upload is disabled
-    /*
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            isUploading = true
-            coroutineScope.launch {
-                val result = authRepository.updateProfilePicture(it)
-                isUploading = false
-                if (result.isSuccess) {
-                    try {
-                        authRepository.currentUser?.reload()?.await()
-                        user = authRepository.currentUser
-                        profilePhotoUrl = user?.photoUrl
-                        Toast.makeText(context, "Profile picture updated!", Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Toast.makeText(context, "Upload failed: ${result.exceptionOrNull()?.localizedMessage}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
-    */
 
     Scaffold(
         containerColor = Color(0xFF121212),
@@ -132,7 +138,7 @@ fun SettingsScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile Picture Section (Display only, no upload functionality)
+                // Profile Picture Section
                 Box(
                     modifier = Modifier.size(120.dp),
                     contentAlignment = Alignment.Center
@@ -140,27 +146,11 @@ fun SettingsScreen(navController: NavController) {
                     Box(modifier = Modifier.fillMaxSize().clip(CircleShape)) {
                         ProfileImageInternal(displayName, profilePhotoUrl)
                     }
-                    // Removed CameraAlt icon as manual upload is disabled
-                    /*
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.BottomEnd).size(36.dp).offset(x = 4.dp, y = 4.dp),
-                        shadowElevation = 4.dp
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Change Picture",
-                            tint = Color.White,
-                            modifier = Modifier.padding(8.dp).fillMaxSize()
-                        )
-                    }
-                    */
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // User Info Display (Display Name and Email)
+                // User Info Display
                 Text(
                     text = displayName.ifEmpty { "Trading User" },
                     color = Color.White,
@@ -217,9 +207,31 @@ fun SettingsScreen(navController: NavController) {
                         Switch(
                             checked = notifSettings.masterEnabled,
                             onCheckedChange = { 
-                                val updated = notifSettings.copy(masterEnabled = it)
-                                notifSettings = updated
-                                coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                                if (it) {
+                                    // User trying to enable notifications
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                                        if (!hasPermission) {
+                                            // Trigger system permission request
+                                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        } else {
+                                            // Permission already exists, just update repo
+                                            val updated = notifSettings.copy(masterEnabled = true)
+                                            notifSettings = updated
+                                            coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                                        }
+                                    } else {
+                                        // Legacy Android versions don't need runtime permission
+                                        val updated = notifSettings.copy(masterEnabled = true)
+                                        notifSettings = updated
+                                        coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                                    }
+                                } else {
+                                    // User turning notifications OFF
+                                    val updated = notifSettings.copy(masterEnabled = false)
+                                    notifSettings = updated
+                                    coroutineScope.launch { authRepository.saveNotificationSettings(updated) }
+                                }
                             }
                         )
                     }
@@ -250,12 +262,59 @@ fun SettingsScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Account Security Section
+                SettingsSection(title = "Support") {
+                    SettingsItem(
+                        icon = Icons.Default.Share,
+                        label = "Share App",
+                        value = "Invite friends to trade",
+                        onClick = {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Check out this Stock Simulator!")
+                                putExtra(Intent.EXTRA_TEXT, "I'm practicing my trading skills on the Stock Market Simulator app. Download it now on Google Play!")
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Share via"))
+                        }
+                    )
+                    SettingsItem(
+                        icon = Icons.Default.BugReport,
+                        label = "Feedback",
+                        value = "Report a bug or suggest a feature",
+                        onClick = {
+                            val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:support@stocksim.app")
+                                putExtra(Intent.EXTRA_SUBJECT, "App Feedback - v${BuildConfig.VERSION_NAME}")
+                            }
+                            try {
+                                context.startActivity(emailIntent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Account Security Section
                 SettingsSection(title = "Security") {
                     SettingsItem(
                         icon = Icons.Default.Lock,
                         label = "Security Credentials",
                         value = "Update password",
                         onClick = { navController.navigate(Screen.PasswordSetup.createRoute(true)) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // About Section (Version Info)
+                SettingsSection(title = "About") {
+                    SettingsItem(
+                        icon = Icons.Default.Info,
+                        label = "Current Version",
+                        value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                        trailing = {}
                     )
                 }
 
@@ -276,6 +335,8 @@ fun SettingsScreen(navController: NavController) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Logout", fontWeight = FontWeight.Bold)
                 }
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -318,6 +379,7 @@ fun ProfileImageInternal(
 
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    val context = LocalContext.current
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
@@ -350,8 +412,7 @@ fun SettingsItem(
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        verticalAlignment = Alignment.CenterVertically) {
         Icon(imageVector = icon, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -366,8 +427,7 @@ fun SettingsItem(
 fun NotificationCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable { onCheckedChange(!checked) }.padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        verticalAlignment = Alignment.CenterVertically) {
         Checkbox(checked = checked, onCheckedChange = onCheckedChange)
         Spacer(modifier = Modifier.width(8.dp))
         Text(label, color = Color.White, fontSize = 14.sp)

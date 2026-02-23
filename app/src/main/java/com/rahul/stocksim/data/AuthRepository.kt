@@ -201,6 +201,24 @@ class AuthRepository {
         }
     }
 
+    suspend fun deleteCurrentUser(): Result<Unit> {
+        val user = currentUser ?: return Result.failure(Exception("Not authenticated"))
+        return try {
+            val uid = user.uid
+            logEventWithUser("delete_account_immediate")
+            firestore.collection("users").document(uid).delete().await()
+            
+            try {
+                storage.reference.child("profile_pictures/$uid").delete().await()
+            } catch (e: Exception) {}
+            
+            user.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun setUserBalance(balance: Double, level: Int): Result<Unit> {
         val user = auth.currentUser ?: return Result.failure(Exception("Account not authenticated"))
         return try {

@@ -1,5 +1,6 @@
 package com.rahul.stocksim.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +47,23 @@ fun PasswordSetupScreen(
     
     val isPasswordValid = hasMinLength && hasUppercase && hasDigit && hasSpecial && passwordsMatch && (!isChangePassword || oldPassword.isNotEmpty())
 
+    val handleBack: () -> Unit = {
+        if (!isChangePassword && authRepository.currentUser != null) {
+            isLoading = true
+            coroutineScope.launch {
+                authRepository.deleteCurrentUser()
+                isLoading = false
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        } else {
+            navController.popBackStack()
+        }
+    }
+
+    BackHandler(onBack = handleBack)
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFF121212),
@@ -53,7 +71,7 @@ fun PasswordSetupScreen(
             TopAppBar(
                 title = { Text(if (isChangePassword) "Change Password" else "Security Setup", color = Color.White) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = handleBack, enabled = !isLoading) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },

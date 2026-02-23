@@ -11,7 +11,7 @@
 
 ### 🎮 Gamified Experience
 - **Difficulty Levels**: Choose your starting capital from **Level 1 ($100,000)** all the way to **Level 7 ($100)**.
-- **Global Leaderboard**: Compete for the top spot! Both Global and Level specific rankings show the **Top 5** traders globally.
+- **Global Leaderboard**: Compete for the top spot! Both Global and Level specific rankings show the **Top** traders globally.
 - **Personal Recognition**: Your name gets a **Royal Crown (👑)** and highlight when you make the leaderboard.
 
 ### 💼 Portfolio & Trading

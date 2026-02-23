@@ -1,25 +1,49 @@
 package com.rahul.stocksim.ui.screens
 
+import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.rahul.stocksim.data.AuthRepository
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
-fun GuideScreen() {
+fun GuideScreen(navController: NavController) {
+    val authRepository = remember { AuthRepository() }
+    var isTutorialCompleted by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        isTutorialCompleted = authRepository.isTutorialCompleted()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -38,6 +62,13 @@ fun GuideScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
+            item {
+                TutorialCard(
+                    isCompleted = isTutorialCompleted,
+                    onClick = { navController.navigate(Screen.MarketTutorial.route) }
+                )
+            }
+
             item {
                 GuideSection(
                     title = "The Life of a Stock",
@@ -119,6 +150,488 @@ fun GuideScreen() {
         }
     }
 }
+
+@Composable
+fun TutorialCard(isCompleted: Boolean, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(160.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isCompleted) Color(0xFF2C2C2C) else MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .align(Alignment.CenterStart)
+            ) {
+                Text(
+                    text = "Interactive Tutorial",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (isCompleted) Color.Gray else Color.White,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    text = "Master the basics of trading",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isCompleted) Color.DarkGray else Color.White.copy(alpha = 0.8f)
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isCompleted) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Completed", color = Color.Gray, fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(Icons.Default.RadioButtonUnchecked, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Start Training", color = Color.White, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                        )
+                    }
+                }
+            }
+            
+            Icon(
+                imageVector = Icons.Default.PlayCircle,
+                contentDescription = null,
+                tint = if (isCompleted) Color.DarkGray else Color.White.copy(alpha = 0.3f),
+                modifier = Modifier
+                    .size(120.dp)
+                    .align(Alignment.CenterEnd)
+                    .offset(x = 30.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
+    var currentStep by remember { mutableStateOf(0) }
+    var previewActive by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    
+    val steps = listOf(
+        TutorialStep(
+            title = "Welcome Trader!",
+            description = "Welcome to the Stock Market Simulator. Tap the icon below to see it react!",
+            icon = Icons.Default.WavingHand
+        ),
+        TutorialStep(
+            title = "Researching Stocks",
+            description = "Use the search bar to find companies. Tap the icon to see it in action!",
+            icon = Icons.Default.Search
+        ),
+        TutorialStep(
+            title = "Executing a Trade",
+            description = "Buying low and selling high is the goal. Tap the icon to simulate a purchase!",
+            icon = Icons.Default.SwapHoriz
+        ),
+        TutorialStep(
+            title = "Monitoring Performance",
+            description = "Track your assets in the Portfolio. Tap the icon to see your holdings!",
+            icon = Icons.Default.DonutLarge
+        ),
+        TutorialStep(
+            title = "The Leaderboard",
+            description = "Compete with others globally. Tap the icon to see the winners!",
+            icon = Icons.Default.EmojiEvents
+        )
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color(0xFF121212)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
+                // Top Bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (currentStep > 0) {
+                        IconButton(onClick = { 
+                            currentStep--
+                            previewActive = false
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(48.dp))
+                    }
+                    
+                    TextButton(onClick = onDismiss) {
+                        Text("Exit", color = Color.Gray)
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Interactive Graphic with Animation
+                    AnimatedGraphic(
+                        icon = steps[currentStep].icon, 
+                        stepIndex = currentStep,
+                        onInteraction = { previewActive = true }
+                    )
+
+                    Spacer(modifier = Modifier.height(48.dp))
+
+                    AnimatedContent(
+                        targetState = currentStep,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
+                            } else {
+                                (slideInHorizontally { -it } + fadeIn()).togetherWith(slideOutHorizontally { it } + fadeOut())
+                            }.using(SizeTransform(clip = false))
+                        },
+                        label = "TutorialContent"
+                    ) { stepIndex ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = steps[stepIndex].title,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = steps[stepIndex].description,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.LightGray,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 28.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(64.dp))
+
+                    // Interactive Progress Dots
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        repeat(steps.size) { index ->
+                            val size by animateDpAsState(if (index == currentStep) 12.dp else 8.dp, label = "dotSize")
+                            val color by animateColorAsState(if (index == currentStep) MaterialTheme.colorScheme.primary else Color.DarkGray, label = "dotColor")
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .size(size + 8.dp) // Larger touch target
+                                    .clip(CircleShape)
+                                    .clickable { 
+                                        currentStep = index 
+                                        previewActive = false
+                                    }
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(size)
+                                        .clip(CircleShape)
+                                        .background(color)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Bottom Navigation
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    if (currentStep < steps.size - 1) {
+                        Button(
+                            onClick = { 
+                                currentStep++ 
+                                previewActive = false
+                            },
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Continue", fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                    } else {
+                        Button(
+                            onClick = onComplete,
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
+                        ) {
+                            Text("Finish Tutorial", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // Preview Overlay
+            AnimatedVisibility(
+                visible = previewActive,
+                enter = fadeIn(animationSpec = tween(300)) + expandVertically(expandFrom = Alignment.CenterVertically),
+                exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(shrinkTowards = Alignment.CenterVertically)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.85f))
+                        .clickable { previewActive = false },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Hint text to dismiss
+                        Text(
+                            text = "Tap anywhere to dismiss preview",
+                            color = Color.White.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(bottom = 32.dp)
+                        )
+
+                        when (currentStep) {
+                            1 -> TutorialSearchBarPreview()
+                            2 -> TradePreview(onConfirm = { 
+                                Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
+                                previewActive = false 
+                            })
+                            3 -> PortfolioPreview()
+                            4 -> LeaderboardPreview()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TutorialSearchBarPreview() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        TextField(
+            value = "NVIDIA (NVDA)",
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Search stocks...") },
+            leadingIcon = { Icon(Icons.Default.Search, null, tint = Color.Gray) },
+            trailingIcon = { Icon(Icons.Default.Close, null, tint = Color.White) },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedTextColor = Color.White
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            readOnly = true
+        )
+    }
+}
+
+@Composable
+fun TradePreview(onConfirm: () -> Unit) {
+    Card(
+        modifier = Modifier.padding(horizontal = 32.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Buy AAPL", style = MaterialTheme.typography.titleLarge, color = Color.White, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Shares:", color = Color.Gray)
+                Text("10", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Market Price:", color = Color.Gray)
+                Text("$190.20", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Confirm Purchase", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun PortfolioPreview() {
+    Card(
+        modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Asset Allocation", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            PortfolioItemPreview("NVIDIA (NVDA)", "+12.4%", Color(0xFF00C853))
+            Spacer(modifier = Modifier.height(12.dp))
+            PortfolioItemPreview("Tesla (TSLA)", "-2.1%", Color.Red)
+            Spacer(modifier = Modifier.height(12.dp))
+            PortfolioItemPreview("Bitcoin (BTC)", "+0.8%", Color(0xFF00C853))
+        }
+    }
+}
+
+@Composable
+fun PortfolioItemPreview(symbol: String, returns: String, color: Color) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(symbol, color = Color.White)
+        Text(returns, color = color, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun LeaderboardPreview() {
+    Card(
+        modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Global Ranking", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            LeaderboardItemPreview(1, "Warren Buffet", "$1.2M", Color.Yellow)
+            Spacer(modifier = Modifier.height(12.dp))
+            LeaderboardItemPreview(2, "Nancy Pelosi", "$840K", Color.Gray)
+            Spacer(modifier = Modifier.height(12.dp))
+            LeaderboardItemPreview(3, "Retail Trader", "$120K", Color(0xFFCD7F32))
+        }
+    }
+}
+
+@Composable
+fun LeaderboardItemPreview(rank: Int, name: String, value: String, rankColor: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        Text("$rank.", color = rankColor, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+        Text(name, color = Color.White)
+        Spacer(modifier = Modifier.weight(1f))
+        Text(value, color = Color.White, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun AnimatedGraphic(icon: ImageVector, stepIndex: Int, onInteraction: () -> Unit) {
+    var isTapped by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isTapped) 1.25f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "graphicScale"
+    )
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "floating")
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = -10f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatingOffset"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(160.dp)
+            .graphicsLayer { translationY = floatOffset }
+            .scale(scale)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+            .clickable { 
+                onInteraction()
+                coroutineScope.launch {
+                    isTapped = true
+                    delay(400)
+                    isTapped = false
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(80.dp)
+        )
+        
+        // Circular rotating background effect
+        val rotation by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(8000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "rotation"
+        )
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { rotationZ = rotation }
+                .padding(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                    .align(Alignment.TopCenter)
+            )
+        }
+    }
+}
+
+data class TutorialStep(val title: String, val description: String, val icon: ImageVector)
 
 @Composable
 fun GuideSection(title: String, icon: ImageVector, content: String, detailedContent: String) {

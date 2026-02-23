@@ -64,43 +64,23 @@ fun PasswordSetupScreen(
             FloatingActionButton(
                 onClick = {
                     if (isPasswordValid) {
-                        isLoading = true
-                        coroutineScope.launch {
-                            if (isChangePassword) {
+                        if (isChangePassword) {
+                            isLoading = true
+                            coroutineScope.launch {
                                 val result = authRepository.updatePassword(password)
                                 isLoading = false
                                 if (result.isSuccess) navController.popBackStack()
                                 else snackbarHostState.showSnackbar("Error: ${result.exceptionOrNull()?.localizedMessage}")
-                            } else {
-                                // NEW USER REGISTRATION CASE
-                                if (initialEmail != null) {
-                                    authRepository.register(initialEmail, password) { success, error ->
-                                        if (success) {
-                                            coroutineScope.launch {
-                                                if (initialName != null) authRepository.updateDisplayName(initialName)
-                                                isLoading = false
-                                                navController.navigate(Screen.BalanceSelection.route) {
-                                                    popUpTo(Screen.Register.route) { inclusive = true }
-                                                }
-                                            }
-                                        } else {
-                                            isLoading = false
-                                            coroutineScope.launch { snackbarHostState.showSnackbar(error ?: "Registration failed") }
-                                        }
-                                    }
-                                } else {
-                                    // GOOGLE NEW USER CASE (Update existing auth password)
-                                    val result = authRepository.updatePassword(password)
-                                    isLoading = false
-                                    if (result.isSuccess) {
-                                        navController.navigate(Screen.BalanceSelection.route) {
-                                            popUpTo(Screen.Register.route) { inclusive = true }
-                                        }
-                                    } else {
-                                        snackbarHostState.showSnackbar("Error: ${result.exceptionOrNull()?.localizedMessage}")
-                                    }
-                                }
                             }
+                        } else {
+                            // Proceed to difficulty selection with details
+                            navController.navigate(
+                                Screen.BalanceSelection.createRoute(
+                                    name = initialName,
+                                    email = initialEmail,
+                                    password = password
+                                )
+                            )
                         }
                     }
                 },

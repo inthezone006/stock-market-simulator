@@ -23,11 +23,21 @@ sealed class Screen(val route: String) {
             return if (queryParams.isEmpty()) base else "$base?${queryParams.joinToString("&")}"
         }
     }
-    object BalanceSelection : Screen("balance_selection_screen")
+    object BalanceSelection : Screen("balance_selection_screen?name={name}&email={email}&password={password}") {
+        fun createRoute(name: String? = null, email: String? = null, password: String? = null): String {
+            val base = "balance_selection_screen"
+            val queryParams = mutableListOf<String>()
+            if (name != null) queryParams.add("name=$name")
+            if (email != null) queryParams.add("email=$email")
+            if (password != null) queryParams.add("password=$password")
+            return if (queryParams.isEmpty()) base else "$base?${queryParams.joinToString("&")}"
+        }
+    }
     object Settings : Screen("settings_screen")
     object EditProfile : Screen("edit_profile_screen")
     object Main : Screen("main_screen")
     object Details : Screen("details/{symbol}")
+    object MarketTutorial : Screen("market_tutorial")
 }
 
 sealed class BottomNavItem(val route: String, val label: String, val icon: ImageVector) {

@@ -20,6 +20,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StockMarketSimulator"
         android:enableOnBackInvokedCallback="true">
+
+        <!-- Disable Firebase Sessions to prevent ANR in main thread during startup -->
+        <meta-data
+            android:name="firebase_sessions_enabled"
+            android:value="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

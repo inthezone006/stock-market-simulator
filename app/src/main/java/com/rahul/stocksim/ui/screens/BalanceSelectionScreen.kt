@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,9 +24,15 @@ data class BalanceLevel(val level: Int, val amount: Double, val label: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BalanceSelectionScreen(navController: NavController) {
+fun BalanceSelectionScreen(
+    navController: NavController,
+    name: String? = null,
+    email: String? = null,
+    password: String? = null
+) {
     val authRepository = AuthRepository()
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     
     val levels = listOf(
         BalanceLevel(1, 100000.0, "$100,000 (Beginner)"),
@@ -41,23 +48,67 @@ fun BalanceSelectionScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(false) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFF121212),
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = { Text("Choose Your Difficulty", color = Color.White) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF121212))
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121212))
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    isLoading = true
-                    coroutineScope.launch {
-                        val result = authRepository.setUserBalance(selectedLevel.amount, selectedLevel.level)
-                        isLoading = false
-                        if (result.isSuccess) {
-                            navController.navigate(Screen.Main.route) {
-                                popUpTo(Screen.BalanceSelection.route) { inclusive = true }
+                    if (email != null && password != null) {
+                        isLoading = true
+                        coroutineScope.launch {
+                            // Defer account creation until this point
+                            authRepository.register(email, password) { success, error ->
+                                if (success) {
+                                    coroutineScope.launch {
+                                        // Set display name if provided
+                                        if (name != null) {
+                                            authRepository.updateDisplayName(name)
+                                        }
+                                        
+                                        // Now set the initial balance in Firestore
+                                        val result = authRepository.setUserBalance(selectedLevel.amount, selectedLevel.level)
+                                        isLoading = false
+                                        
+                                        if (result.isSuccess) {
+                                            navController.navigate(Screen.Main.route) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
+                                        } else {
+                                            snackbarHostState.showSnackbar("Error setting balance: ${result.exceptionOrNull()?.localizedMessage}")
+                                        }
+                                    }
+                                } else {
+                                    isLoading = false
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(error ?: "Registration failed. Please try again.")
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // This case handles existing users who might have been sent here (if any)
+                        // or handles Google sign-in users who still need to pick a balance
+                        isLoading = true
+                        coroutineScope.launch {
+                            val result = authRepository.setUserBalance(selectedLevel.amount, selectedLevel.level)
+                            isLoading = false
+                            if (result.isSuccess) {
+                                navController.navigate(Screen.Main.route) {
+                                    popUpTo(Screen.BalanceSelection.route) { inclusive = true }
+                                }
+                            } else {
+                                snackbarHostState.showSnackbar("Error: ${result.exceptionOrNull()?.localizedMessage}")
                             }
                         }
                     }

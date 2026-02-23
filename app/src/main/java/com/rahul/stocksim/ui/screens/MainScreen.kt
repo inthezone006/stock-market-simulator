@@ -61,7 +61,12 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
     var searchResults by remember { mutableStateOf<List<Stock>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
     
-    // Debounce Job to prevent rate limiting
+    var isTutorialCompleted by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        isTutorialCompleted = authRepository.isTutorialCompleted()
+    }
+    
     var searchJob by remember { mutableStateOf<Job?>(null) }
 
     val performSearch = { query: String ->
@@ -70,7 +75,6 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
             searchJob = coroutineScope.launch {
                 delay(500)
                 isSearching = true
-                // Always use STOCKS filter as requested
                 searchResults = marketRepository.searchStocks(query, AssetFilter.STOCKS)
                 isSearching = false
             }
@@ -209,11 +213,22 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                                 }
                             },
                             icon = {
-                                Icon(
-                                    item.icon,
-                                    contentDescription = item.label,
-                                    tint = if (selected) Color.White else Color.Gray
-                                )
+                                BadgedBox(
+                                    badge = {
+                                        if (item == BottomNavItem.Guide && !isTutorialCompleted) {
+                                            Badge(
+                                                containerColor = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(8.dp).offset(x = 4.dp, y = (-4).dp)
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        item.icon,
+                                        contentDescription = item.label,
+                                        tint = if (selected) Color.White else Color.Gray
+                                    )
+                                }
                             },
                             label = {
                                 Text(
@@ -256,7 +271,7 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                     LeaderboardScreen(mainNavController)
                 }
                 composable(BottomNavItem.Guide.route) {
-                    GuideScreen()
+                    GuideScreen(mainNavController)
                 }
             }
         }

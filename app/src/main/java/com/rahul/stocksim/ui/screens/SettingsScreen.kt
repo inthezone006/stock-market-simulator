@@ -313,7 +313,7 @@ fun SettingsScreen(navController: NavController) {
                     SettingsItem(
                         icon = Icons.Default.Info,
                         label = "Current Version",
-                        value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                        value = "${BuildConfig.VERSION_NAME}",
                         trailing = {}
                     )
                 }

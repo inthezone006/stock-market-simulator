@@ -232,6 +232,28 @@ class AuthRepository {
         }
     }
 
+    suspend fun isTutorialCompleted(): Boolean {
+        val user = auth.currentUser ?: return false
+        return try {
+            val snapshot = firestore.collection("users").document(user.uid).get().await()
+            snapshot.getBoolean("tutorialCompleted") ?: false
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun setTutorialCompleted(): Result<Unit> {
+        val user = auth.currentUser ?: return Result.failure(Exception("Not authenticated"))
+        return try {
+            firestore.collection("users").document(user.uid)
+                .set(mapOf("tutorialCompleted" to true), SetOptions.merge()).await()
+            logEventWithUser("complete_tutorial")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun getNotificationSettings(): NotificationSettings {
         val user = auth.currentUser ?: return NotificationSettings()
         return try {

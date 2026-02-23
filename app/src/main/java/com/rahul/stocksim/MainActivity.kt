@@ -149,8 +149,35 @@ class MainActivity : ComponentActivity() {
                                 initialEmail = email
                             )
                         }
-                        composable(Screen.BalanceSelection.route) {
-                            BalanceSelectionScreen(navController = navController)
+                        composable(
+                            route = Screen.BalanceSelection.route,
+                            arguments = listOf(
+                                navArgument("name") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                },
+                                navArgument("email") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                },
+                                navArgument("password") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val name = backStackEntry.arguments?.getString("name")
+                            val email = backStackEntry.arguments?.getString("email")
+                            val password = backStackEntry.arguments?.getString("password")
+                            BalanceSelectionScreen(
+                                navController = navController,
+                                name = name,
+                                email = email,
+                                password = password
+                            )
                         }
                         composable(Screen.Main.route) {
                             MainScreen(
@@ -181,6 +208,17 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = {
                                     navController.popBackStack()
                                 }
+                            )
+                        }
+                        composable(Screen.MarketTutorial.route) {
+                            MarketTutorialScreen(
+                                onComplete = {
+                                    coroutineScope.launch {
+                                        authRepository.setTutorialCompleted()
+                                        navController.popBackStack()
+                                    }
+                                },
+                                onDismiss = { navController.popBackStack() }
                             )
                         }
                     }

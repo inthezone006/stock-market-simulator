@@ -225,7 +225,7 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
     val steps = listOf(
         TutorialStep(
             title = "Welcome Trader!",
-            description = "Welcome to the Stock Market Simulator. Tap the icon below to see it react!",
+            description = "Welcome to the Stock Market Simulator. Tap the icon above to see it react!",
             icon = Icons.Default.WavingHand
         ),
         TutorialStep(

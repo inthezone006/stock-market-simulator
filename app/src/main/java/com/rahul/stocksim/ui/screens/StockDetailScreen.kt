@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -27,12 +29,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -85,10 +90,13 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
     
     var isLoading by remember { mutableStateOf(true) }
     var isGraphLoading by remember { mutableStateOf(false) }
-    var quantity by remember { mutableIntStateOf(1) }
+    var quantityInput by remember { mutableStateOf("1") }
+    val quantity = quantityInput.toIntOrNull() ?: 0
+    
     var isInWatchlist by remember { mutableStateOf(false) }
     var ownedQuantity by remember { mutableLongStateOf(0L) }
-    
+    val balance by marketRepository.getUserBalance().collectAsState(initial = 0.0)
+
     var errorOccurred by remember { mutableStateOf(false) }
 
     val scrollState = rememberLazyListState()
@@ -533,55 +541,176 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
 
                 item {
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
-                        Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            val unitLabel = when {
-                                stock?.isCrypto == true -> "Units"
-                                stock?.isForex == true -> "Lots"
-                                else -> "Shares"
-                            }
-                            Text(unitLabel, color = Color.Gray)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = { if (quantity > 1) quantity-- }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
-                                Text(text = quantity.toString(), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 24.dp))
-                                IconButton(onClick = { quantity++ }) { Icon(Icons.Default.Add, null, tint = Color.White) }
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Button(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            val buyResult = marketRepository.buyStock(stock!!.symbol, quantity, stock!!.price)
-                                            if (buyResult.isSuccess) {
-                                                Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
-                                                refreshStockData()
-                                                
-                                                // Trigger notification if balance is low
-                                                val newBalance = buyResult.getOrNull() ?: 0.0
-                                                val authRepo = AuthRepository()
-                                                val settings = authRepo.getNotificationSettings()
-                                                if (settings.masterEnabled && settings.notifyLowBalance && newBalance < 10.0) {
-                                                    notificationHelper.showNotification("Portfolio Warning", "Your buying power is below $10.00.")
-                                                }
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
-                                ) { Text("BUY") }
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            // Balance and Position Info
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column {
+                                    Text(text = "Available to Spend", color = Color.Gray, fontSize = 12.sp)
+                                    Text(
+                                        text = "$${String.format("%,.2f", balance)}",
+                                        color = Color.White,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                                 if (ownedQuantity > 0) {
-                                    Button(
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                if (marketRepository.sellStock(stock!!.symbol, quantity, stock!!.price).isSuccess) {
-                                                    Toast.makeText(context, "Sale Successful", Toast.LENGTH_SHORT).show()
-                                                    refreshStockData()
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(text = "In $stockSymbol", color = Color.Gray, fontSize = 12.sp)
+                                        Text(
+                                            text = "$${String.format("%,.2f", ownedQuantity * stock!!.price)}",
+                                            color = Color.White,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Quantity Selector
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val unitLabel = when {
+                                    stock?.isCrypto == true -> "Units"
+                                    stock?.isForex == true -> "Lots"
+                                    else -> "Shares"
+                                }
+                                Text(unitLabel, color = Color.Gray, fontSize = 12.sp)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    IconButton(onClick = { 
+                                        val current = quantityInput.toIntOrNull() ?: 0
+                                        if (current > 1) quantityInput = (current - 1).toString()
+                                    }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
+                                    
+                                    Box(
+                                        modifier = Modifier
+                                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                                            .widthIn(min = 60.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        BasicTextField(
+                                            value = quantityInput,
+                                            onValueChange = { newValue ->
+                                                if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                                    quantityInput = newValue
                                                 }
-                                            }
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000)),
-                                        enabled = quantity <= ownedQuantity
-                                    ) { Text("SELL") }
+                                            },
+                                            textStyle = TextStyle(
+                                                color = Color.White,
+                                                fontSize = 24.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                textAlign = TextAlign.Center
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            cursorBrush = SolidColor(Color.White),
+                                            singleLine = true
+                                        )
+                                    }
+                                    
+                                    IconButton(onClick = { 
+                                        val current = quantityInput.toIntOrNull() ?: 0
+                                        quantityInput = (current + 1).toString()
+                                    }) { Icon(Icons.Default.Add, null, tint = Color.White) }
+                                }
+                            }
+
+                            val totalCost = quantity * stock!!.price
+                            val hasEnoughMoney = balance >= totalCost
+                            val canAffordAnything = balance >= stock!!.price
+                            val canSellQuantity = ownedQuantity > 0 && quantity > 0 && quantity <= ownedQuantity
+
+                            // Visibility logic for the bottom action section
+                            val showBuy = hasEnoughMoney && quantity > 0
+                            val showSell = canSellQuantity
+
+                            if (showBuy || showSell || (quantity > 0 && !hasEnoughMoney)) {
+                                Spacer(modifier = Modifier.height(20.dp))
+
+                                // Themed Warning (Show if they don't have enough money for CURRENT quantity)
+                                if (quantity > 0 && !hasEnoughMoney) {
+                                    Surface(
+                                        color = Color.Red.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ErrorOutline,
+                                                contentDescription = null,
+                                                tint = Color.Red,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = if (canAffordAnything) 
+                                                    "Insufficient funds for $quantity shares."
+                                                    else "You don\'t have enough money to buy any stocks.",
+                                                color = Color.Red,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                    // Only add spacer if buttons will be shown below
+                                    if (showBuy || showSell) {
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                }
+                                
+                                // Buy/Sell Buttons
+                                if (showBuy || showSell) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(), 
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        if (showBuy) {
+                                            Button(
+                                                onClick = {
+                                                    coroutineScope.launch {
+                                                        val buyResult = marketRepository.buyStock(stock!!.symbol, quantity, stock!!.price)
+                                                        if (buyResult.isSuccess) {
+                                                            Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
+                                                            refreshStockData()
+                                                            
+                                                            val newBalance = buyResult.getOrNull() ?: 0.0
+                                                            val authRepo = AuthRepository()
+                                                            val settings = authRepo.getNotificationSettings()
+                                                            if (settings.masterEnabled && settings.notifyLowBalance && newBalance < 10.0) {
+                                                                notificationHelper.showNotification("Portfolio Warning", "Your buying power is below $10.00.")
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                modifier = Modifier.weight(1f),
+                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
+                                            ) { Text("BUY") }
+                                        }
+                                        
+                                        if (showSell) {
+                                            Button(
+                                                onClick = {
+                                                    coroutineScope.launch {
+                                                        if (marketRepository.sellStock(stock!!.symbol, quantity, stock!!.price).isSuccess) {
+                                                            Toast.makeText(context, "Sale Successful", Toast.LENGTH_SHORT).show()
+                                                            refreshStockData()
+                                                        }
+                                                    }
+                                                },
+                                                modifier = Modifier.weight(1f),
+                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000))
+                                            ) { Text("SELL") }
+                                        }
+                                    }
                                 }
                             }
                         }

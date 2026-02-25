@@ -9,6 +9,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,10 +35,13 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,6 +72,7 @@ private fun formatDate(inputDate: String?): String {
 @Composable
 fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBackClick: () -> Unit) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val marketRepository = remember { MarketRepository(context) }
     val coroutineScope = rememberCoroutineScope()
     val notificationHelper = remember { NotificationHelper(context) }
@@ -303,6 +309,11 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     .fillMaxSize()
                     .padding(innerPadding)
                     .background(Color(0xFF121212))
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            focusManager.clearFocus()
+                        })
+                    }
                     .padding(horizontal = 16.dp)
             ) {
                 item {
@@ -608,7 +619,13 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                                 fontWeight = FontWeight.Bold,
                                                 textAlign = TextAlign.Center
                                             ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            keyboardOptions = KeyboardOptions(
+                                                keyboardType = KeyboardType.Number,
+                                                imeAction = ImeAction.Done
+                                            ),
+                                            keyboardActions = KeyboardActions(
+                                                onDone = { focusManager.clearFocus() }
+                                            ),
                                             cursorBrush = SolidColor(Color.White),
                                             singleLine = true
                                         )
@@ -653,8 +670,8 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
                                                 text = if (canAffordAnything) 
-                                                    "Insufficient funds for $quantity shares."
-                                                    else "You don\'t have enough money to buy any stocks.",
+                                                    "Insufficient funds for $quantity shares in this company."
+                                                    else "Insufficient funds for any shares in this company.",
                                                 color = Color.Red,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium

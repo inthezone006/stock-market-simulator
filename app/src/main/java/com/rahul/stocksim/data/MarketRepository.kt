@@ -8,6 +8,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.crashlytics.crashlytics
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.rahul.stocksim.model.Stock
@@ -867,6 +868,23 @@ class MarketRepository(private val context: Context? = null) {
                 emit(0.0)
             }
             kotlinx.coroutines.delay(5000)
+        }
+    }
+
+    suspend fun syncTotalAccountValue(value: Double): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            firestore.collection("users").document(userId)
+                .update(
+                    mapOf(
+                        "totalAccountValue" to value,
+                        "lastSync" to FieldValue.serverTimestamp()
+                    )
+                ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            recordError(e)
+            Result.failure(e)
         }
     }
 

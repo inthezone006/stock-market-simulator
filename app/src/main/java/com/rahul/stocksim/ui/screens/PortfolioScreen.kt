@@ -58,6 +58,13 @@ fun PortfolioScreen(navController: NavController) {
 
     val totalStockValue = portfolioItems.sumOf { it.first.price * it.second }
     val totalAccountValue = balance + totalStockValue
+
+    // Sync total account value to Firestore for leaderboard
+    LaunchedEffect(totalAccountValue) {
+        if (totalAccountValue > 0) {
+            marketRepository.syncTotalAccountValue(totalAccountValue)
+        }
+    }
     
     // Portfolio Analytics
     val dayChange = portfolioItems.sumOf { it.first.change * it.second }

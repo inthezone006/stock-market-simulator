@@ -36,6 +36,7 @@ import com.rahul.stocksim.data.MarketRepository
 import com.rahul.stocksim.model.Stock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +66,21 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
 
     LaunchedEffect(Unit) {
         isTutorialCompleted = authRepository.isTutorialCompleted()
+        
+        // Sync total account value on app open
+        coroutineScope.launch {
+            try {
+                val balance = marketRepository.getUserBalance().first()
+                val portfolio = marketRepository.getPortfolioWithQuotes(forceRefresh = true)
+                val totalStockValue = portfolio.sumOf { it.first.price * it.second }
+                val totalAccountValue = balance + totalStockValue
+                if (totalAccountValue > 0) {
+                    marketRepository.syncTotalAccountValue(totalAccountValue)
+                }
+            } catch (e: Exception) {
+                // Ignore background sync errors
+            }
+        }
     }
     
     var searchJob by remember { mutableStateOf<Job?>(null) }

@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 data class LeaderboardUser(
     val id: String,
     val name: String,
-    val balance: Double,
+    val totalAccountValue: Double,
     val photoUrl: String? = null,
     val level: Int = 4
 )
@@ -62,11 +62,11 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 // Determine the query
                 val baseQuery = if (selectedLevelFilter == 0) {
                     firestore.collection("users")
-                        .orderBy("balance", Query.Direction.DESCENDING)
+                        .orderBy("totalAccountValue", Query.Direction.DESCENDING)
                 } else {
                     firestore.collection("users")
                         .whereEqualTo("level", selectedLevelFilter)
-                        .orderBy("balance", Query.Direction.DESCENDING)
+                        .orderBy("totalAccountValue", Query.Direction.DESCENDING)
                 }
 
                 val snapshot = baseQuery.limit(30).get().await()
@@ -74,7 +74,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
                     LeaderboardUser(
                         id = doc.id,
                         name = doc.getString("displayName") ?: doc.getString("email")?.split("@")?.get(0) ?: "Trader",
-                        balance = doc.getDouble("balance") ?: 0.0,
+                        totalAccountValue = doc.getDouble("totalAccountValue") ?: doc.getDouble("balance") ?: 0.0,
                         photoUrl = doc.getString("photoUrl"),
                         level = (doc.getLong("level") ?: 4L).toInt()
                     )
@@ -85,7 +85,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 // Fallback: Fetch all users and filter locally if the index isn't ready
                 try {
                     val fallbackSnapshot = firestore.collection("users")
-                        .orderBy("balance", Query.Direction.DESCENDING)
+                        .orderBy("totalAccountValue", Query.Direction.DESCENDING)
                         .limit(50)
                         .get().await()
                     
@@ -93,7 +93,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
                         LeaderboardUser(
                             id = doc.id,
                             name = doc.getString("displayName") ?: doc.getString("email")?.split("@")?.get(0) ?: "Trader",
-                            balance = doc.getDouble("balance") ?: 0.0,
+                            totalAccountValue = doc.getDouble("totalAccountValue") ?: doc.getDouble("balance") ?: 0.0,
                             photoUrl = doc.getString("photoUrl"),
                             level = (doc.getLong("level") ?: 4L).toInt()
                         )
@@ -268,7 +268,7 @@ fun LeaderCard(rank: Int, user: LeaderboardUser, isCurrentUser: Boolean) {
             }
 
             Text(
-                text = "$${String.format("%,.0f", user.balance)}",
+                text = "$${String.format("%,.0f", user.totalAccountValue)}",
                 color = if (isCurrentUser) MaterialTheme.colorScheme.primary else Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp

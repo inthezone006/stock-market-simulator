@@ -670,8 +670,8 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
                                                 text = if (canAffordAnything) 
-                                                    "Insufficient funds for $quantity shares in this company."
-                                                    else "Insufficient funds for any shares in this company.",
+                                                    "Insufficient funds for purchasing $quantity shares in this company."
+                                                    else "Insufficient funds to purchase any shares in this company.",
                                                 color = Color.Red,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium

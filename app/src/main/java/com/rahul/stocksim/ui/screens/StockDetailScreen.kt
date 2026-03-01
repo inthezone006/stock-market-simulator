@@ -9,6 +9,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,6 +30,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
@@ -38,6 +40,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -105,10 +108,13 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
 
     var errorOccurred by remember { mutableStateOf(false) }
 
+    // State for interactive graph tracking
+    var selectedPricePoint by remember { mutableStateOf<StockPricePoint?>(null) }
+
     val scrollState = rememberLazyListState()
     val isCollapsed by remember {
         derivedStateOf {
-            scrollState.firstVisibleItemIndex > 0 || scrollState.firstVisibleItemScrollOffset > 100
+            scrollState.firstVisibleItemIndex > 0 || (scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset > 200)
         }
     }
 
@@ -247,13 +253,13 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                             }
                         } else {
                             Column {
-                                Text(stockSymbol ?: "Stock Details", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                                Text(stockSymbol ?: "Stock Details", color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                                 marketStatus?.let { status ->
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Box(
                                             modifier = Modifier
-                                                .size(8.dp)
-                                                .clip(RoundedCornerShape(4.dp))
+                                                .size(6.dp)
+                                                .clip(CircleShape)
                                                 .background(if (status.isOpen) Color.Green else Color.Red)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
@@ -318,44 +324,73 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
             ) {
                 item {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            if (profile?.logo?.isNotEmpty() == true) {
-                                AsyncImage(
-                                    model = profile?.logo,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(Color.White),
-                                    contentScale = ContentScale.Fit
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
+                            // Logo Box
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF1F1F1F)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (profile?.logo?.isNotEmpty() == true) {
+                                    AsyncImage(
+                                        model = profile?.logo,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(36.dp),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                } else {
+                                    Text(
+                                        text = stock!!.symbol.take(1),
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp
+                                    )
+                                }
                             }
                             
+                            Spacer(modifier = Modifier.width(16.dp))
+                            
                             Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = stock!!.symbol, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
-                                    if (stock?.isCrypto == true) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFFFFA726).copy(alpha = 0.2f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                            Text(text = "CRYPTO", color = Color(0xFFFFA726), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                        }
-                                    }
-                                    if (stock?.isForex == true) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFF2196F3).copy(alpha = 0.2f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                            Text(text = "FOREX", color = Color(0xFF2196F3), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                        }
-                                    }
-                                }
-                                Text(text = stock!!.name, style = MaterialTheme.typography.bodyLarge, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(
+                                    text = stock!!.symbol,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = stock!!.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.Gray,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
-
+                        
                         Column(horizontalAlignment = Alignment.End) {
-                            Text(text = "$${String.format("%.2f", stock!!.price)}", style = MaterialTheme.typography.headlineSmall, color = if (stock!!.change >= 0) Color.Green else Color.Red, fontWeight = FontWeight.Bold)
-                            Text(text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)", color = if (stock!!.change >= 0) Color.Green else Color.Red, fontSize = 14.sp)
+                            val color = if (stock!!.change >= 0) Color.Green else Color.Red
+                            
+                            Text(
+                                text = "$${String.format("%.2f", stock!!.price)}",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = color,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            Text(
+                                text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
+                                color = color,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
                 }
@@ -429,7 +464,8 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                 StockLineChart(
                                     data = history,
                                     modifier = Modifier.fillMaxSize(),
-                                    color = if (history.last().price >= history.first().price) Color.Green else Color.Red
+                                    color = if (history.last().price >= history.first().price) Color.Green else Color.Red,
+                                    onPointSelected = { point -> selectedPricePoint = point }
                                 )
                             }
                         }
@@ -810,7 +846,12 @@ fun RecItem(label: String, value: Int, color: Color) {
 }
 
 @Composable
-fun StockLineChart(data: List<StockPricePoint>, modifier: Modifier, color: Color) {
+fun StockLineChart(
+    data: List<StockPricePoint>, 
+    modifier: Modifier, 
+    color: Color,
+    onPointSelected: (StockPricePoint?) -> Unit
+) {
     val textPaint = remember {
         Paint().apply {
             this.color = Color.Gray.toArgb()
@@ -829,24 +870,65 @@ fun StockLineChart(data: List<StockPricePoint>, modifier: Modifier, color: Color
         }
     }
 
-    Canvas(modifier = modifier.padding(end = 48.dp, top = 16.dp, bottom = 32.dp)) {
+    val priceLabelPaint = remember {
+        Paint().apply {
+            this.color = Color.Gray.toArgb()
+            this.textSize = 48f
+            this.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            this.textAlign = Paint.Align.CENTER
+        }
+    }
+
+    var dragX by remember { mutableStateOf<Float?>(null) }
+
+    Canvas(
+        modifier = modifier
+            .padding(end = 64.dp, top = 16.dp, bottom = 32.dp, start = 16.dp)
+            .pointerInput(data) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        dragX = offset.x
+                    },
+                    onDrag = { change, _ ->
+                        dragX = change.position.x
+                    },
+                    onDragEnd = {
+                        dragX = null
+                        onPointSelected(null)
+                    },
+                    onDragCancel = {
+                        dragX = null
+                        onPointSelected(null)
+                    }
+                )
+            }
+    ) {
         if (data.size < 2) return@Canvas
         
         val maxPrice = data.maxOf { it.price }
         val minPrice = data.minOf { it.price }
         val priceRange = (maxPrice - minPrice).coerceAtLeast(0.1)
-        
+
+        // Draw Y-axis labels and horizontal grid lines
         for (i in 0..4) {
             val price = maxPrice - (i * (priceRange / 4))
             val y = (i * (size.height / 4)).toFloat()
-            drawContext.canvas.nativeCanvas.drawText("$${String.format("%.2f", price)}", size.width + 44.dp.toPx(), y + 8f, textPaint)
+            
+            drawContext.canvas.nativeCanvas.drawText(
+                "$${String.format("%.2f", price)}", 
+                size.width + 60.dp.toPx(), 
+                y + 8f, 
+                textPaint
+            )
         }
 
         val timeSdf = SimpleDateFormat("h:mm a", Locale.getDefault())
-        for (i in 0..3) {
-            val index = (i * (data.size - 1) / 3)
+        val timeStepCount = 3
+        for (i in 0..timeStepCount) {
+            val index = (i * (data.size - 1) / timeStepCount)
             val point = data[index]
-            val x = i * (size.width / 3)
+            val x = i * (size.width / timeStepCount)
+            
             val timeStr = timeSdf.format(Date(point.timestamp * 1000))
             drawContext.canvas.nativeCanvas.drawText(timeStr, x, size.height + 24.dp.toPx(), timePaint)
         }
@@ -858,6 +940,46 @@ fun StockLineChart(data: List<StockPricePoint>, modifier: Modifier, color: Color
             if (index == 0) chartPath.moveTo(x, y) else chartPath.lineTo(x, y)
         }
         drawPath(path = chartPath, color = color, style = Stroke(width = 3.dp.toPx()))
+
+        // Interaction logic
+        dragX?.let { x ->
+            val normalizedX = x.coerceIn(0f, size.width)
+            val index = ((normalizedX / size.width) * (data.size - 1)).toInt().coerceIn(0, data.size - 1)
+            val selectedPoint = data[index]
+            
+            onPointSelected(selectedPoint)
+
+            val pointX = index * (size.width / (data.size - 1))
+            val pointY = size.height - ((selectedPoint.price - minPrice) / priceRange * size.height).toFloat()
+
+            drawLine(
+                color = Color.Gray,
+                start = Offset(pointX, 0f),
+                end = Offset(pointX, size.height),
+                strokeWidth = 1.dp.toPx()
+            )
+
+            // Draw current price at the top of the vertical line
+            val labelText = "$${String.format("%.2f", selectedPoint.price)}"
+            drawContext.canvas.nativeCanvas.drawText(
+                labelText,
+                pointX,
+                -28.dp.toPx(), // Position above the vertical line
+                priceLabelPaint
+            )
+
+            // Draw indicator dot
+            drawCircle(
+                color = Color.Black,
+                radius = 10.dp.toPx(),
+                center = Offset(pointX, pointY)
+            )
+            drawCircle(
+                color = color,
+                radius = 8.dp.toPx(),
+                center = Offset(pointX, pointY)
+            )
+        }
     }
 }
 

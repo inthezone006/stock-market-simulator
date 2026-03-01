@@ -258,13 +258,13 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "$${String.format("%,.2f", stock!!.price)}",
+                                        text = "$${String.format("%.2f", stock!!.price)}",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = if (stock!!.change >= 0) Color.Green else Color.Red,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%,.2f", stock!!.change)}",
+                                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)}",
                                         color = if (stock!!.change >= 0) Color.Green else Color.Red,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium
@@ -399,14 +399,14 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                             val color = if (stock!!.change >= 0) Color.Green else Color.Red
                             
                             Text(
-                                text = "$${String.format("%,.2f", stock!!.price)}",
+                                text = "$${String.format("%.2f", stock!!.price)}",
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = color,
                                 fontWeight = FontWeight.Bold
                             )
                             
                             Text(
-                                text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%,.2f", stock!!.change)} (${String.format("%,.2f", stock!!.percentChange)}%)",
+                                text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
                                 color = color,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
@@ -466,9 +466,9 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                             
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(text = "50D SMA: $${String.format("%,.2f", currentSma50)}", color = Color.Gray, fontSize = 11.sp)
+                                Text(text = "50D SMA: $${String.format("%.2f", currentSma50)}", color = Color.Gray, fontSize = 11.sp)
                                 Text(text = trend, color = trendColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                Text(text = "200D SMA: $${String.format("%,.2f", currentSma200)}", color = Color.Gray, fontSize = 11.sp)
+                                Text(text = "200D SMA: $${String.format("%.2f", currentSma200)}", color = Color.Gray, fontSize = 11.sp)
                             }
                         }
                     }
@@ -977,7 +977,7 @@ fun StockLineChart(
     val timePaint = remember {
         Paint().apply {
             this.color = Color.Gray.toArgb()
-            this.textSize = 22f
+            this.textSize = 30f
             this.typeface = Typeface.DEFAULT
             this.textAlign = Paint.Align.CENTER
         }
@@ -996,7 +996,7 @@ fun StockLineChart(
 
     Canvas(
         modifier = modifier
-            .padding(end = 64.dp, top = 16.dp, bottom = 32.dp, start = 16.dp)
+            .padding(end = 64.dp, top = 48.dp, bottom = 32.dp, start = 16.dp)
             .pointerInput(data) {
                 detectDragGestures(
                     onDragStart = { offset ->
@@ -1028,7 +1028,7 @@ fun StockLineChart(
             val y = (i * (size.height / 4)).toFloat()
             
             drawContext.canvas.nativeCanvas.drawText(
-                "$${String.format("%,.2f", price)}",
+                "$${String.format("%,.2f", price)}", 
                 size.width + 60.dp.toPx(), 
                 y + 8f, 
                 textPaint
@@ -1077,8 +1077,17 @@ fun StockLineChart(
             drawContext.canvas.nativeCanvas.drawText(
                 labelText,
                 pointX,
-                -28.dp.toPx(), // Position above the vertical line
+                -36.dp.toPx(), // Position above the vertical line
                 priceLabelPaint
+            )
+            
+            // Draw current time under the price
+            val timeLabelText = timeSdf.format(Date(selectedPoint.timestamp * 1000))
+            drawContext.canvas.nativeCanvas.drawText(
+                timeLabelText,
+                pointX,
+                -20.dp.toPx(), // Position below the price label but above the vertical line
+                timePaint
             )
 
             // Draw indicator dot

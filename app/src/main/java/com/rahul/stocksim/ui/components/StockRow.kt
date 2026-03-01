@@ -84,13 +84,13 @@ fun StockRow(stock: Stock, ownedQuantity: Long = 0, onRowClick: (Stock) -> Unit)
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = "$${"%.2f".format(stock.price)}",
+                    text = "$${"%,.2f".format(stock.price)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     color = Color.White
                 )
                 Text(
-                    text = "${if (stock.change >= 0) "+" else ""}${"%.2f".format(stock.change)}%",
+                    text = "${if (stock.change >= 0) "+" else ""}${"%,.2f".format(stock.change)}%",
                     style = MaterialTheme.typography.labelMedium,
                     color = if (stock.change >= 0) Color(0xFF4CAF50) else Color(0xFFCF6679)
                 )

@@ -194,7 +194,7 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                             ListItem(
                                 headlineContent = { Text(stock.symbol, color = Color.White) },
                                 supportingContent = { Text(stock.name, color = Color.Gray) },
-                                trailingContent = { Text("$${String.format("%.2f", stock.price)}", color = Color.White) },
+                                trailingContent = { Text("$${String.format("%,.2f", stock.price)}", color = Color.White) },
                                 modifier = Modifier.clickable {
                                     searchActive = false
                                     onStockClick(stock)

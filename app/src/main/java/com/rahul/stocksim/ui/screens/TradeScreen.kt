@@ -156,7 +156,7 @@ fun PositionRow(stock: Stock, quantity: Long, mainNavController: NavController, 
             )
             if (!isOld) {
                 Text(
-                    text = "Value: $${String.format("%.2f", stock.price * quantity)}",
+                    text = "Value: $${String.format("%,.2f", stock.price * quantity)}",
                     color = Color.Gray,
                     fontSize = 14.sp
                 )

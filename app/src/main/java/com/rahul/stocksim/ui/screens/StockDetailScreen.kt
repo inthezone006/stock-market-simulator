@@ -96,6 +96,8 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
     var newsSentiment by remember { mutableStateOf<FinnhubNewsSentimentResponse?>(null) }
     var marketStatus by remember { mutableStateOf<FinnhubMarketStatusResponse?>(null) }
     var esgScores by remember { mutableStateOf<FinnhubEsgResponse?>(null) }
+    var priceTarget by remember { mutableStateOf<FinnhubPriceTargetResponse?>(null) }
+    var aiRecommendation by remember { mutableStateOf<AIRecommendation?>(null) }
     
     var isLoading by remember { mutableStateOf(true) }
     var isGraphLoading by remember { mutableStateOf(false) }
@@ -130,25 +132,43 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     stock = stockResult
                     
                     // Fetch data in parallel
-                    launch { profile = marketRepository.getCompanyProfile(stockSymbol) }
-                    launch { financials = marketRepository.getBasicFinancials(stockSymbol) }
-                    launch { newsArticles = marketRepository.getCompanyNews(stockSymbol) }
-                    launch { recommendations = marketRepository.getRecommendations(stockSymbol) }
-                    launch { peers = marketRepository.getPeers(stockSymbol) }
-                    launch { earnings = marketRepository.getEarningsCalendar(stockSymbol) }
-                    launch { rsiData = marketRepository.getTechnicalIndicator(stockSymbol, "rsi") }
-                    launch { sma50Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 50) }
-                    launch { sma200Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 200) }
-                    launch { dividends = marketRepository.getDividends(stockSymbol) }
-                    launch { newsSentiment = marketRepository.getNewsSentiment(stockSymbol) }
-                    launch { marketStatus = marketRepository.getMarketStatus() }
-                    launch { if (stockResult.isCrypto == false && stockResult.isForex == false) esgScores = marketRepository.getEsgScores(stockSymbol) }
+                    val jobs = listOf(
+                        launch { profile = marketRepository.getCompanyProfile(stockSymbol) },
+                        launch { financials = marketRepository.getBasicFinancials(stockSymbol) },
+                        launch { newsArticles = marketRepository.getCompanyNews(stockSymbol) },
+                        launch { recommendations = marketRepository.getRecommendations(stockSymbol) },
+                        launch { peers = marketRepository.getPeers(stockSymbol) },
+                        launch { earnings = marketRepository.getEarningsCalendar(stockSymbol) },
+                        launch { rsiData = marketRepository.getTechnicalIndicator(stockSymbol, "rsi") },
+                        launch { sma50Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 50) },
+                        launch { sma200Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 200) },
+                        launch { dividends = marketRepository.getDividends(stockSymbol) },
+                        launch { newsSentiment = marketRepository.getNewsSentiment(stockSymbol) },
+                        launch { marketStatus = marketRepository.getMarketStatus() },
+                        launch { priceTarget = marketRepository.getPriceTarget(stockSymbol) },
+                        launch { if (stockResult.isCrypto == false && stockResult.isForex == false) esgScores = marketRepository.getEsgScores(stockSymbol) }
+                    )
                     
                     val watchlist = marketRepository.getWatchlist()
                     isInWatchlist = watchlist.any { it.symbol == stockSymbol }
                     
                     val portfolio = marketRepository.getPortfolio()
                     ownedQuantity = portfolio.find { it.first == stockSymbol }?.second ?: 0L
+                    
+                    // Wait for critical jobs for AI analysis
+                    jobs.forEach { it.join() }
+                    
+                    aiRecommendation = marketRepository.analyzeStock(
+                        stock = stockResult,
+                        financials = financials,
+                        priceTarget = priceTarget,
+                        rsi = rsiData?.rsi?.lastOrNull(),
+                        sma50 = sma50Data?.sma?.lastOrNull(),
+                        sma200 = sma200Data?.sma?.lastOrNull(),
+                        sentiment = newsSentiment?.sentiment?.bullishPercent,
+                        analystRecs = recommendations.firstOrNull()
+                    )
+                    
                     isLoading = false
                 } catch (e: Exception) {
                     errorOccurred = true
@@ -238,13 +258,13 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "$${String.format("%.2f", stock!!.price)}",
+                                        text = "$${String.format("%,.2f", stock!!.price)}",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = if (stock!!.change >= 0) Color.Green else Color.Red,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)}",
+                                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%,.2f", stock!!.change)}",
                                         color = if (stock!!.change >= 0) Color.Green else Color.Red,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium
@@ -379,14 +399,14 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                             val color = if (stock!!.change >= 0) Color.Green else Color.Red
                             
                             Text(
-                                text = "$${String.format("%.2f", stock!!.price)}",
+                                text = "$${String.format("%,.2f", stock!!.price)}",
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = color,
                                 fontWeight = FontWeight.Bold
                             )
                             
                             Text(
-                                text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
+                                text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%,.2f", stock!!.change)} (${String.format("%,.2f", stock!!.percentChange)}%)",
                                 color = color,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
@@ -446,9 +466,9 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                             
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(text = "50D SMA: $${String.format("%.2f", currentSma50)}", color = Color.Gray, fontSize = 11.sp)
+                                Text(text = "50D SMA: $${String.format("%,.2f", currentSma50)}", color = Color.Gray, fontSize = 11.sp)
                                 Text(text = trend, color = trendColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                Text(text = "200D SMA: $${String.format("%.2f", currentSma200)}", color = Color.Gray, fontSize = 11.sp)
+                                Text(text = "200D SMA: $${String.format("%,.2f", currentSma200)}", color = Color.Gray, fontSize = 11.sp)
                             }
                         }
                     }
@@ -793,31 +813,38 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                             Text("Market Stats", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
                             
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatItem("Open", "$${String.format("%.2f", stock!!.open)}")
-                                StatItem("Prev Close", "$${String.format("%.2f", stock!!.prevClose)}")
+                                StatItem("Open", "$${String.format("%,.2f", stock!!.open)}")
+                                StatItem("Prev Close", "$${String.format("%,.2f", stock!!.prevClose)}")
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatItem("High", "$${String.format("%.2f", stock!!.high)}")
-                                StatItem("Low", "$${String.format("%.2f", stock!!.low)}")
+                                StatItem("High", "$${String.format("%,.2f", stock!!.high)}")
+                                StatItem("Low", "$${String.format("%,.2f", stock!!.low)}")
                             }
                             
                             HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
                             
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatItem("Market Cap", profile?.marketCapitalization?.let { "${String.format("%.2f", it / 1000)}B" } ?: "N/A")
-                                StatItem("Shares Out.", profile?.shareOutstanding?.let { "${String.format("%.2f", it)}M" } ?: "N/A")
+                                StatItem("Market Cap", profile?.marketCapitalization?.let { "${String.format("%,.2f", it / 1000)}B" } ?: "N/A")
+                                StatItem("Shares Out.", profile?.shareOutstanding?.let { "${String.format("%,.2f", it)}M" } ?: "N/A")
                             }
                             
                             if (financials?.metric != null) {
                                 val metrics = financials!!.metric!!
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    StatItem("52W High", metrics["52WeekHigh"]?.let { if (it is Double) "$${String.format("%.2f", it)}" else "N/A" } ?: "N/A")
-                                    StatItem("52W Low", metrics["52WeekLow"]?.let { if (it is Double) "$${String.format("%.2f", it)}" else "N/A" } ?: "N/A")
+                                    StatItem("52W High", metrics["52WeekHigh"]?.let { if (it is Double) "$${String.format("%,.2f", it)}" else "N/A" } ?: "N/A")
+                                    StatItem("52W Low", metrics["52WeekLow"]?.let { if (it is Double) "$${String.format("%,.2f", it)}" else "N/A" } ?: "N/A")
                                 }
                             }
                         }
+                    }
+                }
+
+                aiRecommendation?.let { recommendation ->
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        AIRecommendationSection(recommendation)
                     }
                 }
 
@@ -832,6 +859,92 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     }
                 }
                 item { Spacer(modifier = Modifier.height(32.dp)) }
+            }
+        }
+    }
+}
+
+@Composable
+fun AIRecommendationSection(recommendation: AIRecommendation) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = Color(0xFFBB86FC),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "AI Recommendation",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+                
+                Surface(
+                    color = when (recommendation.advice) {
+                        "BUY" -> Color(0xFF00C853).copy(alpha = 0.2f)
+                        "SELL" -> Color(0xFFD50000).copy(alpha = 0.2f)
+                        else -> Color.Gray.copy(alpha = 0.2f)
+                    },
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = recommendation.advice,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        color = when (recommendation.advice) {
+                            "BUY" -> Color(0xFF00C853)
+                            "SELL" -> Color(0xFFFF5252)
+                            else -> Color.LightGray
+                        },
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "Confidence: ", color = Color.Gray, fontSize = 14.sp)
+                Text(text = "${recommendation.confidence}%", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                LinearProgressIndicator(
+                    progress = { recommendation.confidence / 100f },
+                    modifier = Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)),
+                    color = Color(0xFFBB86FC),
+                    trackColor = Color.White.copy(alpha = 0.1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(text = "Analysis Highlights:", color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            recommendation.reasons.forEach { reason ->
+                Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircleOutline,
+                        contentDescription = null,
+                        tint = Color(0xFFBB86FC).copy(alpha = 0.7f),
+                        modifier = Modifier.size(14.dp).padding(top = 2.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = reason, color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
+                }
             }
         }
     }
@@ -915,7 +1028,7 @@ fun StockLineChart(
             val y = (i * (size.height / 4)).toFloat()
             
             drawContext.canvas.nativeCanvas.drawText(
-                "$${String.format("%.2f", price)}", 
+                "$${String.format("%,.2f", price)}",
                 size.width + 60.dp.toPx(), 
                 y + 8f, 
                 textPaint
@@ -960,7 +1073,7 @@ fun StockLineChart(
             )
 
             // Draw current price at the top of the vertical line
-            val labelText = "$${String.format("%.2f", selectedPoint.price)}"
+            val labelText = "$${String.format("%,.2f", selectedPoint.price)}"
             drawContext.canvas.nativeCanvas.drawText(
                 labelText,
                 pointX,

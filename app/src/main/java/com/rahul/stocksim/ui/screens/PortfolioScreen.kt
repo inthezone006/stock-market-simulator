@@ -128,7 +128,7 @@ fun PortfolioScreen(navController: NavController) {
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "${if (dayChange >= 0) "+" else ""}${String.format("%.2f%%", dayChangePercent)}",
+                                        text = "${if (dayChange >= 0) "+" else ""}${String.format("%,.2f%%", dayChangePercent)}",
                                         color = if (dayChange >= 0) Color.Green else Color.Red,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
@@ -219,7 +219,7 @@ fun PortfolioScreen(navController: NavController) {
                         onRowClick = { navController.navigate("details/${stock.symbol}") }
                     )
                     Text(
-                        text = "$quantity ${if (stock.isCrypto) "units" else "shares"} • $${String.format("%.2f", stock.price * quantity)} total",
+                        text = "$quantity ${if (stock.isCrypto) "units" else "shares"} • $${String.format("%,.2f", stock.price * quantity)} total",
                         color = Color.Gray,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)

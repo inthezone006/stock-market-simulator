@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -69,7 +70,8 @@ fun LeaderboardScreen(mainNavController: NavController) {
                         .orderBy("totalAccountValue", Query.Direction.DESCENDING)
                 }
 
-                val snapshot = baseQuery.limit(30).get().await()
+                // Increase limit to show more users
+                val snapshot = baseQuery.limit(100).get().await()
                 leaders = snapshot.documents.map { doc ->
                     LeaderboardUser(
                         id = doc.id,
@@ -79,6 +81,10 @@ fun LeaderboardScreen(mainNavController: NavController) {
                         level = (doc.getLong("level") ?: 4L).toInt()
                     )
                 }
+                
+                if (leaders.isEmpty()) {
+                    Log.d("Leaderboard", "No users found for level $selectedLevelFilter")
+                }
             } catch (e: Exception) {
                 Log.e("Leaderboard", "Query failed, falling back to local filter", e)
                 
@@ -86,7 +92,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 try {
                     val fallbackSnapshot = firestore.collection("users")
                         .orderBy("totalAccountValue", Query.Direction.DESCENDING)
-                        .limit(50)
+                        .limit(200)
                         .get().await()
                     
                     val allUsers = fallbackSnapshot.documents.map { doc ->
@@ -213,7 +219,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
             } else {
                 itemsIndexed(leaders) { index, user ->
                     LeaderCard(
-                        rank = if (selectedLevelFilter == 0) index + 1 else 0, // Only show rank on Global
+                        rank = index + 1,
                         user = user, 
                         isCurrentUser = user.id == currentUserId
                     )
@@ -240,20 +246,19 @@ fun LeaderCard(rank: Int, user: LeaderboardUser, isCurrentUser: Boolean) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (rank > 0) {
-                Text(
-                    text = "#$rank",
-                    color = when(rank) {
-                        1 -> Color(0xFFFFD700) // Gold
-                        2 -> Color(0xFFC0C0C0) // Silver
-                        3 -> Color(0xFFCD7F32) // Bronze
-                        else -> if (isCurrentUser) MaterialTheme.colorScheme.primary else Color.Gray
-                    },
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.width(40.dp)
-                )
-            }
+            Text(
+                text = "#$rank",
+                color = when(rank) {
+                    1 -> Color(0xFFFFD700) // Gold
+                    2 -> Color(0xFFC0C0C0) // Silver
+                    3 -> Color(0xFFCD7F32) // Bronze
+                    else -> if (isCurrentUser) MaterialTheme.colorScheme.primary else Color.Gray
+                },
+                fontWeight = FontWeight.Bold,
+                fontSize = if (rank >= 100) 14.sp else 18.sp,
+                modifier = Modifier.width(44.dp),
+                maxLines = 1
+            )
 
             Box(
                 modifier = Modifier
@@ -285,7 +290,9 @@ fun LeaderCard(rank: Int, user: LeaderboardUser, isCurrentUser: Boolean) {
                     Text(
                         text = user.name, 
                         color = Color.White, 
-                        fontWeight = if (isCurrentUser) FontWeight.ExtraBold else FontWeight.Bold
+                        fontWeight = if (isCurrentUser) FontWeight.ExtraBold else FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (isCurrentUser) {
                         Spacer(modifier = Modifier.width(4.dp))

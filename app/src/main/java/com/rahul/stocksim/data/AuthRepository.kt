@@ -225,6 +225,7 @@ class AuthRepository {
             val userRef = firestore.collection("users").document(user.uid)
             val userData = hashMapOf(
                 "balance" to balance,
+                "totalAccountValue" to balance, // Initialize for leaderboard
                 "level" to level,
                 "email" to user.email,
                 "displayName" to user.displayName,

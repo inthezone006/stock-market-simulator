@@ -127,73 +127,101 @@ fun LeaderboardScreen(mainNavController: NavController) {
         },
         modifier = Modifier.fillMaxSize().background(Color(0xFF121212))
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Text(
-                text = "Global Leaderboard",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Global Leaderboard",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Level Filter Chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-            ) {
-                val levels = listOf(0, 1, 2, 3, 4, 5, 6, 7)
-                levels.forEach { level ->
-                    FilterChip(
-                        selected = selectedLevelFilter == level,
-                        onClick = { 
-                            if (selectedLevelFilter != level) {
-                                selectedLevelFilter = level
-                            }
-                        },
-                        label = { Text(if (level == 0) "All" else "Level $level") },
-                        modifier = Modifier.padding(end = 8.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = Color.White,
-                            containerColor = Color(0xFF1F1F1F),
-                            labelColor = Color.Gray
+                // Level Filter Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                ) {
+                    val levels = listOf(0, 1, 2, 3, 4, 5, 6, 7)
+                    levels.forEach { level ->
+                        FilterChip(
+                            selected = selectedLevelFilter == level,
+                            onClick = { 
+                                if (selectedLevelFilter != level) {
+                                    selectedLevelFilter = level
+                                }
+                            },
+                            label = { Text(if (level == 0) "All" else "Level $level") },
+                            modifier = Modifier.padding(end = 8.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White,
+                                containerColor = Color(0xFF1F1F1F),
+                                labelColor = Color.Gray
+                            )
                         )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (isLoading && !isRefreshing) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.White)
-                }
-            } else if (leaders.isEmpty() && errorMessage == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = if (selectedLevelFilter == 0) "No traders found." else "No traders found for Level $selectedLevelFilter.",
-                        color = Color.Gray,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            } else if (errorMessage != null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(errorMessage!!, color = Color.Gray)
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    itemsIndexed(leaders) { index, user ->
-                        LeaderCard(
-                            rank = if (selectedLevelFilter == 0) index + 1 else 0, // Only show rank on Global
-                            user = user, 
-                            isCurrentUser = user.id == currentUserId
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
+
+            if (isLoading && !isRefreshing) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxHeight(0.7f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color.White)
+                    }
+                }
+            } else if (leaders.isEmpty() && errorMessage == null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxHeight(0.7f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (selectedLevelFilter == 0) "No traders found." else "No traders found for Level $selectedLevelFilter.",
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            } else if (errorMessage != null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxHeight(0.7f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(errorMessage!!, color = Color.Gray)
+                    }
+                }
+            } else {
+                itemsIndexed(leaders) { index, user ->
+                    LeaderCard(
+                        rank = if (selectedLevelFilter == 0) index + 1 else 0, // Only show rank on Global
+                        user = user, 
+                        isCurrentUser = user.id == currentUserId
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+            
+            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }

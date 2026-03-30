@@ -39,13 +39,11 @@ fun TradeScreen(mainNavController: NavController) {
     }
 
     LaunchedEffect(Unit) {
-        // Try to load from cache immediately
         val cached = marketRepository.getPortfolioWithQuotes(forceRefresh = false)
         if (cached.isNotEmpty()) {
             portfolioItems = cached
             isLoading = false
         }
-        // Then refresh in the background
         refreshData()
     }
 
@@ -59,78 +57,92 @@ fun TradeScreen(mainNavController: NavController) {
             .fillMaxSize()
             .background(Color(0xFF121212))
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            // Buying Power Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(text = "Buying Power", color = Color.Gray, fontSize = 14.sp)
-                    Text(
-                        text = "$${String.format("%,.2f", balance)}",
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                // Buying Power Section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text(text = "Buying Power", color = Color.Gray, fontSize = 14.sp)
+                        Text(
+                            text = "$${String.format("%,.2f", balance)}",
+                            color = Color.White,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
             if (isLoading && portfolioItems.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.White)
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxHeight(0.7f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color.White)
+                    }
                 }
             } else {
                 val activePositions = portfolioItems.filter { it.second > 0 }
                 val oldPositions = portfolioItems.filter { it.second <= 0 }
 
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    if (activePositions.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "Active Positions",
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 12.dp)
-                            )
-                        }
-                        items(activePositions) { (stock, quantity) ->
-                            PositionRow(stock, quantity, mainNavController)
-                        }
+                if (activePositions.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Active Positions",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
                     }
-
-                    if (oldPositions.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(
-                                text = "Old Positions",
-                                color = Color.Gray,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 12.dp)
-                            )
-                        }
-                        items(oldPositions) { (stock, quantity) ->
-                            PositionRow(stock, quantity, mainNavController, isOld = true)
-                        }
+                    items(activePositions) { (stock, quantity) ->
+                        PositionRow(stock, quantity, mainNavController)
                     }
+                }
 
-                    if (activePositions.isEmpty() && oldPositions.isEmpty() && !isLoading) {
-                        item {
-                            Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                                Text(text = "You don't have any trading history yet.", color = Color.Gray)
-                            }
+                if (oldPositions.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "Old Positions",
+                            color = Color.Gray,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
+                    }
+                    items(oldPositions) { (stock, quantity) ->
+                        PositionRow(stock, quantity, mainNavController, isOld = true)
+                    }
+                }
+
+                if (activePositions.isEmpty() && oldPositions.isEmpty() && !isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxHeight(0.7f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "You don't have any trading history yet.", color = Color.Gray)
                         }
                     }
                 }
             }
+            
+            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }

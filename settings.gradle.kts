@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Stock Market Simulator"
+rootProject.name = "TradeSim"
 include(":app")

@@ -24,7 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
-import com.rahul.stocksim.ui.theme.StockMarketSimulatorTheme
+import com.rahul.stocksim.ui.theme.TradeSimTheme
 import com.rahul.stocksim.ui.screens.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -105,7 +105,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            StockMarketSimulatorTheme {
+            TradeSimTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

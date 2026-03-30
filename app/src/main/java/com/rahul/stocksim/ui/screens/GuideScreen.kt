@@ -48,10 +48,10 @@ fun GuideScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF121212))
-            .padding(16.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
         Text(
-            text = "Simulator Guide",
+            text = "TradeSim Guide",
             style = MaterialTheme.typography.headlineMedium,
             color = Color.White,
             fontWeight = FontWeight.Bold,
@@ -225,7 +225,7 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
     val steps = listOf(
         TutorialStep(
             title = "Welcome Trader!",
-            description = "Welcome to the Stock Market Simulator. Tap the icon above to see it react!",
+            description = "Welcome to TradeSim. Tap the icon above to see it react!",
             icon = Icons.Default.WavingHand
         ),
         TutorialStep(

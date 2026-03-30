@@ -940,7 +940,7 @@ fun AIRecommendationSection(recommendation: AIRecommendation) {
                         imageVector = Icons.Default.CheckCircleOutline,
                         contentDescription = null,
                         tint = Color(0xFFBB86FC).copy(alpha = 0.7f),
-                        modifier = Modifier.size(14.dp).padding(top = 2.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = reason, color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)

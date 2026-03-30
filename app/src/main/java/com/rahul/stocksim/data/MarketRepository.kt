@@ -1124,15 +1124,15 @@ class MarketRepository(private val context: Context? = null) {
             if (total > 5) { // Ensure enough analysts for weight
                 val buySide = (it.buy + it.strongBuy).toDouble() / total
                 val sellSide = (it.sell + it.strongSell).toDouble() / total
-                if (buySide > 0.6) { score += 2; reasons.add("Strong analyst buy consensus") }
-                else if (sellSide > 0.35) { score -= 2; reasons.add("Notable analyst sell consensus") }
+                if (buySide > 0.6) { score += 2; reasons.add("Strong analyst buy consensus.") }
+                else if (sellSide > 0.35) { score -= 2; reasons.add("Notable analyst sell consensus.") }
             }
         }
 
         // 6. News Sentiment (Often null on free tier)
         sentiment?.let {
-            if (it > 65) { score += 1; reasons.add("News sentiment is predominantly bullish") }
-            else if (it < 35) { score -= 1; reasons.add("News sentiment is predominantly bearish") }
+            if (it > 65) { score += 1; reasons.add("News sentiment is predominantly bullish.") }
+            else if (it < 35) { score -= 1; reasons.add("News sentiment is predominantly bearish.") }
         }
 
         val advice = when {

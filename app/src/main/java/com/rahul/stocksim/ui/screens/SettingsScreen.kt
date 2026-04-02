@@ -282,7 +282,7 @@ fun SettingsScreen(navController: NavController) {
                         value = "Report a bug or suggest a feature",
                         onClick = {
                             val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:support@tradesim.app")
+                                data = Uri.parse("mailto:rahul.menon85280@gmail.com")
                                 putExtra(Intent.EXTRA_SUBJECT, "App Feedback - v${BuildConfig.VERSION_NAME}")
                             }
                             try {

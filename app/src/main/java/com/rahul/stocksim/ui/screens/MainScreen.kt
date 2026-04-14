@@ -33,26 +33,43 @@ import coil.request.ImageRequest
 import com.rahul.stocksim.data.AssetFilter
 import com.rahul.stocksim.data.AuthRepository
 import com.rahul.stocksim.data.MarketRepository
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.rahul.stocksim.ui.viewmodels.PortfolioViewModel
+import com.rahul.stocksim.ui.viewmodels.MarketViewModel
+import com.rahul.stocksim.ui.viewmodels.PortfolioUiState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rahul.stocksim.model.Stock
+import com.rahul.stocksim.util.NetworkObserver
+import com.rahul.stocksim.util.NetworkStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) {
+fun MainScreen(
+    mainNavController: NavController, 
+    onStockClick: (Stock) -> Unit,
+    portfolioViewModel: PortfolioViewModel = hiltViewModel(),
+    marketViewModel: MarketViewModel = hiltViewModel()
+) {
     val bottomNavController = rememberNavController()
+    val context = LocalContext.current
+    val networkObserver = remember { NetworkObserver(context) }
+    val networkStatus by networkObserver.networkStatus.collectAsState(initial = NetworkStatus.Available)
+    val snackbarHostState = remember { SnackbarHostState() }
+    
     val navItems = listOf(
         BottomNavItem.Portfolio,
         BottomNavItem.Market,
-        BottomNavItem.Trade,
+        BottomNavItem.Contracts,
         BottomNavItem.Leaderboard,
         BottomNavItem.Guide
     )
     
     val authRepository = remember { AuthRepository() }
-    val marketRepository = remember { MarketRepository() }
     val user = authRepository.currentUser
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
@@ -66,21 +83,6 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
 
     LaunchedEffect(Unit) {
         isTutorialCompleted = authRepository.isTutorialCompleted()
-        
-        // Sync total account value on app open
-        coroutineScope.launch {
-            try {
-                val balance = marketRepository.getUserBalance().first()
-                val portfolio = marketRepository.getPortfolioWithQuotes(forceRefresh = true)
-                val totalStockValue = portfolio.sumOf { it.first.price * it.second }
-                val totalAccountValue = balance + totalStockValue
-                if (totalAccountValue > 0) {
-                    marketRepository.syncTotalAccountValue(totalAccountValue)
-                }
-            } catch (e: Exception) {
-                // Ignore background sync errors
-            }
-        }
     }
     
     var searchJob by remember { mutableStateOf<Job?>(null) }
@@ -91,16 +93,31 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
             searchJob = coroutineScope.launch {
                 delay(500)
                 isSearching = true
-                searchResults = marketRepository.searchStocks(query, AssetFilter.STOCKS)
-                isSearching = false
+                marketViewModel.searchStocks(query).collect { results ->
+                    searchResults = results
+                    isSearching = false
+                }
             }
         } else {
             searchResults = emptyList()
         }
     }
 
+    LaunchedEffect(networkStatus) {
+        if (networkStatus == NetworkStatus.Unavailable) {
+            snackbarHostState.showSnackbar(
+                message = "No internet connection. Data may be outdated.",
+                duration = SnackbarDuration.Indefinite,
+                actionLabel = "Dismiss"
+            )
+        } else {
+            snackbarHostState.currentSnackbarData?.dismiss()
+        }
+    }
+
     Scaffold(
         containerColor = Color(0xFF121212),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 SearchBar(
@@ -280,8 +297,8 @@ fun MainScreen(mainNavController: NavController, onStockClick: (Stock) -> Unit) 
                         onSettingsClick = { mainNavController.navigate(Screen.Settings.route) }
                     )
                 }
-                composable(BottomNavItem.Trade.route) {
-                    TradeScreen(mainNavController)
+                composable(BottomNavItem.Contracts.route) {
+                    ContractsScreen(mainNavController)
                 }
                 composable(BottomNavItem.Leaderboard.route) {
                     LeaderboardScreen(mainNavController)

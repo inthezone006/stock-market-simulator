@@ -32,11 +32,21 @@ import androidx.navigation.navArgument
 import com.google.firebase.auth.auth
 import com.google.firebase.messaging.messaging
 import com.rahul.stocksim.data.AuthRepository
+import com.rahul.stocksim.service.PriceAlertWorker
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var authRepository: AuthRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+        
+        PriceAlertWorker.schedule(this)
         
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(
@@ -55,7 +65,6 @@ class MainActivity : ComponentActivity() {
             val analytics = Firebase.analytics
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
-            val authRepository = AuthRepository()
 
             val fetchAndSaveToken = {
                 Firebase.messaging.token.addOnCompleteListener { task ->

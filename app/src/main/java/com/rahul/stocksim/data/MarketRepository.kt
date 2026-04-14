@@ -10,26 +10,32 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.rahul.stocksim.model.Stock
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.Query as FirestoreQuery
+import com.rahul.stocksim.data.local.StockDao
+import com.rahul.stocksim.data.local.entity.StockEntity
+import com.rahul.stocksim.data.local.entity.*
+import com.rahul.stocksim.model.*
 import com.rahul.stocksim.util.NotificationHelper
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.*
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.HttpException
 import retrofit2.http.GET
 import retrofit2.http.Query
-import java.time.Instant
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.sin
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.math.sin
+import kotlin.math.abs
 
 // Interface for Finnhub API
 interface FinnhubApi {
@@ -55,6 +61,24 @@ interface FinnhubApi {
 
     @GET("stock/candle")
     suspend fun getStockCandles(
+        @Query("symbol") symbol: String,
+        @Query("resolution") resolution: String,
+        @Query("from") from: Long,
+        @Query("to") to: Long,
+        @Query("token") apiKey: String
+    ): FinnhubCandleResponse
+
+    @GET("crypto/candle")
+    suspend fun getCryptoCandles(
+        @Query("symbol") symbol: String,
+        @Query("resolution") resolution: String,
+        @Query("from") from: Long,
+        @Query("to") to: Long,
+        @Query("token") apiKey: String
+    ): FinnhubCandleResponse
+
+    @GET("forex/candle")
+    suspend fun getForexCandles(
         @Query("symbol") symbol: String,
         @Query("resolution") resolution: String,
         @Query("from") from: Long,
@@ -162,236 +186,61 @@ interface FinnhubApi {
         @Query("symbol") symbol: String,
         @Query("token") apiKey: String
     ): List<FinnhubEarningsSurpriseResponse>
-
-    @GET("forex/symbol")
-    suspend fun getForexSymbols(
-        @Query("exchange") exchange: String = "oanda",
-        @Query("token") apiKey: String
-    ): List<FinnhubSymbolResult>
-
-    @GET("crypto/symbol")
-    suspend fun getCryptoSymbols(
-        @Query("exchange") exchange: String = "binance",
-        @Query("token") apiKey: String
-    ): List<FinnhubSymbolResult>
 }
 
-data class FinnhubQuoteResponse(
-    val c: Double, // Current price
-    val d: Double, // Change
-    val dp: Double, // Percent change
-    val h: Double,
-    val l: Double,
-    val o: Double,
-    val pc: Double
+data class FinnhubQuoteResponse(val c: Double, val d: Double, val dp: Double, val h: Double, val l: Double, val o: Double, val pc: Double)
+data class FinnhubSearchResponse(val count: Int, val result: List<FinnhubSearchResult>)
+data class FinnhubSearchResult(val description: String, val displaySymbol: String, val symbol: String, val type: String)
+data class FinnhubSymbolResult(val description: String, val displaySymbol: String, val symbol: String)
+data class FinnhubNewsArticle(val category: String, val datetime: Long, val headline: String, val id: Long, val image: String, val related: String, val source: String, val summary: String, val url: String)
+data class FinnhubCandleResponse(val c: List<Double>?, val h: List<Double>?, val l: List<Double>?, val o: List<Double>?, val s: String, val t: List<Long>?, val v: List<Long>?)
+data class FinnhubProfileResponse(val country: String?, val currency: String?, val exchange: String?, val name: String?, val ticker: String?, val logo: String?, val marketCapitalization: Double?, val finnhubIndustry: String?, val shareOutstanding: Double?)
+data class FinnhubFinancialsResponse(val symbol: String, val metric: Map<String, Any?>?)
+data class FinnhubRecommendationResponse(val buy: Int, val hold: Int, val period: String, val sell: Int, val strongBuy: Int, val strongSell: Int, val symbol: String)
+data class FinnhubEarningsCalendarResponse(val earningsCalendar: List<FinnhubEarningsEntry>)
+data class FinnhubEarningsEntry(val date: String, val epsActual: Double?, val epsEstimate: Double?, val hour: String, val quarter: Int, val symbol: String, val year: Int)
+data class FinnhubIndicatorResponse(val rsi: List<Double>?, val macd: List<Double>?, val macdSignal: List<Double>?, val macdHist: List<Double>?, val sma: List<Double>?, val ema: List<Double>?, val s: String)
+data class FinnhubDividendResponse(val symbol: String, val date: String, val amount: Double, val adjustedAmount: Double, val payDate: String, val recordDate: String, val declarationDate: String, val currency: String)
+data class FinnhubIpoCalendarResponse(val ipoCalendar: List<FinnhubIpoEntry>)
+data class FinnhubIpoEntry(val date: String, val exchange: String, val name: String, val numberOfShares: Long, val price: String, val status: String, val symbol: String, val totalSharesValue: Long)
+data class FinnhubNewsSentimentResponse(val buzz: FinnhubBuzz?, val companyNewsScore: Double?, val sectorAverageBullishPercent: Double?, val sectorAverageNewsScore: Double?, val sentiment: FinnhubSentiment?, val symbol: String)
+data class FinnhubBuzz(val articlesInLastWeek: Int?, val buzz: Double?, val weeklyAverage: Double?)
+data class FinnhubSentiment(val bearishPercent: Double?, val bullishPercent: Double?)
+data class FinnhubForexRatesResponse(val base: String, val code: String? = null, val quote: Map<String, Double>? = null)
+data class FinnhubMarketStatusResponse(val exchange: String, val holiday: String?, val isOpen: Boolean, val session: String?, val timezone: String?)
+data class FinnhubEsgResponse(val symbol: String, val totalScore: Double?, val environmentScore: Double?, val socialScore: Double?, val governanceScore: Double?, val data: Map<String, Any?>?)
+data class FinnhubPriceTargetResponse(val symbol: String, val targetHigh: Double?, val targetLow: Double?, val targetMean: Double?, val targetMedian: Double?, val lastUpdate: String?)
+data class FinnhubEarningsSurpriseResponse(val actual: Double?, val estimate: Double?, val period: String?, val symbol: String?, val surprise: Double?, val surprisePercent: Double?)
+
+data class StockPricePoint(
+    val timestamp: Long,
+    val price: Double,
+    val open: Double = 0.0,
+    val high: Double = 0.0,
+    val low: Double = 0.0,
+    val volume: Long = 0
 )
-
-data class FinnhubSearchResponse(
-    val count: Int,
-    val result: List<FinnhubSearchResult>
-)
-
-data class FinnhubSearchResult(
-    val description: String,
-    val displaySymbol: String,
-    val symbol: String,
-    val type: String
-)
-
-data class FinnhubSymbolResult(
-    val description: String,
-    val displaySymbol: String,
-    val symbol: String
-)
-
-data class FinnhubNewsArticle(
-    val category: String,
-    val datetime: Long,
-    val headline: String,
-    val id: Long,
-    val image: String,
-    val related: String,
-    val source: String,
-    val summary: String,
-    val url: String
-)
-
-data class FinnhubCandleResponse(
-    val c: List<Double>?, // Close prices
-    val h: List<Double>?, // High prices
-    val l: List<Double>?, // Low prices
-    val o: List<Double>?, // Open prices
-    val s: String,        // Status
-    val t: List<Long>?,   // Timestamps
-    val v: List<Long>?    // Volume
-)
-
-data class FinnhubProfileResponse(
-    val country: String?,
-    val currency: String?,
-    val exchange: String?,
-    val name: String?,
-    val ticker: String?,
-    val logo: String?,
-    val marketCapitalization: Double?,
-    val finnhubIndustry: String?,
-    val shareOutstanding: Double?
-)
-
-data class FinnhubFinancialsResponse(
-    val symbol: String,
-    val metric: Map<String, Any?>? // Use Any? to prevent crashes when API returns dates or strings
-)
-
-data class FinnhubRecommendationResponse(
-    val buy: Int,
-    val hold: Int,
-    val period: String,
-    val sell: Int,
-    val strongBuy: Int,
-    val strongSell: Int,
-    val symbol: String
-)
-
-data class FinnhubEarningsCalendarResponse(
-    val earningsCalendar: List<FinnhubEarningsEntry>
-)
-
-data class FinnhubEarningsEntry(
-    val date: String,
-    val epsActual: Double?,
-    val epsEstimate: Double?,
-    val hour: String,
-    val quarter: Int,
-    val symbol: String,
-    val year: Int
-)
-
-data class FinnhubIndicatorResponse(
-    val rsi: List<Double>?,
-    val macd: List<Double>?,
-    val macdSignal: List<Double>?,
-    val macdHist: List<Double>?,
-    val sma: List<Double>?,
-    val ema: List<Double>?,
-    val s: String
-)
-
-data class FinnhubDividendResponse(
-    val symbol: String,
-    val date: String,
-    val amount: Double,
-    val adjustedAmount: Double,
-    val payDate: String,
-    val recordDate: String,
-    val declarationDate: String,
-    val currency: String
-)
-
-data class FinnhubIpoCalendarResponse(
-    val ipoCalendar: List<FinnhubIpoEntry>
-)
-
-data class FinnhubIpoEntry(
-    val date: String,
-    val exchange: String,
-    val name: String,
-    val numberOfShares: Long,
-    val price: String,
-    val status: String,
-    val symbol: String,
-    val totalSharesValue: Long
-)
-
-data class FinnhubNewsSentimentResponse(
-    val buzz: FinnhubBuzz?,
-    val companyNewsScore: Double?,
-    val sectorAverageBullishPercent: Double?,
-    val sectorAverageNewsScore: Double?,
-    val sentiment: FinnhubSentiment?,
-    val symbol: String
-)
-
-data class FinnhubBuzz(
-    val articlesInLastWeek: Int?,
-    val buzz: Double?,
-    val weeklyAverage: Double?
-)
-
-data class FinnhubSentiment(
-    val bearishPercent: Double?,
-    val bullishPercent: Double?
-)
-
-data class FinnhubForexRatesResponse(
-    val base: String,
-    val code: String? = null,
-    val quote: Map<String, Double>? = null
-)
-
-data class FinnhubMarketStatusResponse(
-    val exchange: String,
-    val holiday: String?,
-    val isOpen: Boolean,
-    val session: String?,
-    val timezone: String?
-)
-
-data class FinnhubEsgResponse(
-    val symbol: String,
-    val totalScore: Double?,
-    val environmentScore: Double?,
-    val socialScore: Double?,
-    val governanceScore: Double?,
-    val data: Map<String, Any?>?
-)
-
-data class FinnhubPriceTargetResponse(
-    val symbol: String,
-    val targetHigh: Double?,
-    val targetLow: Double?,
-    val targetMean: Double?,
-    val targetMedian: Double?,
-    val lastUpdate: String?
-)
-
-data class FinnhubEarningsSurpriseResponse(
-    val actual: Double?,
-    val estimate: Double?,
-    val period: String?,
-    val symbol: String?,
-    val surprise: Double?,
-    val surprisePercent: Double?
-)
-
-data class StockPricePoint(val timestamp: Long, val price: Double)
-
 data class WatchlistItem(val symbol: String)
+data class AIRecommendation(val advice: String, val confidence: Int, val reasons: List<String>)
+enum class AssetFilter { STOCKS, CRYPTO, FOREX, OTHERS }
 
-data class AIRecommendation(
-    val advice: String, // "BUY", "SELL", "HOLD"
-    val confidence: Int,
-    val reasons: List<String>
-)
-
-enum class AssetFilter {
-    STOCKS, CRYPTO, FOREX, OTHERS
-}
-
-class MarketRepository(private val context: Context? = null) {
+@Singleton
+class MarketRepository @Inject constructor(
+    private val api: FinnhubApi,
+    private val stockDao: StockDao,
+    @ApplicationContext private val context: Context
+) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val analytics = Firebase.analytics
     private val crashlytics = Firebase.crashlytics
-    private val notificationHelper = context?.let { NotificationHelper(it) }
+    private val notificationHelper = NotificationHelper(context)
     
     private val apiKey = "d38davhr01qlbdj4vutgd38davhr01qlbdj4vuu0"
 
-    // Simple in-memory cache to stay within Finnhub free tier limits (60 calls/min)
     private val quoteCache = ConcurrentHashMap<String, Pair<Stock, Long>>()
     private val CACHE_EXPIRATION_MS = 300_000L // 5 minutes
     
-    // Mutex to throttle outgoing requests and prevent burst 429s
     private val apiMutex = Mutex()
     private var lastRequestTime = 0L
     private val MIN_DELAY_MS = 100L
@@ -400,7 +249,7 @@ class MarketRepository(private val context: Context? = null) {
         private var globalWatchlistCache: List<Stock>? = null
         private var globalPortfolioCache: List<Pair<Stock, Long>>? = null
         
-        // Persist company names to ensure symbols show full names instead of ticker duplicates
+        private val industryCache = ConcurrentHashMap<String, String>()
         private val companyNameMap = ConcurrentHashMap<String, String>().apply {
             put("AAPL", "Apple Inc.")
             put("GOOGL", "Alphabet Inc.")
@@ -418,70 +267,39 @@ class MarketRepository(private val context: Context? = null) {
             put("CRM", "Salesforce Inc.")
             put("QCOM", "Qualcomm Inc.")
             put("SPY", "SPDR S&P 500 ETF Trust")
-            put("OANDA:EUR_USD", "Euro / US Dollar")
-            put("OANDA:GBP_USD", "British Pound / US Dollar")
-            put("OANDA:USD_JPY", "US Dollar / Japanese Yen")
-            put("BINANCE:BTCUSDT", "Bitcoin / Tether")
-            put("BINANCE:ETHUSDT", "Ethereum / Tether")
-            put("BINANCE:XRPUSDT", "Ripple / Tether")
-            put("BINANCE:SOLUSDT", "Solana / Tether")
         }
 
-        private val industryCache = ConcurrentHashMap<String, String>()
-
-        // List of known cryptocurrency symbols
-        private val cryptoSymbols = setOf(
-            "BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:XRPUSDT", "BINANCE:SOLUSDT"
-        )
-
-        // List of known forex symbols
-        private val forexSymbols = setOf(
-            "OANDA:EUR_USD", "OANDA:GBP_USD", "OANDA:USD_JPY"
-        )
+        private val cryptoSymbols = setOf("BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:XRPUSDT", "BINANCE:SOLUSDT")
+        private val forexSymbols = setOf("OANDA:EUR_USD", "OANDA:GBP_USD", "OANDA:USD_JPY")
     }
 
-    private val loggingInterceptor = HttpLoggingInterceptor { message ->
-        crashlytics.log(message)
-        Log.d("API_LOG", message)
-    }.apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-
-    private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .build()
-
-    private val api = Retrofit.Builder()
-        .baseUrl("https://finnhub.io/api/v1/")
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(FinnhubApi::class.java)
-
-    // Helper to log errors
     private fun recordError(e: Exception) {
+        if (e is HttpException && e.code() == 401) {
+            crashlytics.log("Finnhub API 401 Unauthorized: Check API Key validity. Current key: ${apiKey.take(5)}...")
+            crashlytics.setCustomKey("api_auth_error", true)
+        }
         crashlytics.recordException(e)
     }
 
     suspend fun getStockQuote(symbol: String): Stock? {
-        // Check cache first
         val cached = quoteCache[symbol]
         if (cached != null && System.currentTimeMillis() - cached.second < CACHE_EXPIRATION_MS) {
             return cached.first
         }
 
-        return apiMutex.withLock {
-            val reCached = quoteCache[symbol]
-            if (reCached != null && System.currentTimeMillis() - reCached.second < CACHE_EXPIRATION_MS) {
-                return reCached.first
-            }
+        // Try Room database for offline cache if network fails
+        return try {
+            apiMutex.withLock {
+                val reCached = quoteCache[symbol]
+                if (reCached != null && System.currentTimeMillis() - reCached.second < CACHE_EXPIRATION_MS) {
+                    return reCached.first
+                }
 
-            val timeSinceLast = System.currentTimeMillis() - lastRequestTime
-            if (timeSinceLast < MIN_DELAY_MS) {
-                delay(MIN_DELAY_MS - timeSinceLast)
-            }
+                val timeSinceLast = System.currentTimeMillis() - lastRequestTime
+                if (timeSinceLast < MIN_DELAY_MS) {
+                    delay(MIN_DELAY_MS - timeSinceLast)
+                }
 
-            try {
                 val response = api.getQuote(symbol, apiKey)
                 lastRequestTime = System.currentTimeMillis()
                 
@@ -490,16 +308,7 @@ class MarketRepository(private val context: Context? = null) {
                         val profileRes = api.getCompanyProfile(symbol, apiKey)
                         if (profileRes.name != null) companyNameMap[symbol] = profileRes.name
                         if (profileRes.finnhubIndustry != null) industryCache[symbol] = profileRes.finnhubIndustry!!
-                    } catch (e: Exception) {
-                        // Fallback to search if profile fails
-                        if (!companyNameMap.containsKey(symbol)) {
-                            try {
-                                val searchRes = api.searchSymbol(symbol, apiKey)
-                                val match = searchRes.result.find { it.symbol == symbol }
-                                if (match != null) companyNameMap[symbol] = match.description
-                            } catch (e2: Exception) {}
-                        }
-                    }
+                    } catch (e: Exception) {}
                 }
 
                 val isCrypto = symbol.startsWith("BINANCE:") || cryptoSymbols.contains(symbol)
@@ -519,14 +328,31 @@ class MarketRepository(private val context: Context? = null) {
                     isForex = isForex,
                     industry = industryCache[symbol]
                 )
+                
+                // Update caches
                 quoteCache[symbol] = stock to System.currentTimeMillis()
+                stockDao.insertStock(stock.toEntity())
+                
                 stock
-            } catch (e: Exception) {
-                recordError(e)
-                cached?.first
             }
+        } catch (e: Exception) {
+            recordError(e)
+            // Offline fallback
+            stockDao.getStock(symbol)?.toDomain() ?: cached?.first
         }
     }
+
+    private fun Stock.toEntity() = StockEntity(
+        symbol = symbol, name = name, price = price, change = change, percentChange = percentChange,
+        high = high, low = low, open = open, prevClose = prevClose, isCrypto = isCrypto,
+        isForex = isForex, industry = industry
+    )
+
+    private fun StockEntity.toDomain() = Stock(
+        symbol = symbol, name = name, price = price, change = change, percentChange = percentChange,
+        high = high, low = low, open = open, prevClose = prevClose, isCrypto = isCrypto,
+        isForex = isForex, industry = industry
+    )
 
     suspend fun getStocksQuotes(symbols: List<String>): List<Stock> = coroutineScope {
         symbols.map { symbol ->
@@ -538,15 +364,11 @@ class MarketRepository(private val context: Context? = null) {
         if (!forceRefresh && globalWatchlistCache != null) {
             return globalWatchlistCache!!
         }
-
         val symbols = getWatchlist().map { it.symbol }
         if (symbols.isEmpty()) return emptyList()
-
         return try {
             val stocks = getStocksQuotes(symbols)
-            if (stocks.isNotEmpty()) {
-                globalWatchlistCache = stocks
-            }
+            if (stocks.isNotEmpty()) globalWatchlistCache = stocks
             globalWatchlistCache ?: emptyList()
         } catch (e: Exception) {
             recordError(e)
@@ -555,25 +377,16 @@ class MarketRepository(private val context: Context? = null) {
     }
 
     suspend fun getPortfolioWithQuotes(forceRefresh: Boolean = false): List<Pair<Stock, Long>> {
-        if (!forceRefresh && globalPortfolioCache != null) {
-            return globalPortfolioCache!!
-        }
-
+        if (!forceRefresh && globalPortfolioCache != null) return globalPortfolioCache!!
         return try {
             val rawPortfolio = getPortfolio()
             if (rawPortfolio.isEmpty()) return emptyList()
-
-            val symbols = rawPortfolio.map { it.first }
-            val stocks = getStocksQuotes(symbols)
-            
+            val stocks = getStocksQuotes(rawPortfolio.map { it.first })
             val portfolioWithQuotes = rawPortfolio.mapNotNull { (symbol, qty) ->
                 val stock = stocks.find { it.symbol == symbol }
                 if (stock != null) stock to qty else null
             }
-            
-            if (portfolioWithQuotes.isNotEmpty()) {
-                globalPortfolioCache = portfolioWithQuotes
-            }
+            if (portfolioWithQuotes.isNotEmpty()) globalPortfolioCache = portfolioWithQuotes
             globalPortfolioCache ?: emptyList()
         } catch (e: Exception) {
             recordError(e)
@@ -585,91 +398,144 @@ class MarketRepository(private val context: Context? = null) {
         val to = Instant.now().epochSecond
         val from = when (period) {
             "1D" -> to - (24 * 3600)
+            "5D" -> to - (5 * 24 * 3600)
             "1W" -> to - (7 * 24 * 3600)
             "1M" -> to - (30 * 24 * 3600)
+            "6M" -> to - (180 * 24 * 3600)
             "1Y" -> to - (365 * 24 * 3600)
+            "5Y" -> to - (5 * 365 * 24 * 3600)
             else -> to - (30 * 24 * 3600)
         }
-        
         val resolution = when (period) {
             "1D" -> "15"
+            "5D" -> "60"
             "1W" -> "60"
             "1M" -> "D"
+            "6M" -> "D"
             "1Y" -> "W"
+            "5Y" -> "M"
             else -> "D"
         }
 
+        val isCrypto = symbol.startsWith("BINANCE:") || cryptoSymbols.contains(symbol)
+        val isForex = symbol.startsWith("OANDA:") || forexSymbols.contains(symbol)
+
         return try {
-            val response = api.getStockCandles(symbol, resolution, from, to, apiKey)
-            if (response.s == "ok" && response.c != null && response.t != null) {
-                response.t.zip(response.c).map { StockPricePoint(it.first, it.second) }
-            } else {
-                val quote = getStockQuote(symbol)
-                if (quote != null) {
-                    val simulatedQuote = FinnhubQuoteResponse(
-                        c = quote.price, 
-                        d = quote.change, 
-                        dp = quote.percentChange,
-                        h = quote.high, 
-                        l = quote.low, 
-                        o = quote.open, 
-                        pc = quote.prevClose
+            val response = when {
+                isCrypto -> api.getCryptoCandles(symbol, resolution, from, to, apiKey)
+                isForex -> api.getForexCandles(symbol, resolution, from, to, apiKey)
+                else -> api.getStockCandles(symbol, resolution, from, to, apiKey)
+            }
+            if (response.s == "ok" && !response.c.isNullOrEmpty() && !response.t.isNullOrEmpty()) {
+                response.t.indices.map { i ->
+                    StockPricePoint(
+                        timestamp = response.t[i],
+                        price = response.c[i],
+                        open = response.o?.getOrNull(i) ?: response.c[i],
+                        high = response.h?.getOrNull(i) ?: response.c[i],
+                        low = response.l?.getOrNull(i) ?: response.c[i],
+                        volume = response.v?.getOrNull(i) ?: 0L
                     )
-                    generateSimulatedPoints(simulatedQuote, to, period)
-                } else emptyList()
+                }
+            } else {
+                // Fallback to simulation if no data or status not ok
+                getStockQuote(symbol)?.let { generateSimulatedPoints(FinnhubQuoteResponse(it.price, it.change, it.percentChange, it.high, it.low, it.open, it.prevClose), to, period) } ?: emptyList()
             }
         } catch (e: Exception) {
-            try {
-                val quote = getStockQuote(symbol)
-                if (quote != null) {
-                    val simulatedQuote = FinnhubQuoteResponse(
-                        c = quote.price, 
-                        d = quote.change, 
-                        dp = quote.percentChange,
-                        h = quote.high, 
-                        l = quote.low, 
-                        o = quote.open, 
-                        pc = quote.prevClose
-                    )
-                    generateSimulatedPoints(simulatedQuote, to, period)
-                } else emptyList()
-            } catch (innerEx: Exception) {
-                recordError(innerEx)
-                emptyList()
-            }
+            recordError(e)
+            // Fallback to simulation on network error
+            getStockQuote(symbol)?.let { generateSimulatedPoints(FinnhubQuoteResponse(it.price, it.change, it.percentChange, it.high, it.low, it.open, it.prevClose), to, period) } ?: emptyList()
         }
     }
 
     private fun generateSimulatedPoints(quote: FinnhubQuoteResponse, endTime: Long, period: String): List<StockPricePoint> {
         val points = mutableListOf<StockPricePoint>()
-        val startPrice = quote.o
-        val endPrice = quote.c
-        val high = quote.h
-        val low = quote.l
         
-        val intervalSeconds = when(period) {
-            "1D" -> 3600L
-            "1W" -> 3600L * 12
-            "1M" -> 3600L * 24 * 2
-            "1Y" -> 3600L * 24 * 30
-            else -> 3600L
+        // Use available quote data for variance
+        val high = if (quote.h > 0) quote.h else quote.c * 1.05
+        val low = if (quote.l > 0) quote.l else quote.c * 0.95
+        val open = if (quote.o > 0) quote.o else quote.pc.takeIf { it > 0 } ?: (quote.c * 0.98)
+        val close = quote.c
+        
+        val steps = when(period) {
+            "1D" -> 24 // Hourly points for 1 day
+            "1W" -> 14 // Twice daily for a week
+            "1M" -> 30 // Daily for a month
+            else -> 20
         }
-        
-        val steps = 15
-        for (i in 0..steps) {
-            val timestamp = endTime - ((steps - i) * intervalSeconds)
-            val noise = (sin(i.toDouble() * 1.5) * (high - low) * 0.15)
+
+        val intervalSeconds = when(period) { 
+            "1D" -> 3600L 
+            "1W" -> 3600L * 12 
+            "1M" -> 3600L * 24 * 2 
+            "1Y" -> 3600L * 24 * 30 
+            else -> 3600L 
+        }
+
+        val random = Random(endTime + (close * 100).toLong()) // Seeded random for consistency
+
+        if (period == "1D") {
+            // For 1D charts, strictly follow Open -> (High/Low) -> Close path to touch all key stats
+            val isHighFirst = random.nextBoolean()
+            val step1 = steps / 3
+            val step2 = 2 * steps / 3
             
-            val basePrice = when {
-                i == 0 -> startPrice
-                i == steps -> endPrice
-                i < steps / 3 -> startPrice + (low - startPrice) * (i / (steps / 3.0))
-                i < (steps * 2) / 3 -> low + (high - low) * ((i - (steps / 3.0)) / (steps / 3.0))
-                else -> high + (endPrice - high) * ((i - ((steps * 2) / 3.0)) / (steps / 3.0))
+            val keySteps = listOf(0, step1, step2, steps)
+            val keyPrices = if (isHighFirst) listOf(open, high, low, close) else listOf(open, low, high, close)
+
+            for (i in 0 until 3) {
+                val sStart = keySteps[i]
+                val sEnd = keySteps[i+1]
+                val pStart = keyPrices[i]
+                val pEnd = keyPrices[i+1]
+                
+                for (step in sStart until sEnd) {
+                    val progress = (step - sStart).toDouble() / (sEnd - sStart)
+                    val trend = pStart + (pEnd - pStart) * progress
+                    // Add some jitter but keep within daily bounds
+                    val noise = (random.nextDouble() - 0.5) * (high - low) * 0.15
+                    val price = (trend + noise).coerceIn(low, high)
+                    
+                    points.add(StockPricePoint(
+                        timestamp = endTime - ((steps - step) * intervalSeconds),
+                        price = price,
+                        open = price * (1 + (random.nextDouble() - 0.5) * 0.002),
+                        high = price * (1 + random.nextDouble() * 0.002),
+                        low = price * (1 - random.nextDouble() * 0.002),
+                        volume = (1000..50000).random().toLong()
+                    ))
+                }
             }
-            
-            points.add(StockPricePoint(timestamp, basePrice + noise))
+            // Add final point exactly at current price
+            points.add(StockPricePoint(
+                timestamp = endTime,
+                price = close,
+                open = close,
+                high = close,
+                low = close,
+                volume = (1000..50000).random().toLong()
+            ))
+        } else {
+            // For other periods, use a trend-based simulation from "open" to current price
+            val startPrice = if (open > 0) open else close * (0.95 + random.nextDouble() * 0.1)
+            for (i in 0..steps) {
+                val timestamp = endTime - ((steps - i) * intervalSeconds)
+                val progress = i.toDouble() / steps
+                val trend = startPrice + (close - startPrice) * progress
+                val noise = (random.nextDouble() - 0.5) * close * 0.05
+                val price = (trend + noise).coerceAtLeast(0.01)
+                
+                points.add(StockPricePoint(
+                    timestamp = timestamp,
+                    price = if (i == steps) close else price,
+                    open = price * (1 + (random.nextDouble() - 0.5) * 0.005),
+                    high = price * (1 + random.nextDouble() * 0.005),
+                    low = price * (1 - random.nextDouble() * 0.005),
+                    volume = (1000..50000).random().toLong()
+                ))
+            }
         }
+
         return points
     }
 
@@ -679,8 +545,7 @@ class MarketRepository(private val context: Context? = null) {
             val calendar = Calendar.getInstance()
             val today = sdf.format(calendar.time)
             calendar.add(Calendar.DAY_OF_YEAR, -7)
-            val weekAgo = sdf.format(calendar.time)
-            api.getCompanyNews(symbol, weekAgo, today, apiKey).take(5)
+            api.getCompanyNews(symbol, sdf.format(calendar.time), today, apiKey).take(5)
         } catch (e: Exception) {
             recordError(e)
             emptyList()
@@ -690,32 +555,19 @@ class MarketRepository(private val context: Context? = null) {
     suspend fun searchStocks(query: String, filter: AssetFilter = AssetFilter.STOCKS): List<Stock> = coroutineScope {
         try {
             val response = api.searchSymbol(query, apiKey)
-            
-            val filteredResults = response.result
-                .filter { result ->
-                    when (filter) {
-                        AssetFilter.STOCKS -> {
-                            val isStock = result.type == "Common Stock" || result.type == "ADR" || result.type == "ETF"
-                            val isNasdaq = result.symbol.all { it.isLetter() }
-                            isStock && isNasdaq
-                        }
-                        AssetFilter.CRYPTO -> {
-                            result.symbol.startsWith("BINANCE:") || cryptoSymbols.contains(result.symbol)
-                        }
-                        AssetFilter.FOREX -> {
-                            result.symbol.startsWith("OANDA:") || forexSymbols.contains(result.symbol)
-                        }
-                        AssetFilter.OTHERS -> true
-                    }
+            val filteredResults = response.result.filter { result ->
+                when (filter) {
+                    AssetFilter.STOCKS -> (result.type == "Common Stock" || result.type == "ADR" || result.type == "ETF") && result.symbol.all { it.isLetter() }
+                    AssetFilter.CRYPTO -> result.symbol.startsWith("BINANCE:") || cryptoSymbols.contains(result.symbol)
+                    AssetFilter.FOREX -> result.symbol.startsWith("OANDA:") || forexSymbols.contains(result.symbol)
+                    AssetFilter.OTHERS -> true
                 }
-                .take(10)
-
+            }.take(10)
             filteredResults.map { result ->
                 companyNameMap[result.symbol] = result.description
-                val isCrypto = result.symbol.startsWith("BINANCE:") || cryptoSymbols.contains(result.symbol)
-                val isForex = result.symbol.startsWith("OANDA:") || forexSymbols.contains(result.symbol)
-                
                 getStockQuote(result.symbol)?.let { quote ->
+                    val isCrypto = result.symbol.startsWith("BINANCE:") || cryptoSymbols.contains(result.symbol)
+                    val isForex = result.symbol.startsWith("OANDA:") || forexSymbols.contains(result.symbol)
                     Stock(
                         symbol = result.symbol,
                         name = result.description,
@@ -727,7 +579,8 @@ class MarketRepository(private val context: Context? = null) {
                         open = quote.open,
                         prevClose = quote.prevClose,
                         isCrypto = isCrypto,
-                        isForex = isForex
+                        isForex = isForex,
+                        industry = industryCache[result.symbol]
                     )
                 }
             }.filterNotNull()
@@ -740,9 +593,7 @@ class MarketRepository(private val context: Context? = null) {
     suspend fun getWatchlist(): List<WatchlistItem> {
         val userId = auth.currentUser?.uid ?: return emptyList()
         return try {
-            val snapshot = firestore.collection("users").document(userId)
-                .collection("watchlist").get().await()
-            snapshot.documents.map { WatchlistItem(it.getString("symbol") ?: "") }
+            firestore.collection("users").document(userId).collection("watchlist").get().await().documents.map { WatchlistItem(it.getString("symbol") ?: "") }
         } catch (e: Exception) {
             recordError(e)
             emptyList()
@@ -752,13 +603,8 @@ class MarketRepository(private val context: Context? = null) {
     suspend fun addToWatchlist(symbol: String): Result<Unit> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
-            firestore.collection("users").document(userId)
-                .collection("watchlist").document(symbol)
-                .set(mapOf("symbol" to symbol)).await()
-            
-            val bundle = Bundle().apply { putString(FirebaseAnalytics.Param.ITEM_ID, symbol) }
-            analytics.logEvent(FirebaseAnalytics.Event.ADD_TO_WISHLIST, bundle)
-            
+            firestore.collection("users").document(userId).collection("watchlist").document(symbol).set(mapOf("symbol" to symbol)).await()
+            analytics.logEvent(FirebaseAnalytics.Event.ADD_TO_WISHLIST, Bundle().apply { putString(FirebaseAnalytics.Param.ITEM_ID, symbol) })
             Result.success(Unit)
         } catch (e: Exception) {
             recordError(e)
@@ -769,9 +615,7 @@ class MarketRepository(private val context: Context? = null) {
     suspend fun removeFromWatchlist(symbol: String): Result<Unit> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
-            firestore.collection("users").document(userId)
-                .collection("watchlist").document(symbol)
-                .delete().await()
+            firestore.collection("users").document(userId).collection("watchlist").document(symbol).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             recordError(e)
@@ -779,285 +623,249 @@ class MarketRepository(private val context: Context? = null) {
         }
     }
 
-    suspend fun buyStock(symbol: String, quantity: Int, pricePerShare: Double): Result<Double> {
-        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
-        val totalCost = quantity * pricePerShare
+    suspend fun createTradeContract(contract: TradeContract): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            val docRef = firestore.collection("users").document(userId).collection("contracts").document()
+            val contractWithId = contract.copy(id = docRef.id, userId = userId)
+            docRef.set(contractWithId).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            recordError(e)
+            Result.failure(e)
+        }
+    }
 
+    fun getTradeContracts(statuses: List<ContractStatus>): Flow<List<TradeContract>> = callbackFlow {
+        val userId = auth.currentUser?.uid ?: run {
+            trySend(emptyList())
+            return@callbackFlow
+        }
+        val statusStrings = statuses.map { it.name }
+        if (statusStrings.isEmpty()) {
+            trySend(emptyList())
+            return@callbackFlow
+        }
+        
+        val listener = firestore.collection("users").document(userId).collection("contracts")
+            .whereIn("status", statusStrings)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        trySend(emptyList())
+                    } else {
+                        recordError(error)
+                        close(error)
+                    }
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val contracts = snapshot.toObjects(TradeContract::class.java)
+                        .sortedByDescending { it.createdAt }
+                    trySend(contracts)
+                }
+            }
+        awaitClose { listener.remove() }
+    }
+
+    fun getTradeContracts(status: ContractStatus = ContractStatus.PENDING): Flow<List<TradeContract>> = 
+        getTradeContracts(listOf(status))
+
+    suspend fun getPendingTradeContractsForCurrentUser(): List<TradeContract> {
+        val userId = auth.currentUser?.uid ?: return emptyList()
+        return try {
+            val snapshot = firestore.collection("users").document(userId).collection("contracts")
+                .whereEqualTo("status", ContractStatus.PENDING.name)
+                .get().await()
+            snapshot.toObjects(TradeContract::class.java)
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun updateTradeContract(contract: TradeContract): Result<Unit> {
+        return try {
+            firestore.collection("users").document(contract.userId).collection("contracts").document(contract.id)
+                .set(contract).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            recordError(e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun cancelTradeContract(contractId: String): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            firestore.collection("users").document(userId).collection("contracts").document(contractId)
+                .update("status", ContractStatus.CANCELLED.name).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            recordError(e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun buyStock(symbol: String, quantity: Int, pricePerShare: Double, userId: String? = null): Result<Double> {
+        val targetUserId = userId ?: auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        val totalCost = quantity * pricePerShare
         return try {
             var newBalance = 0.0
-            val userRef = firestore.collection("users").document(userId)
+            val userRef = firestore.collection("users").document(targetUserId)
             val portfolioRef = userRef.collection("portfolio").document(symbol)
-            
             firestore.runTransaction { transaction ->
-                val userSnapshot = transaction.get(userRef)
-                val portfolioDoc = transaction.get(portfolioRef)
-                
-                val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
-
+                val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
                 if (currentBalance >= totalCost) {
                     newBalance = currentBalance - totalCost
                     transaction.update(userRef, "balance", newBalance)
-                    
-                    if (portfolioDoc.exists()) {
-                        val currentQty = portfolioDoc.getLong("quantity") ?: 0L
-                        transaction.update(portfolioRef, "quantity", currentQty + quantity)
-                    } else {
-                        transaction.set(portfolioRef, mapOf("quantity" to quantity.toLong(), "symbol" to symbol))
-                    }
+                    val portfolioDoc = transaction.get(portfolioRef)
+                    if (portfolioDoc.exists()) transaction.update(portfolioRef, "quantity", (portfolioDoc.getLong("quantity") ?: 0L) + quantity)
+                    else transaction.set(portfolioRef, mapOf("quantity" to quantity.toLong(), "symbol" to symbol))
                     null
-                } else {
-                    throw Exception("Insufficient balance")
-                }
+                } else throw Exception("Insufficient balance")
             }.await()
-            
-            val bundle = Bundle().apply {
-                putString(FirebaseAnalytics.Param.CURRENCY, "USD")
-                putDouble(FirebaseAnalytics.Param.VALUE, totalCost)
-                putString(FirebaseAnalytics.Param.TRANSACTION_ID, symbol)
-            }
-            analytics.logEvent(FirebaseAnalytics.Event.PURCHASE, bundle)
-            
+            analytics.logEvent(FirebaseAnalytics.Event.PURCHASE, Bundle().apply { putString(FirebaseAnalytics.Param.CURRENCY, "USD"); putDouble(FirebaseAnalytics.Param.VALUE, totalCost); putString(FirebaseAnalytics.Param.TRANSACTION_ID, symbol) })
             globalPortfolioCache = null
-            
             Result.success(newBalance)
         } catch (e: Exception) {
-            if (e.message == "Insufficient balance") {
-                Result.failure(e)
-            } else {
-                recordError(e)
-                Result.failure(e)
-            }
+            recordError(e); Result.failure(e)
         }
     }
 
-    suspend fun sellStock(symbol: String, quantity: Int, pricePerShare: Double): Result<Unit> {
-        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+    suspend fun sellStock(symbol: String, quantity: Int, pricePerShare: Double, userId: String? = null): Result<Unit> {
+        val targetUserId = userId ?: auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
         val totalGain = quantity * pricePerShare
-
         return try {
-            val userRef = firestore.collection("users").document(userId)
+            val userRef = firestore.collection("users").document(targetUserId)
             val portfolioRef = userRef.collection("portfolio").document(symbol)
-
             firestore.runTransaction { transaction ->
-                val portfolioDoc = transaction.get(portfolioRef)
-                val userSnapshot = transaction.get(userRef)
-                
-                val currentQty = portfolioDoc.getLong("quantity") ?: 0L
-
+                val currentQty = transaction.get(portfolioRef).getLong("quantity") ?: 0L
                 if (currentQty >= quantity) {
-                    val currentBalance = userSnapshot.getDouble("balance") ?: 0.0
+                    val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
                     transaction.update(userRef, "balance", currentBalance + totalGain)
-                    
                     transaction.update(portfolioRef, "quantity", currentQty - quantity)
                     null
-                } else {
-                    throw Exception("Insufficient quantity")
-                }
+                } else throw Exception("Insufficient quantity")
             }.await()
-            
             globalPortfolioCache = null
-
             Result.success(Unit)
         } catch (e: Exception) {
-            recordError(e)
-            Result.failure(e)
+            recordError(e); Result.failure(e)
         }
     }
 
     fun getUserBalance(): Flow<Double> = flow {
         val userId = auth.currentUser?.uid ?: return@flow
         while(true) {
-            try {
-                val snapshot = firestore.collection("users").document(userId).get().await()
-                emit(snapshot.getDouble("balance") ?: 0.0)
-            } catch (e: Exception) {
-                recordError(e)
-                emit(0.0)
-            }
-            kotlinx.coroutines.delay(5000)
+            val snapshot = firestore.collection("users").document(userId).get().await()
+            val balance = snapshot.getDouble("balance") ?: 0.0
+            emit(balance)
+            delay(5000)
         }
+    }.catch { e ->
+        if (e is Exception) recordError(e)
+        emit(0.0)
     }
 
     suspend fun syncTotalAccountValue(value: Double): Result<Unit> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
-            firestore.collection("users").document(userId)
-                .update(
-                    mapOf(
-                        "totalAccountValue" to value,
-                        "lastSync" to FieldValue.serverTimestamp()
-                    )
-                ).await()
+            firestore.collection("users").document(userId).update(mapOf("totalAccountValue" to value, "lastSync" to FieldValue.serverTimestamp())).await()
+            saveAccountValueHistory(userId, value)
             Result.success(Unit)
+        } catch (e: Exception) { recordError(e); Result.failure(e) }
+    }
+
+    suspend fun saveAccountValueHistory(userId: String, value: Double) {
+        try {
+            val historyRef = firestore.collection("users").document(userId).collection("account_history")
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            
+            historyRef.document(today).set(
+                mapOf(
+                    "value" to value,
+                    "timestamp" to FieldValue.serverTimestamp()
+                )
+            ).await()
         } catch (e: Exception) {
             recordError(e)
-            Result.failure(e)
         }
     }
+
+    fun getAccountValueHistory(): Flow<List<Pair<Long, Double>>> = flow {
+        val userId = auth.currentUser?.uid ?: return@flow
+        val snapshot = firestore.collection("users").document(userId)
+            .collection("account_history")
+            .orderBy("timestamp")
+            .get().await()
+        
+        val history = snapshot.documents.mapNotNull { doc ->
+            val value = doc.getDouble("value") ?: return@mapNotNull null
+            val timestamp = doc.getTimestamp("timestamp")?.toDate()?.time ?: return@mapNotNull null
+            timestamp to value
+        }
+        emit(history)
+    }.catch { e ->
+        if (e is Exception) recordError(e)
+        emit(emptyList())
+    }
+
+    fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     suspend fun getPortfolio(): List<Pair<String, Long>> {
         val userId = auth.currentUser?.uid ?: return emptyList()
         return try {
-            val snapshot = firestore.collection("users").document(userId).collection("portfolio").get().await()
-            snapshot.documents.map { 
-                it.getString("symbol").orEmpty() to (it.getLong("quantity") ?: 0L)
-            }
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
+            firestore.collection("users").document(userId).collection("portfolio").get().await().documents.map { it.getString("symbol").orEmpty() to (it.getLong("quantity") ?: 0L) }
+        } catch (e: Exception) { recordError(e); emptyList() }
     }
 
-    suspend fun getCompanyProfile(symbol: String): FinnhubProfileResponse? {
-        return try {
-            api.getCompanyProfile(symbol, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
-    }
-
-    suspend fun getBasicFinancials(symbol: String): FinnhubFinancialsResponse? {
-        return try {
-            api.getBasicFinancials(symbol, "all", apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
-    }
-
-    suspend fun getMarketNews(): List<FinnhubNewsArticle> {
-        return try {
-            api.getMarketNews("general", apiKey).take(10)
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
-    }
-
-    suspend fun getRecommendations(symbol: String): List<FinnhubRecommendationResponse> {
-        return try {
-            api.getRecommendations(symbol, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
-    }
-
-    suspend fun getPeers(symbol: String): List<String> {
-        return try {
-            api.getPeers(symbol, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
-    }
+    suspend fun getCompanyProfile(symbol: String): FinnhubProfileResponse? = try { api.getCompanyProfile(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
+    suspend fun getBasicFinancials(symbol: String): FinnhubFinancialsResponse? = try { api.getBasicFinancials(symbol, "all", apiKey) } catch (e: Exception) { recordError(e); null }
+    suspend fun getMarketNews(): List<FinnhubNewsArticle> = try { api.getMarketNews("general", apiKey).take(10) } catch (e: Exception) { recordError(e); emptyList() }
+    suspend fun getRecommendations(symbol: String): List<FinnhubRecommendationResponse> = try { api.getRecommendations(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
+    suspend fun getPeers(symbol: String): List<String> = try { api.getPeers(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
 
     suspend fun getEarningsCalendar(symbol: String): FinnhubEarningsCalendarResponse? {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-        val today = sdf.format(calendar.time)
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); val calendar = Calendar.getInstance(); val today = sdf.format(calendar.time)
         calendar.add(Calendar.MONTH, 6)
-        val sixMonthsLater = sdf.format(calendar.time)
-        return try {
-            api.getEarningsCalendar(symbol, today, sixMonthsLater, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
+        return try { api.getEarningsCalendar(symbol, today, sdf.format(calendar.time), apiKey) } catch (e: Exception) { recordError(e); null }
     }
 
     suspend fun getTechnicalIndicator(symbol: String, indicator: String, timeperiod: Int? = null): FinnhubIndicatorResponse? {
         val to = Instant.now().epochSecond
-        val from = to - (365 * 24 * 3600) // Need 1 year for 200-day SMA
-        return try {
-            api.getTechnicalIndicator(symbol, "D", from, to, indicator, apiKey, timeperiod)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
+        return try { api.getTechnicalIndicator(symbol, "D", to - (365 * 24 * 3600), to, indicator, apiKey, timeperiod) } catch (e: Exception) { recordError(e); null }
     }
 
     suspend fun getDividends(symbol: String): List<FinnhubDividendResponse> {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-        val today = sdf.format(calendar.time)
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); val calendar = Calendar.getInstance(); val today = sdf.format(calendar.time)
         calendar.add(Calendar.YEAR, -1)
-        val yearAgo = sdf.format(calendar.time)
-        return try {
-            api.getDividends(symbol, yearAgo, today, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
+        return try { api.getDividends(symbol, sdf.format(calendar.time), today, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
     }
 
     suspend fun getIpoCalendar(): List<FinnhubIpoEntry> {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-        val today = sdf.format(calendar.time)
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); val calendar = Calendar.getInstance(); val today = sdf.format(calendar.time)
         calendar.add(Calendar.MONTH, 1)
-        val monthAhead = sdf.format(calendar.time)
-        return try {
-            api.getIpoCalendar(today, monthAhead, apiKey).ipoCalendar
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
+        return try { api.getIpoCalendar(today, sdf.format(calendar.time), apiKey).ipoCalendar } catch (e: Exception) { recordError(e); emptyList() }
     }
 
-    suspend fun getNewsSentiment(symbol: String): FinnhubNewsSentimentResponse? {
-        return try {
-            api.getNewsSentiment(symbol, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
+    suspend fun getNewsSentiment(symbol: String): FinnhubNewsSentimentResponse? = try { api.getNewsSentiment(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
+    suspend fun getForexRates(base: String = "USD"): FinnhubForexRatesResponse? = try { api.getForexRates(base, apiKey) } catch (e: Exception) { recordError(e); null }
+    suspend fun getMarketStatus(exchange: String = "US"): FinnhubMarketStatusResponse? = try { api.getMarketStatus(exchange, apiKey) } catch (e: Exception) { recordError(e); null }
+    suspend fun getEsgScores(symbol: String): FinnhubEsgResponse? = try { api.getEsgScores(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
+    suspend fun getPriceTarget(symbol: String): FinnhubPriceTargetResponse? = try { api.getPriceTarget(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
+    suspend fun getEarningsSurprises(symbol: String): List<FinnhubEarningsSurpriseResponse> = try { api.getEarningsSurprises(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
+
+    fun getPriceAlerts(symbol: String): Flow<List<PriceAlertEntity>> {
+        return stockDao.getAlertsForStock(symbol)
     }
 
-    suspend fun getForexRates(base: String = "USD"): FinnhubForexRatesResponse? {
-        return try {
-            api.getForexRates(base, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
+    suspend fun addPriceAlert(alert: PriceAlertEntity) {
+        stockDao.insertPriceAlert(alert)
     }
 
-    suspend fun getMarketStatus(exchange: String = "US"): FinnhubMarketStatusResponse? {
-        return try {
-            api.getMarketStatus(exchange, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
-    }
-
-    suspend fun getEsgScores(symbol: String): FinnhubEsgResponse? {
-        return try {
-            api.getEsgScores(symbol, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
-    }
-
-    suspend fun getPriceTarget(symbol: String): FinnhubPriceTargetResponse? {
-        return try {
-            api.getPriceTarget(symbol, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            null
-        }
-    }
-
-    suspend fun getEarningsSurprises(symbol: String): List<FinnhubEarningsSurpriseResponse> {
-        return try {
-            api.getEarningsSurprises(symbol, apiKey)
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
+    suspend fun deletePriceAlert(alert: PriceAlertEntity) {
+        stockDao.deletePriceAlert(alert)
     }
 
     fun analyzeStock(
@@ -1067,88 +875,73 @@ class MarketRepository(private val context: Context? = null) {
         rsi: Double?,
         sma50: Double?,
         sma200: Double?,
-        sentiment: Double?,
-        analystRecs: FinnhubRecommendationResponse?
+        sentiment: FinnhubNewsSentimentResponse?,
+        analystRecs: FinnhubRecommendationResponse?,
+        news: List<FinnhubNewsArticle>
     ): AIRecommendation {
-        var score = 0
         val reasons = mutableListOf<String>()
-
-        // 1. Technical Indicators (Often null on free tier)
-        rsi?.let {
-            if (it < 30) { score += 3; reasons.add("RSI indicates oversold conditions") }
-            else if (it < 40) { score += 1; reasons.add("RSI is leaning towards oversold") }
-            else if (it > 70) { score -= 3; reasons.add("RSI indicates overbought conditions") }
-            else if (it > 60) { score -= 1; reasons.add("RSI is leaning towards overbought") }
-        }
-
-        if (sma50 != null && sma200 != null) {
-            if (sma50 > sma200) { score += 2; reasons.add("Bullish trend (SMA 50 > 200)") }
-            else { score -= 2; reasons.add("Bearish trend (SMA 50 < 200)") }
-        }
-
-        // 2. Price Performance (Free Tier - Very reliable)
-        if (stock.percentChange > 3.5) { 
-            score += 1
-            reasons.add("Strong positive price momentum (+${String.format("%.1f", stock.percentChange)}%)") 
-        } else if (stock.percentChange < -3.5) { 
-            score -= 1
-            reasons.add("Strong negative price momentum (${String.format("%.1f", stock.percentChange)}%)") 
-        }
-
-        // 3. 52-Week Range (Free Tier - BASIC_FINANCIALS)
-        financials?.metric?.let { metrics ->
-            val high52 = (metrics["52WeekHigh"] as? Number)?.toDouble()
-            val low52 = (metrics["52WeekLow"] as? Number)?.toDouble()
-            if (high52 != null && low52 != null && high52 > low52) {
-                val position = (stock.price - low52) / (high52 - low52)
-                if (position < 0.15) { score += 2; reasons.add("Trading near 52-week low (Value potential)") }
-                else if (position > 0.85) { score -= 1; reasons.add("Trading near 52-week high") }
-            }
-        }
-
-        // 4. Price Target (Free Tier)
+        var confidence = 50
+        
+        // Price vs Target
         priceTarget?.targetMean?.let { target ->
-            val upside = (target - stock.price) / stock.price
-            if (upside > 0.15) { 
-                score += 2
-                reasons.add("Significant upside potential to analyst target (+${String.format("%.0f", upside * 100)}%)") 
-            } else if (upside < -0.1) { 
-                score -= 2
-                reasons.add("Trading above analyst mean target price") 
+            if (stock.price < target) {
+                reasons.add("Trading below analyst mean target of $${String.format(Locale.US, "%.2f", target)}.")
+                confidence += 10
+            } else {
+                reasons.add("Trading above analyst mean target of $${String.format(Locale.US, "%.2f", target)}.")
+                confidence -= 10
             }
         }
 
-        // 5. Analyst Recommendations (Free Tier)
-        analystRecs?.let {
-            val total = it.buy + it.strongBuy + it.hold + it.sell + it.strongSell
-            if (total > 5) { // Ensure enough analysts for weight
-                val buySide = (it.buy + it.strongBuy).toDouble() / total
-                val sellSide = (it.sell + it.strongSell).toDouble() / total
-                if (buySide > 0.6) { score += 2; reasons.add("Strong analyst buy consensus.") }
-                else if (sellSide > 0.35) { score -= 2; reasons.add("Notable analyst sell consensus.") }
+        // RSI
+        rsi?.let {
+            if (it > 70) {
+                reasons.add("RSI is at ${String.format(Locale.US, "%.1f", it)}, indicating overbought conditions.")
+                confidence -= 15
+            } else if (it < 30) {
+                reasons.add("RSI is at ${String.format(Locale.US, "%.1f", it)}, indicating oversold conditions.")
+                confidence += 15
+            } else {
+                reasons.add("RSI is at ${String.format(Locale.US, "%.1f", it)}, which is in a neutral range.")
             }
         }
 
-        // 6. News Sentiment (Often null on free tier)
-        sentiment?.let {
-            if (it > 65) { score += 1; reasons.add("News sentiment is predominantly bullish.") }
-            else if (it < 35) { score -= 1; reasons.add("News sentiment is predominantly bearish.") }
+        // SMA
+        if (sma50 != null && sma200 != null) {
+            if (sma50 > sma200) {
+                reasons.add("Golden cross detected: 50-day SMA is above 200-day SMA.")
+                confidence += 10
+            } else {
+                reasons.add("Death cross detected: 50-day SMA is below 200-day SMA.")
+                confidence -= 10
+            }
+        }
+
+        // Valuation
+        val metrics = financials?.metric
+        val pe = metrics?.get("peBasicExclExtraTTM") as? Double
+        if (pe != null) {
+            if (pe > 25) {
+                reasons.add("P/E Ratio of ${String.format(Locale.US, "%.1f", pe)} suggests high valuation.")
+                confidence -= 5
+            } else if (pe < 15) {
+                reasons.add("P/E Ratio of ${String.format(Locale.US, "%.1f", pe)} suggests potential undervaluation.")
+                confidence += 5
+            }
         }
 
         val advice = when {
-            score >= 3 -> "BUY"
-            score <= -3 -> "SELL"
-            else -> "HOLD"
+            confidence >= 70 -> "Strong Buy"
+            confidence >= 60 -> "Buy"
+            confidence <= 30 -> "Strong Sell"
+            confidence <= 40 -> "Sell"
+            else -> "Hold"
         }
 
-        // More granular confidence calculation to avoid fixed values
-        val baseConfidence = 45
-        val variance = (Random().nextInt(11) - 5) // Add slight noise for "AI feel"
-        val scoreImpact = (kotlin.math.abs(score) * 12)
-        val confidence = (baseConfidence + scoreImpact + variance).coerceIn(25, 98)
-        
-        if (reasons.isEmpty()) reasons.add("Market technical indicators are currently neutral.")
-
-        return AIRecommendation(advice, confidence, reasons.take(4))
+        return AIRecommendation(
+            advice = advice,
+            confidence = confidence.coerceIn(0, 100),
+            reasons = if (reasons.isEmpty()) listOf("Insufficient data for detailed analysis.") else reasons
+        )
     }
 }

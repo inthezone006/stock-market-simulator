@@ -26,7 +26,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -87,6 +89,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 }
             } catch (e: Exception) {
                 Log.e("Leaderboard", "Query failed, falling back to local filter", e)
+                com.google.firebase.Firebase.crashlytics.recordException(e)
                 
                 // Fallback: Fetch all users and filter locally if the index isn't ready
                 try {
@@ -111,6 +114,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
                         allUsers.filter { it.level == selectedLevelFilter }
                     }
                 } catch (fallbackEx: Exception) {
+                    com.google.firebase.Firebase.crashlytics.recordException(fallbackEx)
                     leaders = emptyList()
                     errorMessage = "Leaderboard currently unavailable."
                 }

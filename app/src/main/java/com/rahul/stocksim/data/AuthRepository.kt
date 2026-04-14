@@ -49,6 +49,7 @@ class AuthRepository {
             Log.d("AUTH_REPO", "FCM Token saved successfully")
         } catch (e: Exception) {
             Log.e("AUTH_REPO", "Error saving FCM Token", e)
+            crashlytics.recordException(e)
         }
     }
 
@@ -57,8 +58,6 @@ class AuthRepository {
         
         user?.let {
             crashlytics.setUserId(it.uid)
-            crashlytics.setCustomKey("user_email", it.email ?: "anonymous")
-            crashlytics.setCustomKey("user_name", it.displayName ?: "anonymous")
         }
 
         bundle.apply {
@@ -130,6 +129,7 @@ class AuthRepository {
             }
             Result.success(isNewUser)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -139,6 +139,7 @@ class AuthRepository {
             val result = auth.fetchSignInMethodsForEmail(email).await()
             result.signInMethods?.isNotEmpty() == true
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             false
         }
     }
@@ -149,6 +150,7 @@ class AuthRepository {
             logEventWithUser("send_email_verification")
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -165,6 +167,7 @@ class AuthRepository {
             })
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -176,6 +179,7 @@ class AuthRepository {
             logEventWithUser("update_password")
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -197,6 +201,7 @@ class AuthRepository {
             user.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -215,6 +220,7 @@ class AuthRepository {
             user.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -247,6 +253,7 @@ class AuthRepository {
 
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -257,6 +264,7 @@ class AuthRepository {
             val snapshot = firestore.collection("users").document(user.uid).get().await()
             snapshot.getBoolean("tutorialCompleted") ?: false
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             false
         }
     }
@@ -269,6 +277,7 @@ class AuthRepository {
             logEventWithUser("complete_tutorial")
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }
@@ -286,6 +295,7 @@ class AuthRepository {
                 notifyNewSignIn = data["notif_new_signin"] as? Boolean ?: true
             )
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             NotificationSettings()
         }
     }
@@ -304,6 +314,7 @@ class AuthRepository {
             logEventWithUser("update_notification_settings")
             Result.success(Unit)
         } catch (e: Exception) {
+            crashlytics.recordException(e)
             Result.failure(e)
         }
     }

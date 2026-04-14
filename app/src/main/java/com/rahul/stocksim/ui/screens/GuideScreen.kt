@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -117,7 +118,7 @@ fun GuideScreen(navController: NavController) {
             item {
                 GuideSection(
                     title = "Moving Averages (SMA)",
-                    icon = Icons.Default.TrendingUp,
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
                     content = "Identifying long-term trends using 50-day and 200-day averages.",
                     detailedContent = "The SMA (Simple Moving Average) smooths out price spikes. A 'Bullish Cross' occurs when the short-term 50-day average moves above the long-term 200-day average, suggesting a strong upward trend. The opposite is a 'Bearish Cross'."
                 )
@@ -129,6 +130,24 @@ fun GuideScreen(navController: NavController) {
                     icon = Icons.Default.Eco,
                     content = "Invest ethically by checking a company's ESG scores.",
                     detailedContent = "ESG stands for Environmental, Social, and Governance. It measures a company's impact on the planet and its ethical standards. Higher scores suggest the company is well-managed and prepared for a sustainable future."
+                )
+            }
+
+            item {
+                GuideSection(
+                    title = "Trade Contracts & Limit Orders",
+                    icon = Icons.Default.Description,
+                    content = "Automate your strategy with price-triggered buy and sell orders.",
+                    detailedContent = "A Limit Order (BUY_AT or SELL_AT) allows you to set a specific price to enter or exit a position. For example, if Apple is at $190, you can set a 'BUY_AT' contract at $180. If the price drops to $180, TradeSim will automatically buy the shares for you. This helps you trade without constantly watching the screen."
+                )
+            }
+
+            item {
+                GuideSection(
+                    title = "Simulated Options (Calls & Puts)",
+                    icon = Icons.Default.SwapCalls,
+                    content = "Speculate on price movements with leveraged option contracts.",
+                    detailedContent = "Options give you the right to benefit from price changes without owning the stock. A 'CALL' is a bet that the price will go UP. A 'PUT' is a bet that the price will go DOWN. In TradeSim, options expire in 30 days. You pay a 'Premium' (small fee) to open the contract. If your prediction is right (In The Money) at expiration, you keep the profit! 1 contract controls 100 shares."
                 )
             }
 
@@ -247,6 +266,11 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
             title = "The Leaderboard",
             description = "Compete with others globally. Tap the icon to see the winners!",
             icon = Icons.Default.EmojiEvents
+        ),
+        TutorialStep(
+            title = "Contracts & Options",
+            description = "Master advanced trading. Tap to see how contracts and options work!",
+            icon = Icons.Default.Description
         )
     )
 
@@ -434,6 +458,7 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
                             })
                             3 -> PortfolioPreview()
                             4 -> LeaderboardPreview()
+                            5 -> ContractsPreview()
                         }
                     }
                 }
@@ -554,6 +579,38 @@ fun LeaderboardItemPreview(rank: Int, name: String, value: String, rankColor: Co
         Text(name, color = Color.White)
         Spacer(modifier = Modifier.weight(1f))
         Text(value, color = Color.White, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun ContractsPreview() {
+    Card(
+        modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Active Contracts", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text("AAPL CALL $200", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Expires in 28d", color = Color.Gray, fontSize = 12.sp)
+                }
+                Text("+$450.00", color = Color(0xFF00C853), fontWeight = FontWeight.Bold)
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text("TSLA BUY_AT $150", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Target: $150.00", color = Color.Gray, fontSize = 12.sp)
+                }
+                Text("Pending", color = Color.Yellow, fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
 

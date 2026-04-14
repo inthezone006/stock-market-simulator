@@ -1,15 +1,10 @@
 package com.rahul.stocksim.ui.screens
 
 import android.content.Intent
-import android.graphics.Paint
-import android.graphics.Typeface
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,24 +18,19 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,153 +40,51 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.rahul.stocksim.data.*
-import com.rahul.stocksim.model.Stock
-import com.rahul.stocksim.util.NotificationHelper
+import com.rahul.stocksim.model.*
+import com.rahul.stocksim.ui.components.TradingViewChart
+import com.rahul.stocksim.ui.components.VicoLineChart
+import com.rahul.stocksim.ui.viewmodels.StockDetailUiState
+import com.rahul.stocksim.ui.viewmodels.StockDetailViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-private fun formatDate(inputDate: String?): String {
-    if (inputDate == null) return "N/A"
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-        val date = inputFormat.parse(inputDate)
-        if (date != null) outputFormat.format(date) else inputDate
-    } catch (e: Exception) {
-        inputDate
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBackClick: () -> Unit) {
+fun StockDetailScreen(
+    stockSymbol: String?,
+    navController: NavController,
+    onBackClick: () -> Unit,
+    viewModel: StockDetailViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    val marketRepository = remember { MarketRepository(context) }
     val coroutineScope = rememberCoroutineScope()
-    val notificationHelper = remember { NotificationHelper(context) }
     
-    var stock by remember { mutableStateOf<Stock?>(null) }
-    var profile by remember { mutableStateOf<FinnhubProfileResponse?>(null) }
-    var financials by remember { mutableStateOf<FinnhubFinancialsResponse?>(null) }
-    var newsArticles by remember { mutableStateOf<List<FinnhubNewsArticle>>(emptyList()) }
-    var history by remember { mutableStateOf<List<StockPricePoint>>(emptyList()) }
-    
-    var recommendations by remember { mutableStateOf<List<FinnhubRecommendationResponse>>(emptyList()) }
-    var peers by remember { mutableStateOf<List<String>>(emptyList()) }
-    var earnings by remember { mutableStateOf<FinnhubEarningsCalendarResponse?>(null) }
-    var rsiData by remember { mutableStateOf<FinnhubIndicatorResponse?>(null) }
-    var sma50Data by remember { mutableStateOf<FinnhubIndicatorResponse?>(null) }
-    var sma200Data by remember { mutableStateOf<FinnhubIndicatorResponse?>(null) }
-    var dividends by remember { mutableStateOf<List<FinnhubDividendResponse>>(emptyList()) }
-    var newsSentiment by remember { mutableStateOf<FinnhubNewsSentimentResponse?>(null) }
-    var marketStatus by remember { mutableStateOf<FinnhubMarketStatusResponse?>(null) }
-    var esgScores by remember { mutableStateOf<FinnhubEsgResponse?>(null) }
-    var priceTarget by remember { mutableStateOf<FinnhubPriceTargetResponse?>(null) }
-    var aiRecommendation by remember { mutableStateOf<AIRecommendation?>(null) }
-    
-    var isLoading by remember { mutableStateOf(true) }
-    var isGraphLoading by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
+    val isInWatchlist by viewModel.isInWatchlist.collectAsState()
+    val ownedQuantity by viewModel.ownedQuantity.collectAsState()
+    val balance by viewModel.userBalance.collectAsState(initial = 0.0)
+    val priceAlerts by viewModel.priceAlerts.collectAsState()
+    val activeContracts by viewModel.activeContracts.collectAsState()
+
     var quantityInput by remember { mutableStateOf("1") }
     val quantity = quantityInput.toIntOrNull() ?: 0
+
+    var showAlertDialog by remember { mutableStateOf(false) }
     
-    var isInWatchlist by remember { mutableStateOf(false) }
-    var ownedQuantity by remember { mutableLongStateOf(0L) }
-    val balance by marketRepository.getUserBalance().collectAsState(initial = 0.0)
-
-    var errorOccurred by remember { mutableStateOf(false) }
-
-    // State for interactive graph tracking
-    var selectedPricePoint by remember { mutableStateOf<StockPricePoint?>(null) }
-
+    var showContractsSheet by remember { mutableStateOf(false) }
+    
     val scrollState = rememberLazyListState()
+    
     val isCollapsed by remember {
         derivedStateOf {
             scrollState.firstVisibleItemIndex > 0 || (scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset > 200)
-        }
-    }
-
-    val refreshStockData = {
-        if (stockSymbol != null) {
-            coroutineScope.launch {
-                try {
-                    val stockResult = marketRepository.getStockQuote(stockSymbol)
-                    if (stockResult == null) {
-                        errorOccurred = true
-                        return@launch
-                    }
-                    stock = stockResult
-                    
-                    // Fetch data in parallel
-                    val jobs = listOf(
-                        launch { profile = marketRepository.getCompanyProfile(stockSymbol) },
-                        launch { financials = marketRepository.getBasicFinancials(stockSymbol) },
-                        launch { newsArticles = marketRepository.getCompanyNews(stockSymbol) },
-                        launch { recommendations = marketRepository.getRecommendations(stockSymbol) },
-                        launch { peers = marketRepository.getPeers(stockSymbol) },
-                        launch { earnings = marketRepository.getEarningsCalendar(stockSymbol) },
-                        launch { rsiData = marketRepository.getTechnicalIndicator(stockSymbol, "rsi") },
-                        launch { sma50Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 50) },
-                        launch { sma200Data = marketRepository.getTechnicalIndicator(stockSymbol, "sma", 200) },
-                        launch { dividends = marketRepository.getDividends(stockSymbol) },
-                        launch { newsSentiment = marketRepository.getNewsSentiment(stockSymbol) },
-                        launch { marketStatus = marketRepository.getMarketStatus() },
-                        launch { priceTarget = marketRepository.getPriceTarget(stockSymbol) },
-                        launch { if (stockResult.isCrypto == false && stockResult.isForex == false) esgScores = marketRepository.getEsgScores(stockSymbol) }
-                    )
-                    
-                    val watchlist = marketRepository.getWatchlist()
-                    isInWatchlist = watchlist.any { it.symbol == stockSymbol }
-                    
-                    val portfolio = marketRepository.getPortfolio()
-                    ownedQuantity = portfolio.find { it.first == stockSymbol }?.second ?: 0L
-                    
-                    // Wait for critical jobs for AI analysis
-                    jobs.forEach { it.join() }
-                    
-                    aiRecommendation = marketRepository.analyzeStock(
-                        stock = stockResult,
-                        financials = financials,
-                        priceTarget = priceTarget,
-                        rsi = rsiData?.rsi?.lastOrNull(),
-                        sma50 = sma50Data?.sma?.lastOrNull(),
-                        sma200 = sma200Data?.sma?.lastOrNull(),
-                        sentiment = newsSentiment?.sentiment?.bullishPercent,
-                        analystRecs = recommendations.firstOrNull()
-                    )
-                    
-                    isLoading = false
-                } catch (e: Exception) {
-                    errorOccurred = true
-                }
-            }
-        }
-    }
-
-    val refreshGraph = {
-        if (stockSymbol != null) {
-            coroutineScope.launch {
-                isGraphLoading = true
-                history = marketRepository.getStockHistory(stockSymbol, "1D")
-                isGraphLoading = false
-            }
-        }
-    }
-
-    LaunchedEffect(stockSymbol) {
-        isLoading = true
-        refreshStockData()
-        refreshGraph()
-    }
-
-    LaunchedEffect(errorOccurred) {
-        if (errorOccurred) {
-            Toast.makeText(context, "Market data unavailable for $stockSymbol. Please try again later.", Toast.LENGTH_LONG).show()
-            onBackClick()
         }
     }
 
@@ -212,14 +100,16 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                         },
                         label = "HeaderTransition"
                     ) { collapsed ->
-                        if (collapsed && stock != null) {
+                        val state = uiState
+                        if (collapsed && state is StockDetailUiState.Success) {
+                            val stock = state.stock
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth().padding(end = 8.dp)
                             ) {
-                                if (profile?.logo?.isNotEmpty() == true) {
+                                if (state.profile?.logo?.isNotEmpty() == true) {
                                     AsyncImage(
-                                        model = profile?.logo,
+                                        model = state.profile.logo,
                                         contentDescription = null,
                                         modifier = Modifier
                                             .size(32.dp)
@@ -231,17 +121,17 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        if (marketStatus != null) {
+                                        state.marketStatus?.let { status ->
                                             Box(
                                                 modifier = Modifier
                                                     .size(8.dp)
                                                     .clip(CircleShape)
-                                                    .background(if (marketStatus!!.isOpen) Color.Green else Color.Red)
+                                                    .background(if (status.isOpen) Color.Green else Color.Red)
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                         }
                                         Text(
-                                            text = stock!!.symbol,
+                                            text = stock.symbol,
                                             color = Color.White,
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
@@ -249,32 +139,18 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                         )
                                     }
                                     Text(
-                                        text = stock!!.name,
+                                        text = stock.name,
                                         color = Color.Gray,
                                         style = MaterialTheme.typography.bodySmall,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "$${String.format("%.2f", stock!!.price)}",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = if (stock!!.change >= 0) Color.Green else Color.Red,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)}",
-                                        color = if (stock!!.change >= 0) Color.Green else Color.Red,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
                             }
                         } else {
                             Column {
                                 Text(stockSymbol ?: "Stock Details", color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                marketStatus?.let { status ->
+                                (state as? StockDetailUiState.Success)?.marketStatus?.let { status ->
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Box(
                                             modifier = Modifier
@@ -300,18 +176,16 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                     }
                 },
                 actions = {
-                    if (stock != null) {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                if (isInWatchlist) {
-                                    marketRepository.removeFromWatchlist(stock!!.symbol)
-                                    isInWatchlist = false
-                                } else {
-                                    marketRepository.addToWatchlist(stock!!.symbol)
-                                    isInWatchlist = true
-                                }
-                            }
-                        }) {
+                    if (uiState is StockDetailUiState.Success) {
+
+                        IconButton(onClick = { showAlertDialog = !showAlertDialog }) {
+                            Icon(
+                                imageVector = Icons.Default.NotificationsActive,
+                                contentDescription = "Set Alert",
+                                tint = if (priceAlerts.isNotEmpty()) MaterialTheme.colorScheme.primary else Color.White
+                            )
+                        }
+                        IconButton(onClick = { viewModel.toggleWatchlist() }) {
                             Icon(
                                 imageVector = if (isInWatchlist) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = "Watchlist",
@@ -324,387 +198,472 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
             )
         }
     ) { innerPadding ->
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color.White)
+        when (val state = uiState) {
+            is StockDetailUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White)
+                }
             }
-        } else if (stock != null) {
-            LazyColumn(
-                state = scrollState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .background(Color(0xFF121212))
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            focusManager.clearFocus()
-                        })
+            is StockDetailUiState.Error -> {
+                LaunchedEffect(Unit) {
+                    Toast.makeText(context, "Market data unavailable for $stockSymbol. Please try again later.", Toast.LENGTH_LONG).show()
+                    onBackClick()
+                }
+            }
+            is StockDetailUiState.Success -> {
+                val stock = state.stock
+                val profile = state.profile
+                val newsSentiment = state.newsSentiment
+                val rsiData = state.rsiData
+                val sma50Data = state.sma50Data
+                val sma200Data = state.sma200Data
+                val recommendations = state.recommendations
+                val esgScores = state.esgScores
+                val earnings = state.earnings
+                val dividends = state.dividends
+                val peers = state.peers
+                val financials = state.financials
+                val aiRecommendation = state.aiRecommendation
+                val newsArticles = state.newsArticles
+
+                LazyColumn(
+                    state = scrollState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .background(Color(0xFF121212))
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                focusManager.clearFocus()
+                            })
+                        }
+                        .padding(horizontal = 16.dp)
+                ) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                // Logo Box
+                                Box(
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFF1F1F1F)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (profile?.logo?.isNotEmpty() == true) {
+                                        AsyncImage(
+                                            model = profile.logo,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(36.dp),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                    } else {
+                                        Text(
+                                            text = stock.symbol.take(1),
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.width(16.dp))
+                                
+                                Column {
+                                    Text(
+                                        text = stock.symbol,
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = stock.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Color.Gray,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                            
+                            Column(horizontalAlignment = Alignment.End) {
+                                val color = if (stock.change >= 0) Color.Green else Color.Red
+                                
+                                Text(
+                                    text = "$${String.format(Locale.US, "%.2f", stock.price)}",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = color,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                
+                                Text(
+                                    text = "${if (stock.change >= 0) "+" else ""}${String.format(Locale.US, "%.2f", stock.change)} (${String.format(Locale.US, "%.2f", stock.percentChange)}%)",
+                                    color = color,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
-                    .padding(horizontal = 16.dp)
-            ) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            // Logo Box
+
+                    // Sentiment & Technical Indicators Row
+                    item {
+                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+
+                                
+                                if (rsiData?.rsi?.isNotEmpty() == true) {
+                                    val currentRsi = rsiData.rsi.last()
+                                    val rsiStatus = when {
+                                        currentRsi > 70 -> "Overbought"
+                                        currentRsi < 30 -> "Oversold"
+                                        else -> "Neutral"
+                                    }
+                                    val rsiColor = when {
+                                        currentRsi > 70 -> Color.Red
+                                        currentRsi < 30 -> Color.Green
+                                        else -> Color.Gray
+                                    }
+                                    Row {
+                                        Text("RSI: ", color = Color.Gray, fontSize = 12.sp)
+                                        Text("${String.format(Locale.US, "%.1f", currentRsi)} ($rsiStatus)", color = rsiColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                            
+                            if (sma50Data?.sma?.isNotEmpty() == true && sma200Data?.sma?.isNotEmpty() == true) {
+                                val currentSma50 = sma50Data.sma.last()
+                                val currentSma200 = sma200Data.sma.last()
+                                val trend = if (currentSma50 > currentSma200) "Bullish Cross" else "Bearish Cross"
+                                val trendColor = if (currentSma50 > currentSma200) Color.Green else Color.Red
+                                
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(text = "50D SMA: $${String.format(Locale.US, "%.2f", currentSma50)}", color = Color.Gray, fontSize = 11.sp)
+                                    Text(text = trend, color = trendColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(text = "200D SMA: $${String.format(Locale.US, "%.2f", currentSma200)}", color = Color.Gray, fontSize = 11.sp)
+                                }
+                            }
+                        }
+                    }
+
+                    // --- NATIVE CHART SECTION ---
+                    item {
+                        val history by viewModel.history.collectAsState()
+                        val isGraphLoading by viewModel.isGraphLoading.collectAsState()
+                        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
+                            Text(
+                                text = "Market Chart",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            
                             Box(
                                 modifier = Modifier
-                                    .size(56.dp)
+                                    .fillMaxWidth()
+                                    .height(300.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFF1F1F1F)),
-                                contentAlignment = Alignment.Center
+                                    .background(Color(0xFF1F1F1F).copy(alpha = 0.5f))
                             ) {
-                                if (profile?.logo?.isNotEmpty() == true) {
-                                    AsyncImage(
-                                        model = profile?.logo,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(36.dp),
-                                        contentScale = ContentScale.Fit
+                                if (isGraphLoading) {
+                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
+                                } else if (history.isNotEmpty()) {
+                                    VicoLineChart(
+                                        data = history.map { it.price },
+                                        lineColor = if (stock.change >= 0) Color.Green else Color.Red,
+                                        modifier = Modifier.fillMaxSize()
                                     )
                                 } else {
                                     Text(
-                                        text = stock!!.symbol.take(1),
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp
+                                        text = "No historical data available",
+                                        color = Color.Gray,
+                                        modifier = Modifier.align(Alignment.Center)
                                     )
                                 }
                             }
                             
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                             
-                            Column {
-                                Text(
-                                    text = stock!!.symbol,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = stock!!.name,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.Gray,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                        
-                        Column(horizontalAlignment = Alignment.End) {
-                            val color = if (stock!!.change >= 0) Color.Green else Color.Red
+                            val periods = listOf("1D", "5D", "1M", "6M", "1Y", "5Y")
+                            val selectedPeriod by viewModel.selectedPeriod.collectAsState()
                             
-                            Text(
-                                text = "$${String.format("%.2f", stock!!.price)}",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = color,
-                                fontWeight = FontWeight.Bold
-                            )
-                            
-                            Text(
-                                text = "${if (stock!!.change >= 0) "+" else ""}${String.format("%.2f", stock!!.change)} (${String.format("%.2f", stock!!.percentChange)}%)",
-                                color = color,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                }
-
-                // Sentiment & Technical Indicators Row
-                item {
-                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (newsSentiment?.sentiment != null) {
-                                    val bullish = newsSentiment!!.sentiment?.bullishPercent ?: 0.0
-                                    val sentimentColor = if (bullish > 50) Color.Green else Color.Red
-                                    Icon(
-                                        imageVector = if (bullish > 50) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
-                                        contentDescription = null,
-                                        tint = sentimentColor,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "Sentiment: ${String.format("%.0f%%", bullish)} Bullish",
-                                        color = sentimentColor,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                            
-                            if (rsiData?.rsi?.isNotEmpty() == true) {
-                                val currentRsi = rsiData!!.rsi!!.last()
-                                val rsiStatus = when {
-                                    currentRsi > 70 -> "Overbought"
-                                    currentRsi < 30 -> "Oversold"
-                                    else -> "Neutral"
-                                }
-                                val rsiColor = when {
-                                    currentRsi > 70 -> Color.Red
-                                    currentRsi < 30 -> Color.Green
-                                    else -> Color.Gray
-                                }
-                                Row {
-                                    Text("RSI: ", color = Color.Gray, fontSize = 12.sp)
-                                    Text("${String.format("%.1f", currentRsi)} ($rsiStatus)", color = rsiColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                        
-                        if (sma50Data?.sma?.isNotEmpty() == true && sma200Data?.sma?.isNotEmpty() == true) {
-                            val currentSma50 = sma50Data!!.sma!!.last()
-                            val currentSma200 = sma200Data!!.sma!!.last()
-                            val trend = if (currentSma50 > currentSma200) "Bullish Cross" else "Bearish Cross"
-                            val trendColor = if (currentSma50 > currentSma200) Color.Green else Color.Red
-                            
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(text = "50D SMA: $${String.format("%.2f", currentSma50)}", color = Color.Gray, fontSize = 11.sp)
-                                Text(text = trend, color = trendColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                Text(text = "200D SMA: $${String.format("%.2f", currentSma200)}", color = Color.Gray, fontSize = 11.sp)
-                            }
-                        }
-                    }
-                }
-
-                // --- STOCK GRAPH SECTION ---
-                item {
-                    Column(modifier = Modifier.fillMaxWidth().height(300.dp).padding(vertical = 16.dp)) {
-                        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                            if (isGraphLoading) {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.Gray)
-                            } else if (history.isNotEmpty()) {
-                                StockLineChart(
-                                    data = history,
-                                    modifier = Modifier.fillMaxSize(),
-                                    color = if (history.last().price >= history.first().price) Color.Green else Color.Red,
-                                    onPointSelected = { point -> selectedPricePoint = point }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    if (ownedQuantity > 0) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Your Position",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
                             Row(
-                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Column {
-                                    val unitLabel = when {
-                                        stock?.isCrypto == true -> "Units Owned"
-                                        stock?.isForex == true -> "Lots Owned"
-                                        else -> "Shares Owned"
-                                    }
-                                    Text(unitLabel, color = Color.Gray, fontSize = 12.sp)
-                                    Text(
-                                        text = "$ownedQuantity",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 22.sp
+                                periods.forEach { period ->
+                                    FilterChip(
+                                        modifier = Modifier.weight(1f),
+                                        selected = selectedPeriod == period,
+                                        onClick = { viewModel.refreshGraph(period) },
+                                        label = { 
+                                            Text(
+                                                text = period,
+                                                fontSize = 10.sp,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center
+                                            ) 
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            labelColor = Color.Gray,
+                                            selectedLabelColor = Color.White,
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary
+                                        ),
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            borderColor = Color.DarkGray,
+                                            selectedBorderColor = MaterialTheme.colorScheme.primary,
+                                            enabled = true,
+                                            selected = selectedPeriod == period
+                                        )
                                     )
                                 }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text("Equity Value", color = Color.Gray, fontSize = 12.sp)
-                                    Text(
-                                        text = "$${String.format("%,.2f", ownedQuantity * stock!!.price)}",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 22.sp
-                                    )
-                                }
                             }
                         }
                     }
-                }
 
-                if (recommendations.isNotEmpty()) {
-                    item {
-                        val rec = recommendations.first()
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text("Analyst Sentiment", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
-                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
-                            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                RecItem("Buy", rec.buy + rec.strongBuy, Color.Green)
-                                RecItem("Hold", rec.hold, Color.Gray)
-                                RecItem("Sell", rec.sell + rec.strongSell, Color.Red)
-                            }
-                        }
-                    }
-                }
-
-                esgScores?.let { esg ->
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text("Sustainability (ESG)", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
-                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
-                            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatItem("Total Score", esg.totalScore?.toString() ?: "N/A")
-                                StatItem("Env", esg.environmentScore?.toString() ?: "N/A")
-                                StatItem("Social", esg.socialScore?.toString() ?: "N/A")
-                                StatItem("Gov", esg.governanceScore?.toString() ?: "N/A")
-                            }
-                        }
-                    }
-                }
-
-                earnings?.earningsCalendar?.firstOrNull()?.let { nextEarnings ->
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F).copy(alpha = 0.5f))) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Event, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text("Next Earnings: ", color = Color.Gray, fontSize = 14.sp)
-                                Text(text = formatDate(nextEarnings.date), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            }
-                        }
-                    }
-                }
-
-                if (dividends.isNotEmpty()) {
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text("Dividend History", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
-                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                dividends.take(3).forEach { div ->
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text(text = formatDate(div.date), color = Color.Gray, fontSize = 14.sp)
-                                        Text(text = "$${div.amount} per share", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                    }
-                                    if (div != dividends.take(3).last()) {
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item { Spacer(modifier = Modifier.height(24.dp)) }
-
-                item {
-                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            // Balance and Position Info
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column {
-                                    Text(text = "Available to Spend", color = Color.Gray, fontSize = 12.sp)
-                                    Text(
-                                        text = "$${String.format("%,.2f", balance)}",
-                                        color = Color.White,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                if (ownedQuantity > 0) {
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(text = "In $stockSymbol", color = Color.Gray, fontSize = 12.sp)
+                    if (ownedQuantity > 0) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Your Position",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        val unitLabel = when {
+                                            stock.isCrypto -> "Units Owned"
+                                            stock.isForex -> "Lots Owned"
+                                            else -> "Shares Owned"
+                                        }
+                                        Text(unitLabel, color = Color.Gray, fontSize = 12.sp)
                                         Text(
-                                            text = "$${String.format("%,.2f", ownedQuantity * stock!!.price)}",
+                                            text = "$ownedQuantity",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 22.sp
+                                        )
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text("Equity Value", color = Color.Gray, fontSize = 12.sp)
+                                        Text(
+                                            text = "$${String.format(Locale.US, "%,.2f", ownedQuantity * stock.price)}",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 22.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (recommendations.isNotEmpty()) {
+                        item {
+                            val rec = recommendations.first()
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Analyst Sentiment", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
+                                Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    RecItem("Buy", rec.buy + rec.strongBuy, Color.Green)
+                                    RecItem("Hold", rec.hold, Color.Gray)
+                                    RecItem("Sell", rec.sell + rec.strongSell, Color.Red)
+                                }
+                            }
+                        }
+                    }
+
+                    esgScores?.let { esg ->
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Sustainability (ESG)", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
+                                Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    StatItem("Total Score", esg.totalScore?.toString() ?: "N/A")
+                                    StatItem("Env", esg.environmentScore?.toString() ?: "N/A")
+                                    StatItem("Social", esg.socialScore?.toString() ?: "N/A")
+                                    StatItem("Gov", esg.governanceScore?.toString() ?: "N/A")
+                                }
+                            }
+                        }
+                    }
+
+                    if (earnings?.earningsCalendar?.isNotEmpty() == true) {
+                        val nextEarnings = earnings.earningsCalendar.first()
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F).copy(alpha = 0.5f))) {
+                                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Event, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text("Next Earnings: ", color = Color.Gray, fontSize = 14.sp)
+                                    Text(text = formatDate(nextEarnings.date), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
+                        }
+                    }
+
+                    if (dividends.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Dividend History", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    dividends.take(3).forEach { div ->
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text(text = formatDate(div.date), color = Color.Gray, fontSize = 14.sp)
+                                            Text(text = "$${div.amount} per share", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                        }
+                                        if (div != dividends.take(3).last()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                // Balance and Position Info
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column {
+                                        Text(text = "Available to Spend", color = Color.Gray, fontSize = 12.sp)
+                                        Text(
+                                            text = "$${String.format(Locale.US, "%,.2f", balance)}",
                                             color = Color.White,
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            // Quantity Selector
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                val unitLabel = when {
-                                    stock?.isCrypto == true -> "Units"
-                                    stock?.isForex == true -> "Lots"
-                                    else -> "Shares"
-                                }
-                                Text(unitLabel, color = Color.Gray, fontSize = 12.sp)
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    IconButton(onClick = { 
-                                        val current = quantityInput.toIntOrNull() ?: 0
-                                        if (current > 1) quantityInput = (current - 1).toString()
-                                    }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
-                                    
-                                    Box(
-                                        modifier = Modifier
-                                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
-                                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                                            .widthIn(min = 60.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        BasicTextField(
-                                            value = quantityInput,
-                                            onValueChange = { newValue ->
-                                                if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                                    quantityInput = newValue
-                                                }
-                                            },
-                                            textStyle = TextStyle(
+                                    if (ownedQuantity > 0) {
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(text = "In $stockSymbol", color = Color.Gray, fontSize = 12.sp)
+                                            Text(
+                                                text = "$${String.format(Locale.US, "%,.2f", ownedQuantity * stock.price)}",
                                                 color = Color.White,
-                                                fontSize = 24.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                textAlign = TextAlign.Center
-                                            ),
-                                            keyboardOptions = KeyboardOptions(
-                                                keyboardType = KeyboardType.Number,
-                                                imeAction = ImeAction.Done
-                                            ),
-                                            keyboardActions = KeyboardActions(
-                                                onDone = { focusManager.clearFocus() }
-                                            ),
-                                            cursorBrush = SolidColor(Color.White),
-                                            singleLine = true
-                                        )
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
-                                    
-                                    IconButton(onClick = { 
-                                        val current = quantityInput.toIntOrNull() ?: 0
-                                        quantityInput = (current + 1).toString()
-                                    }) { Icon(Icons.Default.Add, null, tint = Color.White) }
                                 }
-                            }
 
-                            val totalCost = quantity * stock!!.price
-                            val hasEnoughMoney = balance >= totalCost
-                            val canAffordAnything = balance >= stock!!.price
-                            val canSellQuantity = ownedQuantity > 0 && quantity > 0 && quantity <= ownedQuantity
+                                Spacer(modifier = Modifier.height(24.dp))
 
-                            // Visibility logic for the bottom action section
-                            val showBuy = hasEnoughMoney && quantity > 0
-                            val showSell = canSellQuantity
+                                // Quantity Selector
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    val unitLabel = when {
+                                        stock.isCrypto -> "Units"
+                                        stock.isForex -> "Lots"
+                                        else -> "Shares"
+                                    }
+                                    Text(unitLabel, color = Color.Gray, fontSize = 12.sp)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        IconButton(onClick = { 
+                                            val current = quantityInput.toIntOrNull() ?: 0
+                                            if (current > 1) quantityInput = (current - 1).toString()
+                                        }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
+                                        
+                                        Box(
+                                            modifier = Modifier
+                                                .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                                .widthIn(min = 60.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            BasicTextField(
+                                                value = quantityInput,
+                                                onValueChange = { newValue ->
+                                                    if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                                        quantityInput = newValue
+                                                    }
+                                                },
+                                                textStyle = TextStyle(
+                                                    color = Color.White,
+                                                    fontSize = 24.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    textAlign = TextAlign.Center
+                                                ),
+                                                keyboardOptions = KeyboardOptions(
+                                                    keyboardType = KeyboardType.Number,
+                                                    imeAction = ImeAction.Done
+                                                ),
+                                                keyboardActions = KeyboardActions(
+                                                    onDone = { focusManager.clearFocus() }
+                                                ),
+                                                cursorBrush = SolidColor(Color.White),
+                                                singleLine = true
+                                            )
+                                        }
+                                        
+                                        IconButton(onClick = { 
+                                            val current = quantityInput.toIntOrNull() ?: 0
+                                            quantityInput = (current + 1).toString()
+                                        }) { Icon(Icons.Default.Add, null, tint = Color.White) }
+                                    }
+                                }
 
-                            if (showBuy || showSell || (quantity > 0 && !hasEnoughMoney)) {
-                                Spacer(modifier = Modifier.height(20.dp))
+                                val totalCost = quantity * stock.price
+                                val hasEnoughMoney = balance >= totalCost
+                                val canAffordAnything = balance >= stock.price
+                                val canSellQuantity = ownedQuantity > 0 && quantity > 0 && quantity <= ownedQuantity
+
+                                // Action Buttons Section
+                                Spacer(modifier = Modifier.height(24.dp))
+                                
+                                OutlinedButton(
+                                    onClick = { showContractsSheet = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Schedule, null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Limit Orders & Contracts", fontSize = 14.sp)
+                                    if (activeContracts.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = CircleShape,
+                                            modifier = Modifier.size(20.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text("${activeContracts.size}", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
 
                                 // Themed Warning (Show if they don't have enough money for CURRENT quantity)
                                 if (quantity > 0 && !hasEnoughMoney) {
@@ -726,141 +685,562 @@ fun StockDetailScreen(stockSymbol: String?, navController: NavController, onBack
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
                                                 text = if (canAffordAnything) 
-                                                    "Insufficient funds for purchasing $quantity shares in this company."
-                                                    else "Insufficient funds to purchase any shares in this company.",
+                                                    "Insufficient funds for purchasing $quantity shares."
+                                                    else "Insufficient funds to purchase any shares.",
                                                 color = Color.Red,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
                                         }
                                     }
-                                    // Only add spacer if buttons will be shown below
-                                    if (showBuy || showSell) {
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
                                 }
                                 
                                 // Buy/Sell Buttons
-                                if (showBuy || showSell) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(), 
-                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                    ) {
-                                        if (showBuy) {
-                                            Button(
-                                                onClick = {
-                                                    coroutineScope.launch {
-                                                        val buyResult = marketRepository.buyStock(stock!!.symbol, quantity, stock!!.price)
-                                                        if (buyResult.isSuccess) {
-                                                            Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
-                                                            refreshStockData()
-                                                            
-                                                            val newBalance = buyResult.getOrNull() ?: 0.0
-                                                            val authRepo = AuthRepository()
-                                                            val settings = authRepo.getNotificationSettings()
-                                                            if (settings.masterEnabled && settings.notifyLowBalance && newBalance < 10.0) {
-                                                                notificationHelper.showNotification("Portfolio Warning", "Your buying power is below $10.00.")
-                                                            }
-                                                        }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(), 
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                val buyResult = viewModel.buyStock(quantity, stock.price)
+                                                if (buyResult.isSuccess) {
+                                                    Toast.makeText(context, "Purchase Successful", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(context, buyResult.exceptionOrNull()?.message ?: "Purchase failed", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        enabled = hasEnoughMoney && quantity > 0,
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) { Text("BUY") }
+                                    
+                                    if (ownedQuantity > 0) {
+                                        Button(
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    val sellResult = viewModel.sellStock(quantity, stock.price)
+                                                    if (sellResult.isSuccess) {
+                                                        Toast.makeText(context, "Sale Successful", Toast.LENGTH_SHORT).show()
+                                                    } else {
+                                                        Toast.makeText(context, sellResult.exceptionOrNull()?.message ?: "Sale failed", Toast.LENGTH_SHORT).show()
                                                     }
-                                                },
-                                                modifier = Modifier.weight(1f),
-                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
-                                            ) { Text("BUY") }
+                                                }
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            enabled = canSellQuantity,
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000)),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) { Text("SELL") }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // --- AI PREDICTION SECTION ---
+                    aiRecommendation?.let { recommendation ->
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            AIRecommendationSection(recommendation)
+                        }
+                    }
+
+                    // --- KEY STATISTICS SECTION ---
+                    financials?.let { stats ->
+                        val isCrypto = stock.symbol.contains(":") || stock.symbol.endsWith("USD") 
+                        val isForex = stock.symbol.contains("/")
+                        
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Key Statistics", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        val mktCap = (stats.metric?.get("marketCapitalization") as? Number)?.toDouble()
+                                        val peRatio = (stats.metric?.get("peBasicExclExtraTTM") as? Number)?.toDouble()
+                                        StatItem("Market Cap", mktCap?.let { String.format(Locale.US, "%.2fB", it / 1000) } ?: "N/A")
+                                        if (!isCrypto && !isForex) {
+                                            StatItem("P/E Ratio", peRatio?.let { String.format(Locale.US, "%.2f", it) } ?: "N/A", Alignment.End)
+                                        } else {
+                                            val high52 = (stats.metric?.get("52WeekHigh") as? Number)?.toDouble()
+                                            StatItem("52W High", high52?.let { String.format(Locale.US, "$%.2f", it) } ?: "N/A", Alignment.End)
                                         }
-                                        
-                                        if (showSell) {
-                                            Button(
-                                                onClick = {
-                                                    coroutineScope.launch {
-                                                        if (marketRepository.sellStock(stock!!.symbol, quantity, stock!!.price).isSuccess) {
-                                                            Toast.makeText(context, "Sale Successful", Toast.LENGTH_SHORT).show()
-                                                            refreshStockData()
-                                                        }
-                                                    }
-                                                },
-                                                modifier = Modifier.weight(1f),
-                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000))
-                                            ) { Text("SELL") }
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        if (!isCrypto && !isForex) {
+                                            val high52 = (stats.metric?.get("52WeekHigh") as? Number)?.toDouble()
+                                            val low52 = (stats.metric?.get("52WeekLow") as? Number)?.toDouble()
+                                            StatItem("52W High", high52?.let { String.format(Locale.US, "$%.2f", it) } ?: "N/A")
+                                            StatItem("52W Low", low52?.let { String.format(Locale.US, "$%.2f", it) } ?: "N/A", Alignment.End)
+                                        } else {
+                                            val low52 = (stats.metric?.get("52WeekLow") as? Number)?.toDouble()
+                                            val beta = (stats.metric?.get("beta") as? Number)?.toDouble()
+                                            StatItem("52W Low", low52?.let { String.format(Locale.US, "$%.2f", it) } ?: "N/A")
+                                            StatItem("Beta", beta?.let { String.format(Locale.US, "%.2f", it) } ?: "N/A", Alignment.End)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        if (!isCrypto && !isForex) {
+                                            val beta = (stats.metric?.get("beta") as? Number)?.toDouble()
+                                            val yield = (stats.metric?.get("dividendYieldIndicatedAnnual") as? Number)?.toDouble() 
+                                                ?: (stats.metric?.get("dividendYield5Y") as? Number)?.toDouble()
+                                            StatItem("Beta", beta?.let { String.format(Locale.US, "%.2f", it) } ?: "N/A")
+                                            StatItem("Yield", yield?.let { String.format(Locale.US, "%.2f%%", it) } ?: "N/A", Alignment.End)
+                                        } else {
+                                            val yield = (stats.metric?.get("dividendYieldIndicatedAnnual") as? Number)?.toDouble()
+                                            StatItem("Yield", yield?.let { String.format(Locale.US, "%.2f%%", it) } ?: "N/A")
+                                            StatItem("", "") // Placeholder for alignment
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                if (peers.isNotEmpty()) {
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text("Similar Stocks", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(peers) { peerSymbol ->
-                                SuggestionChip(
-                                    onClick = { navController.navigate("details/$peerSymbol") },
-                                    label = { Text(peerSymbol, color = Color.White) },
-                                    colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFF1F1F1F))
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Market Stats", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
-                            
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatItem("Open", "$${String.format("%,.2f", stock!!.open)}")
-                                StatItem("Prev Close", "$${String.format("%,.2f", stock!!.prevClose)}")
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatItem("High", "$${String.format("%,.2f", stock!!.high)}")
-                                StatItem("Low", "$${String.format("%,.2f", stock!!.low)}")
-                            }
-                            
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
-                            
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatItem("Market Cap", profile?.marketCapitalization?.let { "${String.format("%,.2f", it / 1000)}B" } ?: "N/A")
-                                StatItem("Shares Out.", profile?.shareOutstanding?.let { "${String.format("%,.2f", it)}M" } ?: "N/A")
-                            }
-                            
-                            if (financials?.metric != null) {
-                                val metrics = financials!!.metric!!
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    StatItem("52W High", metrics["52WeekHigh"]?.let { if (it is Double) "$${String.format("%,.2f", it)}" else "N/A" } ?: "N/A")
-                                    StatItem("52W Low", metrics["52WeekLow"]?.let { if (it is Double) "$${String.format("%,.2f", it)}" else "N/A" } ?: "N/A")
+                    // --- PEERS SECTION ---
+                    if (peers.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Similar Companies", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                items(peers) { peer ->
+                                    FilterChip(
+                                        selected = false,
+                                        onClick = { navController.navigate("stock_detail/$peer") },
+                                        label = { Text(peer) },
+                                        colors = FilterChipDefaults.filterChipColors(labelColor = Color.White, containerColor = Color(0xFF1F1F1F))
+                                    )
                                 }
                             }
                         }
                     }
+
+                    // --- NEWS SECTION ---
+                    if (newsArticles.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Latest News", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+                        }
+                        items(newsArticles.take(5)) { article ->
+                            NewsArticleItem(article) {
+                                val intent = Intent(Intent.ACTION_VIEW, article.url.toUri())
+                                context.startActivity(intent)
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(40.dp)) }
                 }
 
-                aiRecommendation?.let { recommendation ->
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        AIRecommendationSection(recommendation)
-                    }
+                // --- MODAL SHEETS ---
+                if (showAlertDialog) {
+                    PriceAlertSheet(
+                        symbol = stock.symbol,
+                        priceAlerts = priceAlerts,
+                        onDismiss = { showAlertDialog = false },
+                        onAddAlert = { price, above -> viewModel.addPriceAlert(price, above) },
+                        onDeleteAlert = { viewModel.deletePriceAlert(it) }
+                    )
                 }
 
-                if (newsArticles.isNotEmpty()) {
-                    item {
-                        Spacer(modifier = Modifier.height(32.dp))
-                        Text(text = "Company News", color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
-                    }
-                    items(newsArticles) { article ->
-                        NewsArticleItem(article) { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(article.url))) }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+                if (showContractsSheet) {
+                    TradeContractSheet(
+                        stock = stock,
+                        activeContracts = activeContracts,
+                        onDismiss = { showContractsSheet = false },
+                        onCreateContract = { type, target, qty ->
+                            coroutineScope.launch {
+                                val res = viewModel.createContract(type, target, qty)
+                                if (res.isSuccess) {
+                                    Toast.makeText(context, "Contract created. This will execute when price targets are hit in the background.", Toast.LENGTH_LONG).show()
+                                    showContractsSheet = false
+                                } else {
+                                    Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        onCancelContract = { viewModel.cancelContract(it) }
+                    )
                 }
-                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PriceAlertSheet(
+    symbol: String,
+    priceAlerts: List<com.rahul.stocksim.data.local.entity.PriceAlertEntity>,
+    onDismiss: () -> Unit,
+    onAddAlert: (Double, Boolean) -> Unit,
+    onDeleteAlert: (com.rahul.stocksim.data.local.entity.PriceAlertEntity) -> Unit
+) {
+    var alertTargetPrice by remember { mutableStateOf("") }
+    var alertIsAbove by remember { mutableStateOf(true) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1F1F1F),
+        contentColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Text(
+                "Set Price Alert for $symbol",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = alertTargetPrice,
+                onValueChange = { if (it.isEmpty() || it.toDoubleOrNull() != null) alertTargetPrice = it },
+                label = { Text("Target Price") },
+                prefix = { Text("$") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Trigger when price is", modifier = Modifier.weight(1f))
+                FilterChip(
+                    selected = alertIsAbove,
+                    onClick = { alertIsAbove = true },
+                    label = { Text("Above") }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                FilterChip(
+                    selected = !alertIsAbove,
+                    onClick = { alertIsAbove = false },
+                    label = { Text("Below") }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    val target = alertTargetPrice.toDoubleOrNull()
+                    if (target != null) {
+                        onAddAlert(target, alertIsAbove)
+                        alertTargetPrice = ""
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = alertTargetPrice.isNotEmpty()
+            ) {
+                Text("Set Alert")
+            }
+
+            if (priceAlerts.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("Active Alerts", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                priceAlerts.forEach { alert ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Text(
+                            if (alert.isAbove) "Above $${String.format(Locale.US, "%.2f", alert.targetPrice)}"
+                            else "Below $${String.format(Locale.US, "%.2f", alert.targetPrice)}",
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { onDeleteAlert(alert) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Gray)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TradeContractSheet(
+    stock: Stock,
+    activeContracts: List<TradeContract>,
+    onDismiss: () -> Unit,
+    onCreateContract: (ContractType, Double, Long) -> Unit,
+    onCancelContract: (String) -> Unit
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    var contractPrice by remember { mutableStateOf(stock.price.toString()) }
+    var contractQuantity by remember { mutableStateOf("1") }
+    
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1F1F1F),
+        contentColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Text(
+                "Trading Desk",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary,
+                divider = {}
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text("Limit Orders") }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text("Options (Alpha)") }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (selectedTab == 0) {
+                // --- LIMIT ORDERS TAB ---
+                Text("Set automated buy/sell targets for ${stock.symbol}", color = Color.Gray, fontSize = 14.sp)
+                
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OutlinedTextField(
+                        value = contractPrice,
+                        onValueChange = { contractPrice = it },
+                        label = { Text("Execution Price") },
+                        prefix = { Text("$") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                    )
+                    
+                    OutlinedTextField(
+                        value = contractQuantity,
+                        onValueChange = { if (it.isEmpty() || it.all { char -> char.isDigit() }) contractQuantity = it },
+                        label = { Text("Quantity") },
+                        modifier = Modifier.weight(0.6f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(
+                        onClick = {
+                            val target = contractPrice.toDoubleOrNull()
+                            val qty = contractQuantity.toLongOrNull() ?: 0L
+                            if (target != null && qty > 0) {
+                                onCreateContract(ContractType.BUY_AT, target, qty)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) { Text("Buy At Target") }
+                    
+                    Button(
+                        onClick = {
+                            val target = contractPrice.toDoubleOrNull()
+                            val qty = contractQuantity.toLongOrNull() ?: 0L
+                            if (target != null && qty > 0) {
+                                onCreateContract(ContractType.SELL_AT, target, qty)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) { Text("Sell At Target") }
+                }
+            } else {
+                // --- OPTIONS TAB ---
+                SimulatedOptionsView(stock)
+            }
+
+            // --- PENDING CONTRACTS (Always visible) ---
+            if (activeContracts.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(32.dp))
+                Text("Pending Contracts", fontWeight = FontWeight.Bold, color = Color.Gray)
+                Spacer(modifier = Modifier.height(8.dp))
+                activeContracts.forEach { contract ->
+                    Card(
+                        modifier = Modifier.padding(vertical = 4.dp).fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                val label = when(contract.type) {
+                                    ContractType.BUY_AT -> "Buy"
+                                    ContractType.SELL_AT -> "Sell"
+                                    ContractType.CALL_OPTION -> "Call"
+                                    ContractType.PUT_OPTION -> "Put"
+                                }
+                                val color = if (contract.type == ContractType.BUY_AT || contract.type == ContractType.CALL_OPTION) Color(0xFF00C853) else Color(0xFFD50000)
+                                Text("$label ${contract.quantity} ${if(contract.type == ContractType.CALL_OPTION || contract.type == ContractType.PUT_OPTION) "contracts" else "shares"}", color = color, fontWeight = FontWeight.Bold)
+                                Text("Target: $${String.format(Locale.US, "%.2f", contract.targetPrice)}", color = Color.White, fontSize = 12.sp)
+                            }
+                            IconButton(onClick = { onCancelContract(contract.id) }) {
+                                Icon(Icons.Default.Close, contentDescription = "Cancel", tint = Color.Gray)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SimulatedOptionsView(stock: Stock) {
+    var selectedCall by remember { mutableStateOf(true) }
+    var strikePrice by remember { mutableStateOf(String.format(Locale.US, "%.0f", stock.price)) }
+    var contractsQuantity by remember { mutableIntStateOf(1) }
+    val scope = rememberCoroutineScope()
+    
+    Column {
+        Text("Create Simulated Option Contract", color = Color.Gray, fontSize = 14.sp)
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Row(modifier = Modifier.fillMaxWidth()) {
+            FilterChip(
+                selected = selectedCall,
+                onClick = { selectedCall = true },
+                label = { Text("Call Option") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            FilterChip(
+                selected = !selectedCall,
+                onClick = { selectedCall = false },
+                label = { Text("Put Option") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        OutlinedTextField(
+            value = strikePrice,
+            onValueChange = { strikePrice = it },
+            label = { Text("Strike Price") },
+            prefix = { Text("$") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Contracts (100 shares each)", color = Color.White)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { if (contractsQuantity > 1) contractsQuantity-- }) {
+                    Icon(imageVector = Icons.Default.Remove, contentDescription = "Decrease", tint = Color.White)
+                }
+                Text(
+                    text = contractsQuantity.toString(),
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = { contractsQuantity++ }) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Increase", tint = Color.White)
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Simulated Premium Calculation
+        val strike = strikePrice.toDoubleOrNull() ?: stock.price
+        val diff = kotlin.math.abs(strike - stock.price) / stock.price
+        val basePremium = stock.price * 0.05 // 5% base premium
+        val adjustedPremium = if (selectedCall) {
+            if (strike < stock.price) basePremium + (stock.price - strike) else basePremium / (1 + diff * 10)
+        } else {
+            if (strike > stock.price) basePremium + (strike - stock.price) else basePremium / (1 + diff * 10)
+        }
+        
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Estimated Premium", color = Color.Gray, fontSize = 12.sp)
+                Text(
+                    text = "$${String.format(Locale.US, "%.2f", adjustedPremium)} per share",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                Text("Total Cost ($contractsQuantity contracts): $${String.format(Locale.US, "%,.2f", adjustedPremium * 100 * contractsQuantity)}", color = Color.Gray, fontSize = 12.sp)
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        val viewModel: StockDetailViewModel = hiltViewModel()
+        
+        Button(
+            onClick = { 
+                scope.launch {
+                    viewModel.buyOption(selectedCall, strike, adjustedPremium, contractsQuantity)
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text("Buy $contractsQuantity Contract${if (contractsQuantity > 1) "s" else ""}")
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            "Note: Simulated options expire in 30 days. Profits are settled automatically on expiration.",
+            color = Color.Gray,
+            fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -869,9 +1249,9 @@ fun AIRecommendationSection(recommendation: AIRecommendation) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -881,71 +1261,88 @@ fun AIRecommendationSection(recommendation: AIRecommendation) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = Color(0xFFBB86FC),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "AI Recommendation",
+                        text = "AI Prediction",
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 
                 Surface(
                     color = when (recommendation.advice) {
-                        "BUY" -> Color(0xFF00C853).copy(alpha = 0.2f)
-                        "SELL" -> Color(0xFFD50000).copy(alpha = 0.2f)
-                        else -> Color.Gray.copy(alpha = 0.2f)
+                        "BUY" -> Color(0xFF00C853).copy(alpha = 0.1f)
+                        "SELL" -> Color.Red.copy(alpha = 0.1f)
+                        else -> Color.Gray.copy(alpha = 0.1f)
                     },
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = recommendation.advice,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         color = when (recommendation.advice) {
                             "BUY" -> Color(0xFF00C853)
-                            "SELL" -> Color(0xFFFF5252)
-                            else -> Color.LightGray
+                            "SELL" -> Color.Red
+                            else -> Color.Gray
                         },
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 12.sp
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Confidence: ", color = Color.Gray, fontSize = 14.sp)
-                Text(text = "${recommendation.confidence}%", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Spacer(modifier = Modifier.width(8.dp))
+            // Confidence Meter
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Confidence Score", color = Color.Gray, fontSize = 12.sp)
+                    Text("${recommendation.confidence}%", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 LinearProgressIndicator(
                     progress = { recommendation.confidence / 100f },
-                    modifier = Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)),
-                    color = Color(0xFFBB86FC),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(CircleShape),
+                    color = when {
+                        recommendation.confidence > 75 -> Color(0xFF00C853)
+                        recommendation.confidence > 50 -> Color.Yellow
+                        else -> Color.Red
+                    },
                     trackColor = Color.White.copy(alpha = 0.1f)
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             
-            Text(text = "Analysis Highlights:", color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-            Spacer(modifier = Modifier.height(8.dp))
+            Text("Key Drivers", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(bottom = 12.dp))
             
             recommendation.reasons.forEach { reason ->
-                Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                Row(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
-                        imageVector = Icons.Default.CheckCircleOutline,
+                        imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = Color(0xFFBB86FC).copy(alpha = 0.7f),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         modifier = Modifier.size(14.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = reason, color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = reason, color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp)
                 }
             }
+            
+
         }
     }
 }
@@ -959,155 +1356,8 @@ fun RecItem(label: String, value: Int, color: Color) {
 }
 
 @Composable
-fun StockLineChart(
-    data: List<StockPricePoint>, 
-    modifier: Modifier, 
-    color: Color,
-    onPointSelected: (StockPricePoint?) -> Unit
-) {
-    val textPaint = remember {
-        Paint().apply {
-            this.color = Color.Gray.toArgb()
-            this.textSize = 24f
-            this.typeface = Typeface.DEFAULT
-            this.textAlign = Paint.Align.RIGHT
-        }
-    }
-    
-    val timePaint = remember {
-        Paint().apply {
-            this.color = Color.Gray.toArgb()
-            this.textSize = 30f
-            this.typeface = Typeface.DEFAULT
-            this.textAlign = Paint.Align.CENTER
-        }
-    }
-
-    val priceLabelPaint = remember {
-        Paint().apply {
-            this.color = Color.Gray.toArgb()
-            this.textSize = 48f
-            this.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            this.textAlign = Paint.Align.CENTER
-        }
-    }
-
-    var dragX by remember { mutableStateOf<Float?>(null) }
-
-    Canvas(
-        modifier = modifier
-            .padding(end = 64.dp, top = 48.dp, bottom = 32.dp, start = 16.dp)
-            .pointerInput(data) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        dragX = offset.x
-                    },
-                    onDrag = { change, _ ->
-                        dragX = change.position.x
-                    },
-                    onDragEnd = {
-                        dragX = null
-                        onPointSelected(null)
-                    },
-                    onDragCancel = {
-                        dragX = null
-                        onPointSelected(null)
-                    }
-                )
-            }
-    ) {
-        if (data.size < 2) return@Canvas
-        
-        val maxPrice = data.maxOf { it.price }
-        val minPrice = data.minOf { it.price }
-        val priceRange = (maxPrice - minPrice).coerceAtLeast(0.1)
-
-        // Draw Y-axis labels and horizontal grid lines
-        for (i in 0..4) {
-            val price = maxPrice - (i * (priceRange / 4))
-            val y = (i * (size.height / 4)).toFloat()
-            
-            drawContext.canvas.nativeCanvas.drawText(
-                "$${String.format("%,.2f", price)}", 
-                size.width + 60.dp.toPx(), 
-                y + 8f, 
-                textPaint
-            )
-        }
-
-        val timeSdf = SimpleDateFormat("h:mm a", Locale.getDefault())
-        val timeStepCount = 3
-        for (i in 0..timeStepCount) {
-            val index = (i * (data.size - 1) / timeStepCount)
-            val point = data[index]
-            val x = i * (size.width / timeStepCount)
-            
-            val timeStr = timeSdf.format(Date(point.timestamp * 1000))
-            drawContext.canvas.nativeCanvas.drawText(timeStr, x, size.height + 24.dp.toPx(), timePaint)
-        }
-
-        val chartPath = Path()
-        data.forEachIndexed { index, point ->
-            val x = index * (size.width / (data.size - 1))
-            val y = size.height - ((point.price - minPrice) / priceRange * size.height).toFloat()
-            if (index == 0) chartPath.moveTo(x, y) else chartPath.lineTo(x, y)
-        }
-        drawPath(path = chartPath, color = color, style = Stroke(width = 3.dp.toPx()))
-
-        // Interaction logic
-        dragX?.let { x ->
-            val normalizedX = x.coerceIn(0f, size.width)
-            val index = ((normalizedX / size.width) * (data.size - 1)).toInt().coerceIn(0, data.size - 1)
-            val selectedPoint = data[index]
-            
-            onPointSelected(selectedPoint)
-
-            val pointX = index * (size.width / (data.size - 1))
-            val pointY = size.height - ((selectedPoint.price - minPrice) / priceRange * size.height).toFloat()
-
-            drawLine(
-                color = Color.Gray,
-                start = Offset(pointX, 0f),
-                end = Offset(pointX, size.height),
-                strokeWidth = 1.dp.toPx()
-            )
-
-            // Draw current price at the top of the vertical line
-            val labelText = "$${String.format("%,.2f", selectedPoint.price)}"
-            drawContext.canvas.nativeCanvas.drawText(
-                labelText,
-                pointX,
-                -36.dp.toPx(), // Position above the vertical line
-                priceLabelPaint
-            )
-            
-            // Draw current time under the price
-            val timeLabelText = timeSdf.format(Date(selectedPoint.timestamp * 1000))
-            drawContext.canvas.nativeCanvas.drawText(
-                timeLabelText,
-                pointX,
-                -20.dp.toPx(), // Position below the price label but above the vertical line
-                timePaint
-            )
-
-            // Draw indicator dot
-            drawCircle(
-                color = Color.Black,
-                radius = 10.dp.toPx(),
-                center = Offset(pointX, pointY)
-            )
-            drawCircle(
-                color = color,
-                radius = 8.dp.toPx(),
-                center = Offset(pointX, pointY)
-            )
-        }
-    }
-}
-
-@Composable
-fun StatItem(label: String, value: String) {
-    Column {
+fun StatItem(label: String, value: String, alignment: Alignment.Horizontal = Alignment.Start) {
+    Column(horizontalAlignment = alignment) {
         Text(text = label, color = Color.Gray, fontSize = 12.sp)
         Text(text = value, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
     }
@@ -1132,5 +1382,16 @@ fun NewsArticleItem(article: FinnhubNewsArticle, onClick: () -> Unit) {
                 AsyncImage(model = article.image, contentDescription = null, modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
             }
         }
+    }
+}
+
+private fun formatDate(dateStr: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+        val date = inputFormat.parse(dateStr)
+        if (date != null) outputFormat.format(date) else dateStr
+    } catch (_: Exception) {
+        dateStr
     }
 }

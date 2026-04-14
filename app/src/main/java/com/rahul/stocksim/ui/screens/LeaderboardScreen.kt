@@ -73,19 +73,29 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 }
 
                 // Increase limit to show more users
-                val snapshot = baseQuery.limit(100).get().await()
-                leaders = snapshot.documents.map { doc ->
-                    LeaderboardUser(
-                        id = doc.id,
-                        name = doc.getString("displayName") ?: doc.getString("email")?.split("@")?.get(0) ?: "Trader",
-                        totalAccountValue = doc.getDouble("totalAccountValue") ?: doc.getDouble("balance") ?: 0.0,
-                        photoUrl = doc.getString("photoUrl"),
-                        level = (doc.getLong("level") ?: 4L).toInt()
-                    )
+                val snapshot = try {
+                    baseQuery.limit(100).get().await()
+                } catch (e: Exception) {
+                    if (e.message?.contains("PERMISSION_DENIED") == true) {
+                        errorMessage = "Access denied. Please check your internet or account."
+                        null
+                    } else throw e
                 }
-                
-                if (leaders.isEmpty()) {
-                    Log.d("Leaderboard", "No users found for level $selectedLevelFilter")
+
+                if (snapshot != null) {
+                    leaders = snapshot.documents.map { doc ->
+                        LeaderboardUser(
+                            id = doc.id,
+                            name = doc.getString("displayName") ?: doc.getString("email")?.split("@")?.get(0) ?: "Trader",
+                            totalAccountValue = doc.getDouble("totalAccountValue") ?: doc.getDouble("balance") ?: 0.0,
+                            photoUrl = doc.getString("photoUrl"),
+                            level = (doc.getLong("level") ?: 4L).toInt()
+                        )
+                    }
+                    
+                    if (leaders.isEmpty()) {
+                        Log.d("Leaderboard", "No users found for level $selectedLevelFilter")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("Leaderboard", "Query failed, falling back to local filter", e)

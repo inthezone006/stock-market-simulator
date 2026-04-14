@@ -356,7 +356,16 @@ class MarketRepository @Inject constructor(
 
     suspend fun getStocksQuotes(symbols: List<String>): List<Stock> = coroutineScope {
         symbols.map { symbol ->
-            async { getStockQuote(symbol) }
+            async {
+                try {
+                    withTimeout(5000) {
+                        getStockQuote(symbol)
+                    }
+                } catch (e: Exception) {
+                    Log.e("MarketRepository", "Error fetching quote for $symbol", e)
+                    null
+                }
+            }
         }.awaitAll().filterNotNull()
     }
 
@@ -590,13 +599,20 @@ class MarketRepository @Inject constructor(
         }
     }
 
+    private val DEFAULT_WATCHLIST = listOf("AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX", "SPY")
+
     suspend fun getWatchlist(): List<WatchlistItem> {
-        val userId = auth.currentUser?.uid ?: return emptyList()
+        val userId = auth.currentUser?.uid ?: return DEFAULT_WATCHLIST.map { WatchlistItem(it) }
         return try {
-            firestore.collection("users").document(userId).collection("watchlist").get().await().documents.map { WatchlistItem(it.getString("symbol") ?: "") }
+            val snapshot = firestore.collection("users").document(userId).collection("watchlist").get().await()
+            if (snapshot.isEmpty) {
+                DEFAULT_WATCHLIST.map { WatchlistItem(it) }
+            } else {
+                snapshot.documents.map { WatchlistItem(it.getString("symbol") ?: "") }
+            }
         } catch (e: Exception) {
             recordError(e)
-            emptyList()
+            DEFAULT_WATCHLIST.map { WatchlistItem(it) }
         }
     }
 

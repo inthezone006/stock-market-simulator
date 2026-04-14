@@ -377,7 +377,7 @@ fun StockDetailScreen(
                                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
                                 } else if (history.isNotEmpty()) {
                                     VicoLineChart(
-                                        data = history.map { it.price },
+                                        history = history,
                                         lineColor = if (stock.change >= 0) Color.Green else Color.Red,
                                         modifier = Modifier.fillMaxSize()
                                     )

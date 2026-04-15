@@ -269,7 +269,7 @@ fun PositionRow(stock: Stock, quantity: Long, mainNavController: NavController, 
         StockRow(
             stock = stock,
             ownedQuantity = quantity,
-            onRowClick = { mainNavController.navigate("details/${stock.symbol}") }
+            onRowClick = { mainNavController.navigate(Screen.Details.createRoute(stock.symbol)) }
         )
         Row(
             modifier = Modifier

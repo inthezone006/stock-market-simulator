@@ -191,6 +191,13 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+
+                val currentUserLeader = leaders.find { it.id == currentUserId }
+                val currentUserRank = leaders.indexOfFirst { it.id == currentUserId }.let { if (it != -1) it + 1 else null }
+                
+                if (currentUserLeader != null) {
+                    CurrentUserSummary(rank = currentUserRank, userValue = currentUserLeader.totalAccountValue)
+                }
             }
 
             if (isLoading && !isRefreshing) {
@@ -245,6 +252,45 @@ fun LeaderboardScreen(mainNavController: NavController) {
         }
     }
 }
+
+@Composable
+fun CurrentUserSummary(rank: Int?, userValue: Double) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text("Your Global Rank", color = Color.Gray, fontSize = 12.sp)
+                Text(
+                    text = if (rank != null) "#$rank" else "Processing...",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text("Portfolio Value", color = Color.Gray, fontSize = 12.sp)
+                Text(
+                    text = "$${String.format("%,.2f", userValue)}",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+
+
+
 
 @Composable
 fun LeaderCard(rank: Int, user: LeaderboardUser, isCurrentUser: Boolean) {
@@ -325,3 +371,6 @@ fun LeaderCard(rank: Int, user: LeaderboardUser, isCurrentUser: Boolean) {
         }
     }
 }
+
+
+

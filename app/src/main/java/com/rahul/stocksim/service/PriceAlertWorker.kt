@@ -90,49 +90,37 @@ class PriceAlertWorker @AssistedInject constructor(
                                 }
                             }
                         }
-                        ContractType.CALL_OPTION -> {
+                        ContractType.CALL_OPTION, ContractType.PUT_OPTION -> {
                             val now = Timestamp.now()
                             if (contract.expirationDate != null && now.seconds >= contract.expirationDate.seconds) {
                                 isTriggered = true
-                                val diff = stock.price - contract.targetPrice
-                                val profit = if (diff > 0) diff * 100 * contract.quantity else 0.0 // 1 contract = 100 shares
-                                if (profit > 0) {
-                                    repository.buyStock("OPTION_PROFIT", 1, -profit, contract.userId) // Negative cost = gain
-                                    title = "Call Option Expired ITM: ${contract.symbol}"
-                                    message = "Your ${contract.quantity} call option contract(s) expired in the money! Profit: $${String.format(Locale.US, "%.2f", profit)}"
-                                } else {
-                                    title = "Option Expired: ${contract.symbol}"
-                                    message = "Your ${contract.quantity} call option contract(s) expired worthless."
-                                }
-                            }
-                        }
-                        ContractType.PUT_OPTION -> {
-                            val now = Timestamp.now()
-                            if (contract.expirationDate != null && now.seconds >= contract.expirationDate.seconds) {
-                                isTriggered = true
-                                val diff = contract.targetPrice - stock.price
-                                val profit = if (diff > 0) diff * 100 * contract.quantity else 0.0
-                                if (profit > 0) {
-                                    repository.buyStock("OPTION_PROFIT", 1, -profit, contract.userId)
-                                    title = "Put Option Expired ITM: ${contract.symbol}"
-                                    message = "Your ${contract.quantity} put option contract(s) expired in the money! Profit: $${String.format(Locale.US, "%.2f", profit)}"
-                                } else {
-                                    title = "Option Expired: ${contract.symbol}"
-                                    message = "Your ${contract.quantity} put option contract(s) expired worthless."
+                                val result = repository.settleOption(contract, stock.price, contract.userId)
+                                if (result.isSuccess) {
+                                    val isCall = contract.type == ContractType.CALL_OPTION
+                                    val diff = if (isCall) stock.price - contract.targetPrice else contract.targetPrice - stock.price
+                                    val profit = if (diff > 0) diff * 100 * contract.quantity else 0.0
+                                    
+                                    if (profit > 0) {
+                                        title = "${if (isCall) "Call" else "Put"} Option Expired ITM: ${contract.symbol}"
+                                        message = "Your ${contract.quantity} contract(s) expired in the money! Profit: $${String.format(Locale.US, "%.2f", profit)}"
+                                    } else {
+                                        title = "Option Expired: ${contract.symbol}"
+                                        message = "Your ${contract.quantity} contract(s) expired worthless."
+                                    }
                                 }
                             }
                         }
                     }
 
-                    if (isTriggered) {
-                        repository.updateTradeContract(contract.copy(status = if (message.contains("worthless")) ContractStatus.EXPIRED else ContractStatus.EXECUTED))
-                        if (title.isNotEmpty()) {
-                            notificationHelper.showNotification(
-                                title = title,
-                                message = message,
-                                notificationId = contract.id.hashCode()
-                            )
+                    if (isTriggered && title.isNotEmpty()) {
+                        if (message.contains("worthless")) {
+                            repository.updateTradeContract(contract.copy(status = ContractStatus.EXPIRED))
                         }
+                        notificationHelper.showNotification(
+                            title = title,
+                            message = message,
+                            notificationId = contract.id.hashCode()
+                        )
                     }
                 }
             }

@@ -376,53 +376,55 @@ fun StockDetailScreen(
                                 if (isGraphLoading) {
                                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
                                 } else if (history.isNotEmpty()) {
-                                    VicoLineChart(
-                                        history = history,
-                                        lineColor = if (stock.change >= 0) Color.Green else Color.Red,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
+                                    Column {
+                                        VicoLineChart(
+                                            history = history,
+                                            lineColor = if (stock.change >= 0) Color.Green else Color.Red,
+                                            modifier = Modifier.weight(1f).fillMaxWidth()
+                                        )
+                                        
+                                        val periods = listOf("1D", "5D", "1M", "6M", "1Y")
+                                        val selectedPeriod by viewModel.selectedPeriod.collectAsState()
+                                        
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            periods.forEach { period ->
+                                                FilterChip(
+                                                    modifier = Modifier.weight(1f),
+                                                    selected = selectedPeriod == period,
+                                                    onClick = { viewModel.refreshGraph(period) },
+                                                    label = { 
+                                                        Text(
+                                                            text = period,
+                                                            fontSize = 10.sp,
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            textAlign = TextAlign.Center
+                                                        ) 
+                                                    },
+                                                    colors = FilterChipDefaults.filterChipColors(
+                                                        labelColor = Color.Gray,
+                                                        selectedLabelColor = Color.White,
+                                                        selectedContainerColor = MaterialTheme.colorScheme.primary
+                                                    ),
+                                                    border = FilterChipDefaults.filterChipBorder(
+                                                        borderColor = Color.DarkGray,
+                                                        selectedBorderColor = MaterialTheme.colorScheme.primary,
+                                                        enabled = true,
+                                                        selected = selectedPeriod == period
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
                                 } else {
                                     Text(
                                         text = "No historical data available",
                                         color = Color.Gray,
                                         modifier = Modifier.align(Alignment.Center)
-                                    )
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            val periods = listOf("1D", "5D", "1M", "6M", "1Y", "5Y")
-                            val selectedPeriod by viewModel.selectedPeriod.collectAsState()
-                            
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                periods.forEach { period ->
-                                    FilterChip(
-                                        modifier = Modifier.weight(1f),
-                                        selected = selectedPeriod == period,
-                                        onClick = { viewModel.refreshGraph(period) },
-                                        label = { 
-                                            Text(
-                                                text = period,
-                                                fontSize = 10.sp,
-                                                modifier = Modifier.fillMaxWidth(),
-                                                textAlign = TextAlign.Center
-                                            ) 
-                                        },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            labelColor = Color.Gray,
-                                            selectedLabelColor = Color.White,
-                                            selectedContainerColor = MaterialTheme.colorScheme.primary
-                                        ),
-                                        border = FilterChipDefaults.filterChipBorder(
-                                            borderColor = Color.DarkGray,
-                                            selectedBorderColor = MaterialTheme.colorScheme.primary,
-                                            enabled = true,
-                                            selected = selectedPeriod == period
-                                        )
                                     )
                                 }
                             }
@@ -812,7 +814,7 @@ fun StockDetailScreen(
                                 items(peers) { peer ->
                                     FilterChip(
                                         selected = false,
-                                        onClick = { navController.navigate("stock_detail/$peer") },
+                                        onClick = { navController.navigate(Screen.Details.createRoute(peer)) },
                                         label = { Text(peer) },
                                         colors = FilterChipDefaults.filterChipColors(labelColor = Color.White, containerColor = Color(0xFF1F1F1F))
                                     )
@@ -854,6 +856,7 @@ fun StockDetailScreen(
                     TradeContractSheet(
                         stock = stock,
                         activeContracts = activeContracts,
+                        viewModel = viewModel,
                         onDismiss = { showContractsSheet = false },
                         onCreateContract = { type, target, qty ->
                             coroutineScope.launch {
@@ -981,10 +984,13 @@ fun PriceAlertSheet(
 fun TradeContractSheet(
     stock: Stock,
     activeContracts: List<TradeContract>,
+    viewModel: StockDetailViewModel,
     onDismiss: () -> Unit,
     onCreateContract: (ContractType, Double, Long) -> Unit,
     onCancelContract: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var selectedTab by remember { mutableIntStateOf(0) }
     var contractPrice by remember { mutableStateOf(stock.price.toString()) }
     var contractQuantity by remember { mutableStateOf("1") }
@@ -1086,7 +1092,8 @@ fun TradeContractSheet(
                 }
             } else {
                 // --- OPTIONS TAB ---
-                SimulatedOptionsView(stock)
+                val detailViewModel: StockDetailViewModel = hiltViewModel()
+                SimulatedOptionsView(stock, detailViewModel)
             }
 
             // --- PENDING CONTRACTS (Always visible) ---
@@ -1115,8 +1122,64 @@ fun TradeContractSheet(
                                 Text("$label ${contract.quantity} ${if(contract.type == ContractType.CALL_OPTION || contract.type == ContractType.PUT_OPTION) "contracts" else "shares"}", color = color, fontWeight = FontWeight.Bold)
                                 Text("Target: $${String.format(Locale.US, "%.2f", contract.targetPrice)}", color = Color.White, fontSize = 12.sp)
                             }
-                            IconButton(onClick = { onCancelContract(contract.id) }) {
-                                Icon(Icons.Default.Close, contentDescription = "Cancel", tint = Color.Gray)
+                            IconButton(onClick = { 
+                                if (contract.type == ContractType.CALL_OPTION || contract.type == ContractType.PUT_OPTION) {
+                                    coroutineScope.launch {
+                                        val res = viewModel.settleOption(contract, stock.price)
+                                        if (res.isSuccess) {
+                                            val strike = contract.targetPrice
+                                            val current = stock.price
+                                            val isCall = contract.type == ContractType.CALL_OPTION
+                                            val intrinsicValue = if (isCall) {
+                                                (current - strike).coerceAtLeast(0.0)
+                                            } else {
+                                                (strike - current).coerceAtLeast(0.0)
+                                            }
+                                            val totalSettlement = intrinsicValue * 100 * contract.quantity
+                                            
+                                            if (totalSettlement > 0) {
+                                                Toast.makeText(context, "Option closed! Profit of $${String.format(Locale.US, "%.2f", totalSettlement)} added to balance.", Toast.LENGTH_LONG).show()
+                                            } else {
+                                                Toast.makeText(context, "Option closed at $0.00 value.", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else {
+                                            Toast.makeText(context, "Failed to close option: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                } else {
+                                    onCancelContract(contract.id)
+                                }
+                            }) {
+                                val icon = if (contract.type == ContractType.CALL_OPTION || contract.type == ContractType.PUT_OPTION) Icons.Default.CheckCircle else Icons.Default.Close
+                                Icon(icon, contentDescription = "Close", tint = if (icon == Icons.Default.CheckCircle) Color.Green.copy(alpha = 0.7f) else Color.Gray)
+                            }
+                        }
+                        
+                        // Show P/L for options
+                        if (contract.type == ContractType.CALL_OPTION || contract.type == ContractType.PUT_OPTION) {
+                            val strike = contract.targetPrice
+                            val current = stock.price
+                            val isCall = contract.type == ContractType.CALL_OPTION
+                            val intrinsicValue = if (isCall) {
+                                (current - strike).coerceAtLeast(0.0)
+                            } else {
+                                (strike - current).coerceAtLeast(0.0)
+                            }
+                            val currentTotalValue = intrinsicValue * 100 * contract.quantity
+                            val costBasis = (contract.premium ?: 0.0) * 100 * contract.quantity
+                            val profit = currentTotalValue - costBasis
+                            
+                            Row(
+                                modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Current Value: $${String.format(Locale.US, "%.2f", currentTotalValue)}", color = Color.Gray, fontSize = 11.sp)
+                                Text(
+                                    text = "P/L: ${if (profit >= 0) "+" else ""}$${String.format(Locale.US, "%.2f", profit)}",
+                                    color = if (profit >= 0) Color.Green else Color.Red,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -1127,7 +1190,7 @@ fun TradeContractSheet(
 }
 
 @Composable
-fun SimulatedOptionsView(stock: Stock) {
+fun SimulatedOptionsView(stock: Stock, viewModel: StockDetailViewModel) {
     var selectedCall by remember { mutableStateOf(true) }
     var strikePrice by remember { mutableStateOf(String.format(Locale.US, "%.0f", stock.price)) }
     var contractsQuantity by remember { mutableIntStateOf(1) }
@@ -1201,30 +1264,38 @@ fun SimulatedOptionsView(stock: Stock) {
             if (strike > stock.price) basePremium + (strike - stock.price) else basePremium / (1 + diff * 10)
         }
         
+        val totalCost = adjustedPremium * 100 * contractsQuantity
+        
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Estimated Premium", color = Color.Gray, fontSize = 12.sp)
-                Text(
-                    text = "$${String.format(Locale.US, "%.2f", adjustedPremium)} per share",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-                Text("Total Cost ($contractsQuantity contracts): $${String.format(Locale.US, "%,.2f", adjustedPremium * 100 * contractsQuantity)}", color = Color.Gray, fontSize = 12.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Option Details", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                DetailRow("Est. Premium", "$${String.format(Locale.US, "%.2f", adjustedPremium)} / share")
+                DetailRow("Break Even", "$${String.format(Locale.US, "%.2f", if(selectedCall) strike + adjustedPremium else strike - adjustedPremium)}")
+                Divider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 8.dp))
+                DetailRow("Total Cost", "$${String.format(Locale.US, "%,.2f", totalCost)}", isBold = true)
             }
         }
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        val viewModel: StockDetailViewModel = hiltViewModel()
-        
         Button(
             onClick = { 
                 scope.launch {
-                    viewModel.buyOption(selectedCall, strike, adjustedPremium, contractsQuantity)
+                    val res = viewModel.buyOption(selectedCall, strike, adjustedPremium, contractsQuantity)
+                    if (res.isSuccess) {
+                        Toast.makeText(viewModel.getApplicationContext(), "Option purchased successfully!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(viewModel.getApplicationContext(), res.exceptionOrNull()?.message ?: "Failed to buy", Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -1344,6 +1415,14 @@ fun AIRecommendationSection(recommendation: AIRecommendation) {
             
 
         }
+    }
+}
+
+@Composable
+fun DetailRow(label: String, value: String, isBold: Boolean = false) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = Color.Gray, fontSize = 13.sp)
+        Text(value, color = Color.White, fontSize = 13.sp, fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal)
     }
 }
 

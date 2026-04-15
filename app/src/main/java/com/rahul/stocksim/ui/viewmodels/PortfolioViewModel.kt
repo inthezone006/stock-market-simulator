@@ -3,6 +3,7 @@ package com.rahul.stocksim.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rahul.stocksim.data.MarketRepository
+import com.rahul.stocksim.data.StockPricePoint
 import com.rahul.stocksim.model.Stock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.rahul.stocksim.model.*
@@ -29,10 +30,14 @@ class PortfolioViewModel @Inject constructor(
     private val _executedContracts = MutableStateFlow<List<TradeContract>>(emptyList())
     val executedContracts: StateFlow<List<TradeContract>> = _executedContracts.asStateFlow()
 
+    private val _portfolioHistory = MutableStateFlow<List<StockPricePoint>>(emptyList())
+    val portfolioHistory: StateFlow<List<StockPricePoint>> = _portfolioHistory.asStateFlow()
+
     init {
         loadData(forceRefresh = false)
         loadContracts()
         loadExecutedContracts()
+        loadHistory()
     }
 
     private fun loadContracts() {
@@ -65,20 +70,9 @@ class PortfolioViewModel @Inject constructor(
 
     fun closeOptionPosition(contract: TradeContract) {
         viewModelScope.launch {
-            // Settle option profit/loss manually if closed before expiration
             val quote = marketRepository.getStockQuote(contract.symbol)
             if (quote != null) {
-                val currentPrice = quote.price
-                val profitPerShare = if (contract.type == ContractType.CALL_OPTION) {
-                    (currentPrice - contract.targetPrice).coerceAtLeast(0.0)
-                } else {
-                    (contract.targetPrice - currentPrice).coerceAtLeast(0.0)
-                }
-                
-                // For simplicity, we just mark it as EXECUTED (or EXPIRED) and maybe adjust balance
-                // In this simplified sim, we'll just cancel it to stop tracking, 
-                // but real settlement happens in PriceAlertWorker for simplicity of logic.
-                marketRepository.cancelTradeContract(contract.id)
+                marketRepository.settleOption(contract, quote.price)
                 loadContracts()
                 loadExecutedContracts()
             }
@@ -86,7 +80,20 @@ class PortfolioViewModel @Inject constructor(
     }
 
     private fun loadHistory() {
-        // Portfolio history graph removed from UI
+        viewModelScope.launch {
+            // Fetch total account value history or use mock data
+            val now = System.currentTimeMillis() / 1000
+            val mockHistory = listOf(
+                StockPricePoint(now - 86400 * 6, 95000.0),
+                StockPricePoint(now - 86400 * 5, 97000.0),
+                StockPricePoint(now - 86400 * 4, 96000.0),
+                StockPricePoint(now - 86400 * 3, 102000.0),
+                StockPricePoint(now - 86400 * 2, 105000.0),
+                StockPricePoint(now - 86400 * 1, 103000.0),
+                StockPricePoint(now, 108000.0)
+            )
+            _portfolioHistory.value = mockHistory
+        }
     }
 
     fun refresh() {

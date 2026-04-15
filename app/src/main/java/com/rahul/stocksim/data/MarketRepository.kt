@@ -238,6 +238,8 @@ class MarketRepository @Inject constructor(
     
     private val apiKey = "d38davhr01qlbdj4vutgd38davhr01qlbdj4vuu0"
 
+    fun getApplicationContext() = context
+
     private val quoteCache = ConcurrentHashMap<String, Pair<Stock, Long>>()
     private val CACHE_EXPIRATION_MS = 300_000L // 5 minutes
     
@@ -445,19 +447,19 @@ class MarketRepository @Inject constructor(
                         low = response.l?.getOrNull(i) ?: response.c[i],
                         volume = response.v?.getOrNull(i) ?: 0L
                     )
-                }
+                }.sortedBy { it.timestamp }
             } else {
                 // Fallback to simulation if no data or status not ok
-                getStockQuote(symbol)?.let { generateSimulatedPoints(FinnhubQuoteResponse(it.price, it.change, it.percentChange, it.high, it.low, it.open, it.prevClose), to, period) } ?: emptyList()
+                getStockQuote(symbol)?.let { generateSimulatedPoints(symbol, FinnhubQuoteResponse(it.price, it.change, it.percentChange, it.high, it.low, it.open, it.prevClose), to, period) } ?: emptyList()
             }
         } catch (e: Exception) {
             recordError(e)
             // Fallback to simulation on network error
-            getStockQuote(symbol)?.let { generateSimulatedPoints(FinnhubQuoteResponse(it.price, it.change, it.percentChange, it.high, it.low, it.open, it.prevClose), to, period) } ?: emptyList()
+            getStockQuote(symbol)?.let { generateSimulatedPoints(symbol, FinnhubQuoteResponse(it.price, it.change, it.percentChange, it.high, it.low, it.open, it.prevClose), to, period) } ?: emptyList()
         }
     }
 
-    private fun generateSimulatedPoints(quote: FinnhubQuoteResponse, endTime: Long, period: String): List<StockPricePoint> {
+    private fun generateSimulatedPoints(symbol: String, quote: FinnhubQuoteResponse, endTime: Long, period: String): List<StockPricePoint> {
         val points = mutableListOf<StockPricePoint>()
         
         // Use available quote data for variance
@@ -467,21 +469,30 @@ class MarketRepository @Inject constructor(
         val close = quote.c
         
         val steps = when(period) {
-            "1D" -> 24 // Hourly points for 1 day
-            "1W" -> 14 // Twice daily for a week
-            "1M" -> 30 // Daily for a month
-            else -> 20
+            "1D" -> 24 
+            "5D" -> 40 // 8 points per day for 5 days
+            "1W" -> 35
+            "1M" -> 30 
+            "6M" -> 120 // More points for 6M
+            "1Y" -> 52 
+            "5Y" -> 60 
+            else -> 30
         }
 
         val intervalSeconds = when(period) { 
             "1D" -> 3600L 
-            "1W" -> 3600L * 12 
-            "1M" -> 3600L * 24 * 2 
-            "1Y" -> 3600L * 24 * 30 
-            else -> 3600L 
+            "5D" -> (3600L * 24 * 5) / steps
+            "1W" -> (3600L * 24 * 7) / steps
+            "1M" -> (3600L * 24 * 30) / steps
+            "6M" -> (3600L * 24 * 180) / steps
+            "1Y" -> (3600L * 24 * 365) / steps
+            "5Y" -> (3600L * 24 * 365 * 5) / steps
+            else -> 3600L * 24
         }
 
-        val random = Random(endTime + (close * 100).toLong()) // Seeded random for consistency
+        // Use a stable seed based on symbol and period to keep history consistent across refreshes
+        val seed = symbol.hashCode().toLong() + period.hashCode().toLong()
+        val random = Random(seed)
 
         if (period == "1D") {
             // For 1D charts, strictly follow Open -> (High/Low) -> Close path to touch all key stats
@@ -525,14 +536,30 @@ class MarketRepository @Inject constructor(
                 volume = (1000..50000).random().toLong()
             ))
         } else {
-            // For other periods, use a trend-based simulation from "open" to current price
-            val startPrice = if (open > 0) open else close * (0.95 + random.nextDouble() * 0.1)
+            // For other periods, use a trend-based simulation
+            // For 5D/1M/6M/1Y, the daily 'open' is not the correct starting point for the whole period.
+            // We'll estimate a starting price based on a random walk backwards.
+            val periodVariance = when(period) {
+                "5D" -> 0.05
+                "1W" -> 0.07
+                "1M" -> 0.12
+                "6M" -> 0.25
+                "1Y" -> 0.40
+                "5Y" -> 0.80
+                else -> 0.10
+            }
+            
+            val startPrice = close * (1.0 + (random.nextDouble() - 0.5) * periodVariance)
+            
             for (i in 0..steps) {
                 val timestamp = endTime - ((steps - i) * intervalSeconds)
                 val progress = i.toDouble() / steps
+                
+                // Add some sinusoidal movement for more realistic stock behavior
+                val sineWave = sin(progress * Math.PI * 2) * (close * periodVariance * 0.2)
                 val trend = startPrice + (close - startPrice) * progress
-                val noise = (random.nextDouble() - 0.5) * close * 0.05
-                val price = (trend + noise).coerceAtLeast(0.01)
+                val noise = (random.nextDouble() - 0.5) * close * (periodVariance * 0.1)
+                val price = (trend + sineWave + noise).coerceAtLeast(0.01)
                 
                 points.add(StockPricePoint(
                     timestamp = timestamp,
@@ -716,6 +743,44 @@ class MarketRepository @Inject constructor(
         return try {
             firestore.collection("users").document(userId).collection("contracts").document(contractId)
                 .update("status", ContractStatus.CANCELLED.name).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            recordError(e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun settleOption(contract: TradeContract, currentPrice: Double, userId: String? = null): Result<Unit> {
+        val targetUserId = userId ?: auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        
+        val isCall = contract.type == ContractType.CALL_OPTION
+        val strike = contract.targetPrice
+        val intrinsicValue = if (isCall) {
+            (currentPrice - strike).coerceAtLeast(0.0)
+        } else {
+            (strike - currentPrice).coerceAtLeast(0.0)
+        }
+        
+        val totalSettlement = intrinsicValue * 100 * contract.quantity
+        val newStatus = if (totalSettlement > 0) ContractStatus.EXECUTED else ContractStatus.EXPIRED
+        
+        return try {
+            val userRef = firestore.collection("users").document(targetUserId)
+            val contractRef = userRef.collection("contracts").document(contract.id)
+            
+            firestore.runTransaction { transaction ->
+                // Update balance if there's any value to settle
+                if (totalSettlement > 0) {
+                    val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
+                    transaction.update(userRef, "balance", currentBalance + totalSettlement)
+                }
+                
+                // Mark contract as executed or expired
+                transaction.update(contractRef, "status", newStatus.name)
+                null
+            }.await()
+            
+            globalPortfolioCache = null
             Result.success(Unit)
         } catch (e: Exception) {
             recordError(e)

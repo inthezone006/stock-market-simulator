@@ -18,11 +18,22 @@ import androidx.compose.ui.unit.sp
 import com.rahul.stocksim.model.Stock
 
 @Composable
-fun StockRow(stock: Stock, ownedQuantity: Long = 0, onRowClick: (Stock) -> Unit) {
+fun StockRow(
+    stock: Stock,
+    ownedQuantity: Long = 0,
+    modifier: Modifier = Modifier,
+    onRowClick: ((Stock) -> Unit)? = null
+) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .clickable { onRowClick(stock) },
+            .then(
+                if (onRowClick != null) {
+                    Modifier.clickable { onRowClick(stock) }
+                } else {
+                    Modifier
+                }
+            ),
         color = Color.Transparent
     ) {
         Row(

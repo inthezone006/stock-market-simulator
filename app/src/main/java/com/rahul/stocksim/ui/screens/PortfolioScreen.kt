@@ -24,7 +24,7 @@ import androidx.navigation.NavController
 import com.rahul.stocksim.data.MarketRepository
 import com.rahul.stocksim.model.Stock
 import com.rahul.stocksim.ui.components.StockRow
-import com.rahul.stocksim.ui.components.SimpleLineChart
+import com.rahul.stocksim.ui.components.VicoLineChart
 import com.rahul.stocksim.ui.viewmodels.PortfolioUiState
 import com.rahul.stocksim.ui.viewmodels.PortfolioViewModel
 
@@ -37,6 +37,7 @@ fun PortfolioScreen(
     val balance by viewModel.userBalance.collectAsState(initial = 0.0)
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val portfolioHistory by viewModel.portfolioHistory.collectAsState()
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -117,6 +118,15 @@ fun PortfolioScreen(
                                     }
                                 }
                                 
+                                if (portfolioHistory.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(24.dp))
+                                    VicoLineChart(
+                                        history = portfolioHistory,
+                                        lineColor = if (dayChange >= 0) Color.Green else Color.Red,
+                                        modifier = Modifier.fillMaxWidth().height(180.dp)
+                                    )
+                                }
+
                                 Spacer(modifier = Modifier.height(24.dp))
                                 
                                 // Invested vs Available breakdown
@@ -188,24 +198,36 @@ fun PortfolioScreen(
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { navController.navigate("details/${stock.symbol}") },
-                                color = Color.Transparent
+                                    .padding(vertical = 4.dp)
+                                    .clickable { navController.navigate(Screen.Details.createRoute(stock.symbol)) },
+                                color = Color(0xFF1F1F1F),
+                                shape = RoundedCornerShape(12.dp)
                             ) {
-                                Column {
+                                Column(modifier = Modifier.padding(12.dp)) {
                                     StockRow(
                                         stock = stock,
-                                        ownedQuantity = quantity,
-                                        onRowClick = { /* Click handled by Surface */ }
+                                        ownedQuantity = quantity
                                     )
-                                    Text(
-                                        text = "$quantity ${if (stock.isCrypto) "units" else "shares"} • $${String.format("%,.2f", stock.price * quantity)} total",
-                                        color = Color.Gray,
-                                        fontSize = 12.sp,
-                                        modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
-                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "$quantity ${if (stock.isCrypto) "units" else "shares"}",
+                                            color = Color.Gray,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = "Value: $${String.format("%,.2f", stock.price * quantity)}",
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                         }
                     }
                     item { Spacer(modifier = Modifier.height(32.dp)) }

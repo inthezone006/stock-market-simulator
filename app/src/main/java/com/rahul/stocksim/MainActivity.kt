@@ -192,7 +192,7 @@ class MainActivity : ComponentActivity() {
                             MainScreen(
                                 mainNavController = navController,
                                 onStockClick = { stock ->
-                                    navController.navigate("details/${stock.symbol}")
+                                    navController.navigate(Screen.Details.createRoute(stock.symbol))
                                 }
                             )
                         }

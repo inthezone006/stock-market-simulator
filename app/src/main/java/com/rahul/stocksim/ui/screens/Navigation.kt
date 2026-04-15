@@ -36,7 +36,9 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings_screen")
     object EditProfile : Screen("edit_profile_screen")
     object Main : Screen("main_screen")
-    object Details : Screen("details/{symbol}")
+    object Details : Screen("details/{symbol}") {
+        fun createRoute(symbol: String) = "details/$symbol"
+    }
     object MarketTutorial : Screen("market_tutorial")
 }
 

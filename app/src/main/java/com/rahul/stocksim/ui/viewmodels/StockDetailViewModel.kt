@@ -22,6 +22,9 @@ class StockDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val symbol: String? = savedStateHandle["symbol"]
+    private val application = marketRepository.getApplicationContext()
+
+    fun getApplicationContext() = application
 
     private val _uiState = MutableStateFlow<StockDetailUiState>(StockDetailUiState.Loading)
     val uiState: StateFlow<StockDetailUiState> = _uiState.asStateFlow()
@@ -251,6 +254,15 @@ class StockDetailViewModel @Inject constructor(
         )
         
         return marketRepository.createTradeContract(contract)
+    }
+
+    suspend fun settleOption(contract: TradeContract, currentPrice: Double): Result<Unit> {
+        val result = marketRepository.settleOption(contract, currentPrice)
+        if (result.isSuccess) {
+            // No direct field to update like _ownedQuantity for options yet, 
+            // but the balance flow will update automatically
+        }
+        return result
     }
 
     fun cancelContract(contractId: String) {

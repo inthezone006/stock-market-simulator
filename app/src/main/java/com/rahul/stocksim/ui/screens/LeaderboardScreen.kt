@@ -197,6 +197,7 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 
                 if (currentUserLeader != null) {
                     CurrentUserSummary(rank = currentUserRank, userValue = currentUserLeader.totalAccountValue)
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
 

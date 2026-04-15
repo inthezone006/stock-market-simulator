@@ -1028,7 +1028,7 @@ fun TradeContractSheet(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Options (Alpha)") }
+                    text = { Text("Options") }
                 )
             }
 

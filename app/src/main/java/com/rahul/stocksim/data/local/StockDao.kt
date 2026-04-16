@@ -14,13 +14,13 @@ interface StockDao {
     fun getAllStocks(): Flow<List<StockEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertStock(stock: StockEntity)
+    suspend fun insertStock(stock: StockEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertStocks(stocks: List<StockEntity>)
+    suspend fun insertStocks(stocks: List<StockEntity>): List<Long>
 
     @Query("DELETE FROM stocks")
-    suspend fun clearAll()
+    suspend fun clearAll(): Int
 
     @Query("SELECT * FROM price_alerts WHERE isEnabled = 1")
     suspend fun getActivePriceAlerts(): List<PriceAlertEntity>
@@ -29,11 +29,11 @@ interface StockDao {
     fun getAlertsForStock(symbol: String): Flow<List<PriceAlertEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPriceAlert(alert: PriceAlertEntity)
+    suspend fun insertPriceAlert(alert: PriceAlertEntity): Long
 
     @Update
-    suspend fun updatePriceAlert(alert: PriceAlertEntity)
+    suspend fun updatePriceAlert(alert: PriceAlertEntity): Int
 
     @Delete
-    suspend fun deletePriceAlert(alert: PriceAlertEntity)
+    suspend fun deletePriceAlert(alert: PriceAlertEntity): Int
 }

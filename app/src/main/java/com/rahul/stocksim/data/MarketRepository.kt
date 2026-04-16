@@ -360,7 +360,7 @@ class MarketRepository @Inject constructor(
         symbols.map { symbol ->
             async {
                 try {
-                    withTimeout(5000) {
+                    withTimeout(15000) {
                         getStockQuote(symbol)
                     }
                 } catch (e: Exception) {
@@ -797,10 +797,10 @@ class MarketRepository @Inject constructor(
             val portfolioRef = userRef.collection("portfolio").document(symbol)
             firestore.runTransaction { transaction ->
                 val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
+                val portfolioDoc = transaction.get(portfolioRef)
                 if (currentBalance >= totalCost) {
                     newBalance = currentBalance - totalCost
                     transaction.update(userRef, "balance", newBalance)
-                    val portfolioDoc = transaction.get(portfolioRef)
                     if (portfolioDoc.exists()) transaction.update(portfolioRef, "quantity", (portfolioDoc.getLong("quantity") ?: 0L) + quantity)
                     else transaction.set(portfolioRef, mapOf("quantity" to quantity.toLong(), "symbol" to symbol))
                     null
@@ -836,14 +836,22 @@ class MarketRepository @Inject constructor(
         }
     }
 
-    fun getUserBalance(): Flow<Double> = flow {
-        val userId = auth.currentUser?.uid ?: return@flow
-        while(true) {
-            val snapshot = firestore.collection("users").document(userId).get().await()
-            val balance = snapshot.getDouble("balance") ?: 0.0
-            emit(balance)
-            delay(5000)
+    fun getUserBalance(): Flow<Double> = callbackFlow {
+        val userId = auth.currentUser?.uid ?: run {
+            trySend(0.0)
+            close()
+            return@callbackFlow
         }
+        val listener = firestore.collection("users").document(userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    recordError(error)
+                    return@addSnapshotListener
+                }
+                val balance = snapshot?.getDouble("balance") ?: 0.0
+                trySend(balance)
+            }
+        awaitClose { listener.remove() }
     }.catch { e ->
         if (e is Exception) recordError(e)
         emit(0.0)

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.1.1"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -11,8 +11,8 @@ composeBom = "2024.12.01"
 firebaseCrashlytics = "20.0.4"
 googleFirebaseCrashlytics = "3.0.2"
 firebaseAnalytics = "23.0.0"
-hilt = "2.54"
-room = "2.6.1"
+hilt = "2.59.2"
+room = "2.7.0-alpha13"
 ksp = "2.1.10-1.0.30"
 vico = "2.0.0-beta.3"
 
@@ -51,4 +51,3 @@ kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kot
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-

@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -170,7 +171,7 @@ fun SettingsScreen(navController: NavController) {
                     SettingsItem(
                         icon = Icons.Default.Edit,
                         label = "Identity",
-                        value = "Edit account details",
+                        value = "Manage identity",
                         onClick = { navController.navigate(Screen.EditProfile.route) }
                     )
                     SettingsItem(
@@ -304,6 +305,12 @@ fun SettingsScreen(navController: NavController) {
                         value = "Update password",
                         onClick = { navController.navigate(Screen.PasswordSetup.createRoute(true)) }
                     )
+                    SettingsItem(
+                        icon = Icons.Default.Delete,
+                        label = "Account Management",
+                        value = "Manage account deletion",
+                        onClick = { navController.navigate(Screen.EditProfile.route) }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -331,7 +338,7 @@ fun SettingsScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000))
                 ) {
-                    Icon(Icons.Default.ExitToApp, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Logout", fontWeight = FontWeight.Bold)
                 }

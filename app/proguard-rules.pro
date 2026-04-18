@@ -47,3 +47,7 @@
 -keep class androidx.startup.** { *; }
 -keep class androidx.datastore.** { *; }
 -keep class * extends androidx.startup.Initializer
+
+# Proguard fix for potential adflow NPE (transitive/removed dependency)
+-dontwarn com.adflow.**
+-keep class com.adflow.** { *; }

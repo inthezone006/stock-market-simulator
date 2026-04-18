@@ -184,25 +184,50 @@ class AuthRepository {
         }
     }
 
+    fun isGoogleUser(): Boolean {
+        return currentUser?.providerData?.any { it.providerId == "google.com" } ?: false
+    }
+
     suspend fun deleteAccount(password: String): Result<Unit> {
         val user = currentUser ?: return Result.failure(Exception("Not authenticated"))
         return try {
-            val credential = EmailAuthProvider.getCredential(user.email!!, password)
+            val email = user.email ?: return Result.failure(Exception("User email not found"))
+            val credential = EmailAuthProvider.getCredential(email, password)
             user.reauthenticate(credential).await()
             
-            val uid = user.uid
-            logEventWithUser("delete_account")
-            firestore.collection("users").document(uid).delete().await()
-            
-            try {
-                storage.reference.child("profile_pictures/$uid").delete().await()
-            } catch (e: Exception) {}
-            
+            performAccountCleanup(user.uid)
             user.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("AUTH_REPO", "Error deleting account with password", e)
             crashlytics.recordException(e)
             Result.failure(e)
+        }
+    }
+
+    suspend fun deleteAccountWithGoogle(idToken: String): Result<Unit> {
+        val user = currentUser ?: return Result.failure(Exception("Not authenticated"))
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            user.reauthenticate(credential).await()
+            
+            performAccountCleanup(user.uid)
+            user.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("AUTH_REPO", "Error deleting account with Google", e)
+            crashlytics.recordException(e)
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun performAccountCleanup(uid: String) {
+        logEventWithUser("delete_account")
+        firestore.collection("users").document(uid).delete().await()
+        try {
+            storage.reference.child("profile_pictures/$uid").delete().await()
+        } catch (e: Exception) {
+            Log.w("AUTH_REPO", "Could not delete profile picture during account cleanup", e)
         }
     }
 
@@ -211,16 +236,22 @@ class AuthRepository {
         return try {
             val uid = user.uid
             logEventWithUser("delete_account_immediate")
-            firestore.collection("users").document(uid).delete().await()
             
+            // Try to delete firestore data first
             try {
+                firestore.collection("users").document(uid).delete().await()
                 storage.reference.child("profile_pictures/$uid").delete().await()
-            } catch (e: Exception) {}
+            } catch (e: Exception) {
+                Log.w("AUTH_REPO", "Cleanup failed during immediate delete", e)
+            }
             
             user.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("AUTH_REPO", "Error in deleteCurrentUser", e)
             crashlytics.recordException(e)
+            // If delete fails due to recent login required, at least sign out
+            auth.signOut()
             Result.failure(e)
         }
     }

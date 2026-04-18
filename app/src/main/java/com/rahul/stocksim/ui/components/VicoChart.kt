@@ -74,12 +74,16 @@ fun VicoLineChart(
     val rangeProvider = remember(history) {
         object : CartesianLayerRangeProvider {
             override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore): Double {
-                val delta = maxY - minY
-                return if (delta > 0) minY - delta * 0.1 else minY * 0.9
+                val tempMin = if (minY.isNaN() || minY.isInfinite()) 0.0 else minY
+                val tempMax = if (maxY.isNaN() || maxY.isInfinite()) tempMin + 1.0 else maxY
+                val delta = tempMax - tempMin
+                return if (delta > 0) tempMin - delta * 0.1 else tempMin * 0.9
             }
             override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore): Double {
-                val delta = maxY - minY
-                return if (delta > 0) maxY + delta * 0.1 else maxY * 1.1
+                val tempMin = if (minY.isNaN() || minY.isInfinite()) 0.0 else minY
+                val tempMax = if (maxY.isNaN() || maxY.isInfinite()) tempMin + 1.0 else maxY
+                val delta = tempMax - tempMin
+                return if (delta > 0) tempMax + delta * 0.1 else tempMax * 1.1
             }
         }
     }

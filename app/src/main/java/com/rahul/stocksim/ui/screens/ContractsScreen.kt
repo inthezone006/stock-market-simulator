@@ -58,6 +58,13 @@ fun ContractsScreen(
                 ) {
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Contracts",
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
                         // Buying Power Section
                         Card(
                             modifier = Modifier.fillMaxWidth(),

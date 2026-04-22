@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.ui.graphics.vector.ImageVector
 
 // Shared constant to avoid duplication and conflicts
@@ -47,5 +48,6 @@ sealed class BottomNavItem(val route: String, val label: String, val icon: Image
     object Market : BottomNavItem("market_screen", "Stocks", Icons.Default.BarChart)
     object Contracts : BottomNavItem("contracts_screen", "Contracts", Icons.Default.AttachMoney)
     object Leaderboard : BottomNavItem("leaderboard_screen", "Leaders", Icons.Default.Leaderboard)
+    object Macro : BottomNavItem("macro_screen", "Macro", Icons.Default.Public)
     object Guide : BottomNavItem("guide_screen", "Guide", Icons.Default.Help)
 }

@@ -186,6 +186,19 @@ interface FinnhubApi {
         @Query("symbol") symbol: String,
         @Query("token") apiKey: String
     ): List<FinnhubEarningsSurpriseResponse>
+
+    @GET("stock/insider-transactions")
+    suspend fun getInsiderTransactions(
+        @Query("symbol") symbol: String,
+        @Query("token") apiKey: String
+    ): FinnhubInsiderResponse
+
+    @GET("calendar/economic")
+    suspend fun getEconomicCalendar(
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("token") apiKey: String
+    ): FinnhubEconomicCalendarResponse
 }
 
 data class FinnhubQuoteResponse(val c: Double, val d: Double, val dp: Double, val h: Double, val l: Double, val o: Double, val pc: Double)
@@ -211,6 +224,10 @@ data class FinnhubMarketStatusResponse(val exchange: String, val holiday: String
 data class FinnhubEsgResponse(val symbol: String, val totalScore: Double?, val environmentScore: Double?, val socialScore: Double?, val governanceScore: Double?, val data: Map<String, Any?>?)
 data class FinnhubPriceTargetResponse(val symbol: String, val targetHigh: Double?, val targetLow: Double?, val targetMean: Double?, val targetMedian: Double?, val lastUpdate: String?)
 data class FinnhubEarningsSurpriseResponse(val actual: Double?, val estimate: Double?, val period: String?, val symbol: String?, val surprise: Double?, val surprisePercent: Double?)
+data class FinnhubInsiderResponse(val data: List<FinnhubInsiderTransaction>, val symbol: String)
+data class FinnhubInsiderTransaction(val change: Long, val name: String, val share: Long, val transactionDate: String, val transactionPrice: Double)
+data class FinnhubEconomicCalendarResponse(val economicCalendar: List<FinnhubEconomicEntry>)
+data class FinnhubEconomicEntry(val actual: Double?, val country: String, val estimate: Double?, val event: String, val impact: String, val prev: Double?, val time: String, val unit: String)
 
 data class StockPricePoint(
     val timestamp: Long,
@@ -914,6 +931,21 @@ class MarketRepository @Inject constructor(
     suspend fun getMarketNews(): List<FinnhubNewsArticle> = try { api.getMarketNews("general", apiKey).take(10) } catch (e: Exception) { recordError(e); emptyList() }
     suspend fun getRecommendations(symbol: String): List<FinnhubRecommendationResponse> = try { api.getRecommendations(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
     suspend fun getPeers(symbol: String): List<String> = try { api.getPeers(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
+
+    suspend fun getInsiderTransactions(symbol: String): List<FinnhubInsiderTransaction> = try { 
+        api.getInsiderTransactions(symbol, apiKey).data.take(20) 
+    } catch (e: Exception) { recordError(e); emptyList() }
+
+    suspend fun getEconomicCalendar(): List<FinnhubEconomicEntry> {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        val today = sdf.format(calendar.time)
+        calendar.add(Calendar.DAY_OF_YEAR, 7)
+        val nextWeek = sdf.format(calendar.time)
+        return try { 
+            api.getEconomicCalendar(today, nextWeek, apiKey).economicCalendar 
+        } catch (e: Exception) { recordError(e); emptyList() }
+    }
 
     suspend fun getEarningsCalendar(symbol: String): FinnhubEarningsCalendarResponse? {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); val calendar = Calendar.getInstance(); val today = sdf.format(calendar.time)

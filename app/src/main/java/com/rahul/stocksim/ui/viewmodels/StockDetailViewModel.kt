@@ -23,6 +23,7 @@ class StockDetailViewModel @Inject constructor(
 
     private val symbol: String? = savedStateHandle["symbol"]
     private val application = marketRepository.getApplicationContext()
+    private val geminiService = GeminiService()
 
     fun getApplicationContext() = application
 
@@ -128,6 +129,10 @@ class StockDetailViewModel @Inject constructor(
                     val priceTarget = results[11] as? FinnhubPriceTargetResponse
                     val esg = results[12] as? FinnhubEsgResponse
 
+                    // New advanced features data
+                    val insiders = marketRepository.getInsiderTransactions(stockSymbol)
+                    val aiAnalysis = GeminiService().generateStockAnalysis(stockResult, news, financials)
+
                     val aiRec = marketRepository.analyzeStock(
                         stock = stockResult,
                         financials = financials,
@@ -156,7 +161,9 @@ class StockDetailViewModel @Inject constructor(
                         marketStatus = marketStatus,
                         esgScores = esg,
                         priceTarget = priceTarget,
-                        aiRecommendation = aiRec
+                        aiRecommendation = aiRec,
+                        insiderTransactions = insiders,
+                        aiAnalysis = aiAnalysis
                     )
                 }.collect {
                     _uiState.value = it
@@ -309,7 +316,9 @@ sealed class StockDetailUiState {
         val marketStatus: FinnhubMarketStatusResponse?,
         val esgScores: FinnhubEsgResponse?,
         val priceTarget: FinnhubPriceTargetResponse?,
-        val aiRecommendation: AIRecommendation?
+        val aiRecommendation: AIRecommendation?,
+        val insiderTransactions: List<FinnhubInsiderTransaction> = emptyList(),
+        val aiAnalysis: String? = null
     ) : StockDetailUiState()
     data class Error(val message: String) : StockDetailUiState()
 }

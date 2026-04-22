@@ -15,6 +15,7 @@ hilt = "2.59.2"
 room = "2.7.0-alpha13"
 ksp = "2.1.10-1.0.30"
 vico = "2.0.0-beta.3"
+generative-ai = "0.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,6 +44,7 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 vico-core = { group = "com.patrykandpatrick.vico", name = "core", version.ref = "vico" }
+google-generative-ai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generative-ai" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

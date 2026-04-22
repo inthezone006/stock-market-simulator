@@ -37,6 +37,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.rahul.stocksim.ui.viewmodels.PortfolioViewModel
 import com.rahul.stocksim.ui.viewmodels.MarketViewModel
 import com.rahul.stocksim.ui.viewmodels.PortfolioUiState
+import com.rahul.stocksim.ui.viewmodels.MacroViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rahul.stocksim.model.Stock
 import com.rahul.stocksim.util.NetworkObserver
@@ -66,6 +67,7 @@ fun MainScreen(
         BottomNavItem.Market,
         BottomNavItem.Contracts,
         BottomNavItem.Leaderboard,
+        BottomNavItem.Macro,
         BottomNavItem.Guide
     )
     
@@ -251,7 +253,7 @@ fun MainScreen(
                                         if (item == BottomNavItem.Guide && !isTutorialCompleted) {
                                             Badge(
                                                 containerColor = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(8.dp).offset(x = 4.dp, y = (-4).dp)
+                                                modifier = Modifier.size(8.dp)
                                             )
                                         }
                                     }
@@ -271,10 +273,17 @@ fun MainScreen(
                                 )
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Color(0xFF00796B).copy(alpha = 0.5f),
+                                indicatorColor = Color.Transparent,
                                 selectedIconColor = Color.White,
-                                unselectedIconColor = Color.Gray
-                            )
+                                unselectedIconColor = Color.Gray,
+                                disabledIconColor = Color.Gray,
+                                disabledTextColor = Color.Gray
+                            ),
+                            interactionSource = object : androidx.compose.foundation.interaction.MutableInteractionSource {
+                                override val interactions = kotlinx.coroutines.flow.emptyFlow<androidx.compose.foundation.interaction.Interaction>()
+                                override suspend fun emit(interaction: androidx.compose.foundation.interaction.Interaction) {}
+                                override fun tryEmit(interaction: androidx.compose.foundation.interaction.Interaction) = true
+                            }
                         )
                     }
                 }
@@ -302,6 +311,9 @@ fun MainScreen(
                 }
                 composable(BottomNavItem.Leaderboard.route) {
                     LeaderboardScreen(mainNavController)
+                }
+                composable(BottomNavItem.Macro.route) {
+                    MacroScreen()
                 }
                 composable(BottomNavItem.Guide.route) {
                     GuideScreen(mainNavController)

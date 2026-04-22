@@ -3,9 +3,11 @@ package com.rahul.stocksim.ui.screens
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -55,26 +57,43 @@ fun MarketScreen(
             }
             is MarketUiState.Success -> {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Market",
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp, start = 16.dp)
+                        )
+                    }
                     if (state.stockList.isNotEmpty()) {
                         item {
                             Text(
                                 "My Watchlist",
                                 color = Color.White,
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(16.dp)
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                             )
                         }
                         items(state.stockList) { currentStock ->
-                            StockRow(
-                                stock = currentStock,
-                                ownedQuantity = state.portfolio[currentStock.symbol] ?: 0L,
-                                onRowClick = { stock -> onStockClick(stock) }
-                            )
-                            HorizontalDivider(
-                                thickness = 0.5.dp,
-                                color = Color.White.copy(alpha = 0.1f)
-                            )
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp, horizontal = 16.dp)
+                                    .clickable { onStockClick(currentStock) },
+                                color = Color(0xFF1F1F1F),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    StockRow(
+                                        stock = currentStock,
+                                        ownedQuantity = state.portfolio[currentStock.symbol] ?: 0L,
+                                        onRowClick = { /* Handled by Surface click */ }
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -84,9 +103,9 @@ fun MarketScreen(
                             Text(
                                 "Market News",
                                 color = Color.White,
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(16.dp)
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                             )
                         }
                         items(state.marketNews) { article ->
@@ -94,7 +113,7 @@ fun MarketScreen(
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
                                 context.startActivity(intent)
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                     

@@ -16,8 +16,8 @@ android {
         applicationId = "com.rahul.stocksim"
         minSdk = 24
         targetSdk = 35
-        versionCode = 43
-        versionName = "4.6.2"
+        versionCode = 44
+        versionName = "4.6.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -118,6 +118,10 @@ dependencies {
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.core)
+    implementation(libs.google.generative.ai)
+    implementation("com.google.accompanist:accompanist-pager:0.34.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.34.0")
+    implementation(libs.google.generative.ai)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

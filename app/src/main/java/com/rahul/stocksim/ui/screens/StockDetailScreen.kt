@@ -751,6 +751,20 @@ fun StockDetailScreen(
                         }
                     }
 
+                    // --- GEMINI AI ANALYSIS SECTION ---
+                    state.aiAnalysis?.let { analysis ->
+                        item {
+                            AIAnalysisSection(analysis)
+                        }
+                    }
+
+                    // --- INSIDER TRADING SECTION ---
+                    if (state.insiderTransactions.isNotEmpty()) {
+                        item {
+                            InsiderTradingSection(state.insiderTransactions)
+                        }
+                    }
+
                     // --- KEY STATISTICS SECTION ---
                     financials?.let { stats ->
                         val isCrypto = stock.symbol.contains(":") || stock.symbol.endsWith("USD") 
@@ -1414,6 +1428,82 @@ fun AIRecommendationSection(recommendation: AIRecommendation) {
             }
             
 
+        }
+    }
+}
+
+@Composable
+fun AIAnalysisSection(analysis: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Psychology,
+                    contentDescription = null,
+                    tint = Color(0xFFBB86FC),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Gemini AI Insights",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = analysis,
+                color = Color.White.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodyMedium,
+                lineHeight = 22.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun InsiderTradingSection(transactions: List<FinnhubInsiderTransaction>) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
+        Text(
+            text = "Insider Transactions",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                transactions.take(5).forEach { tx ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = tx.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(text = tx.transactionDate, color = Color.Gray, fontSize = 12.sp)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            val color = if (tx.change > 0) Color.Green else Color.Red
+                            Text(
+                                text = "${if (tx.change > 0) "+" else ""}${tx.change}",
+                                color = color,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(text = "at $${tx.transactionPrice}", color = Color.Gray, fontSize = 12.sp)
+                        }
+                    }
+                    if (tx != transactions.take(5).last()) {
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    }
+                }
+            }
         }
     }
 }

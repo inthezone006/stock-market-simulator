@@ -88,17 +88,10 @@ fun EconomicEventItem(entry: FinnhubEconomicEntry) {
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
+            Box(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                contentAlignment = Alignment.CenterEnd
             ) {
-                Text(
-                    text = entry.country,
-                    color = Color.Gray,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
                 ImpactBadge(impact = entry.impact)
             }
             

@@ -24,6 +24,8 @@
 - **Unified Search Bar**: A powerful Material 3 search interface that takes over the full screen for an immersive experience.
 - **Personal Watchlist**: Hit the heart (❤️) and save your favorite stocks to a persistent list, synced across all your devices.
 - **Deep Insights**: View Open, Prev Close, Day High/Low, and Percent Change for any stock.
+- **Gemini AI Analysis 🧠**: Get real-time, AI-powered stock summaries and outlooks using **Google Gemini**. Includes a custom Markdown formatter for clear, readable insights.
+- **Economic Calendar**: Stay ahead of the market with a live feed of global economic events (Impact, Actual vs. Forecast).
 
 ### ⚙️ Account Management
 - **Customizable Profiles**: Upload and change your profile picture via **Firebase Storage**.
@@ -63,8 +65,9 @@
    - Set up a Firestore Composite Index for the `users` collection on fields `level` (Ascending) and `balance` (Descending) to enable leaderboard filtering.
 
 3. **API Integration**:
-   - Replace the API key in `MarketRepository.kt` with your own Finnhub.io key.
-   - Update `WEB_CLIENT_ID` in `Navigation.kt` with your Firebase Web Client ID.
+   - **Finnhub**: Replace the API key in `MarketRepository.kt` with your own [Finnhub.io](https://finnhub.io/) key.
+   - **Google Gemini**: Add your `GEMINI_API_KEY` to `gradle.properties` (Get it from [Google AI Studio](https://aistudio.google.com/)).
+   - **Firebase**: Update `WEB_CLIENT_ID` in `Navigation.kt` with your Firebase Web Client ID.
 
 4. **Build & Run**: 🏁 Launch the app and start building your empire!
 

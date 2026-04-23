@@ -152,6 +152,24 @@ fun GuideScreen(navController: NavController) {
             }
 
             item {
+                GuideSection(
+                    title = "Economic Calendar",
+                    icon = Icons.Default.CalendarMonth,
+                    content = "Track global economic events that move the markets.",
+                    detailedContent = "The Macro screen shows major events like Inflation data (CPI), Interest Rate decisions, and Employment reports. These events often cause high volatility. Check the 'Impact' level and compare 'Actual' vs 'Forecast' values to see if the news was better or worse than expected for the economy."
+                )
+            }
+
+            item {
+                GuideSection(
+                    title = "Gemini AI Insights",
+                    icon = Icons.Default.AutoAwesome,
+                    content = "Get AI-powered analysis for any stock in your watchlist.",
+                    detailedContent = "TradeSim integrates Google Gemini to provide deep insights. It analyzes current market conditions, recent news, and technical data to give you a concise summary and outlook for specific stocks. Look for the ✨ icon in the stock detail screen."
+                )
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -271,6 +289,11 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
             title = "Contracts & Options",
             description = "Master advanced trading. Tap to see how contracts and options work!",
             icon = Icons.Default.Description
+        ),
+        TutorialStep(
+            title = "Market Intelligence",
+            description = "Stay informed with the Economic Calendar and Gemini AI insights. Tap to explore!",
+            icon = Icons.Default.AutoAwesome
         )
     )
 
@@ -459,6 +482,7 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
                             3 -> PortfolioPreview()
                             4 -> LeaderboardPreview()
                             5 -> ContractsPreview()
+                            6 -> AIIntelligencePreview()
                         }
                     }
                 }
@@ -609,6 +633,37 @@ fun ContractsPreview() {
                     Text("Target: $150.00", color = Color.Gray, fontSize = 12.sp)
                 }
                 Text("Pending", color = Color.Yellow, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun AIIntelligencePreview() {
+    Card(
+        modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Market Intelligence", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text("CPI Inflation Data", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("Impact: High", color = Color.Red, fontSize = 12.sp)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFF8E24AA), modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Gemini: Bullish outlook for NVDA based on recent earnings...", color = Color.LightGray, fontSize = 12.sp, lineHeight = 16.sp)
             }
         }
     }

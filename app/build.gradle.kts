@@ -20,6 +20,8 @@ android {
         versionName = "4.6.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val geminiApiKey: String? = properties["GEMINI_API_KEY"] as? String
+        buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey ?: ""}\"")
     }
 
     buildTypes {

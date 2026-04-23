@@ -1435,7 +1435,9 @@ fun AIRecommendationSection(recommendation: AIRecommendation) {
 @Composable
 fun AIAnalysisSection(analysis: String) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -1456,15 +1458,55 @@ fun AIAnalysisSection(analysis: String) {
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = analysis,
-                color = Color.White.copy(alpha = 0.9f),
-                style = MaterialTheme.typography.bodyMedium,
-                lineHeight = 22.sp
+            
+            MarkdownText(
+                markdown = analysis,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
 }
+
+@Composable
+fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
+    val annotatedString = remember(markdown) {
+        parseMarkdown(markdown)
+    }
+    Text(
+        text = annotatedString,
+        color = Color.White.copy(alpha = 0.9f),
+        style = MaterialTheme.typography.bodyMedium,
+        lineHeight = 22.sp,
+        modifier = modifier
+    )
+}
+
+private fun parseMarkdown(markdown: String): androidx.compose.ui.text.AnnotatedString {
+    return androidx.compose.ui.text.buildAnnotatedString {
+        var currentText = markdown
+        // Basic parser for **bold** text
+        val boldRegex = Regex("""\*\*(.*?)\*\*""")
+        var lastIndex = 0
+        
+        boldRegex.findAll(markdown).forEach { matchResult ->
+            // Add text before the match
+            append(markdown.substring(lastIndex, matchResult.range.first))
+            
+            // Add bold text
+            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Color.White))
+            append(matchResult.groupValues[1])
+            pop()
+            
+            lastIndex = matchResult.range.last + 1
+        }
+        
+        // Add remaining text
+        if (lastIndex < markdown.length) {
+            append(markdown.substring(lastIndex))
+        }
+    }
+}
+
 
 @Composable
 fun InsiderTradingSection(transactions: List<FinnhubInsiderTransaction>) {

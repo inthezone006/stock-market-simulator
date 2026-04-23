@@ -18,12 +18,12 @@ import javax.inject.Inject
 @HiltViewModel
 class StockDetailViewModel @Inject constructor(
     private val marketRepository: MarketRepository,
+    private val geminiService: GeminiService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val symbol: String? = savedStateHandle["symbol"]
     private val application = marketRepository.getApplicationContext()
-    private val geminiService = GeminiService()
 
     fun getApplicationContext() = application
 
@@ -131,7 +131,7 @@ class StockDetailViewModel @Inject constructor(
 
                     // New advanced features data
                     val insiders = marketRepository.getInsiderTransactions(stockSymbol)
-                    val aiAnalysis = GeminiService().generateStockAnalysis(stockResult, news, financials)
+                    val aiAnalysis = geminiService.generateStockAnalysis(stockResult, news, financials)
 
                     val aiRec = marketRepository.analyzeStock(
                         stock = stockResult,

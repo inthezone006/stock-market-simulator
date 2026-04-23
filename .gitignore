@@ -29,6 +29,7 @@ google-services.json
 *.keystore
 *.p12
 signing.properties
+gradle.properties
 
 # Log files
 *.log

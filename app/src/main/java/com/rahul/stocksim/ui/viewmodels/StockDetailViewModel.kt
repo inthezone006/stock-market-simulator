@@ -132,6 +132,10 @@ class StockDetailViewModel @Inject constructor(
                     // New advanced features data
                     val insiders = marketRepository.getInsiderTransactions(stockSymbol)
                     val aiAnalysis = geminiService.generateStockAnalysis(stockResult, news, financials)
+                    
+                    if (aiAnalysis != null) {
+                        marketRepository.trackAIUsage()
+                    }
 
                     val aiRec = marketRepository.analyzeStock(
                         stock = stockResult,

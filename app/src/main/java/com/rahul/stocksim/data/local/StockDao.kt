@@ -1,12 +1,25 @@
 package com.rahul.stocksim.data.local
 
 import androidx.room.*
+import com.rahul.stocksim.data.local.entity.AchievementEntity
 import com.rahul.stocksim.data.local.entity.PriceAlertEntity
 import com.rahul.stocksim.data.local.entity.StockEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StockDao {
+    @Query("SELECT * FROM achievements")
+    fun getAllAchievements(): Flow<List<AchievementEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAchievement(achievement: AchievementEntity)
+
+    @Update
+    suspend fun updateAchievement(achievement: AchievementEntity)
+
+    @Query("SELECT * FROM achievements WHERE id = :id")
+    suspend fun getAchievement(id: String): AchievementEntity?
+
     @Query("SELECT * FROM stocks WHERE symbol = :symbol")
     suspend fun getStock(symbol: String): StockEntity?
 

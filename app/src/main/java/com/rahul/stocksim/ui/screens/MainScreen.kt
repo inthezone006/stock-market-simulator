@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -161,6 +162,13 @@ fun MainScreen(
                                 }) {
                                     Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.White)
                                 }
+                            }
+                            IconButton(onClick = { mainNavController.navigate(Screen.Achievements.route) }) {
+                                Icon(
+                                    imageVector = Icons.Default.EmojiEvents,
+                                    contentDescription = "Achievements",
+                                    tint = Color(0xFFFFD700)
+                                )
                             }
                             Box(
                                 modifier = Modifier

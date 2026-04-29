@@ -420,7 +420,18 @@ class MarketRepository @Inject constructor(
                 val stock = stocks.find { it.symbol == symbol }
                 if (stock != null) stock to qty else null
             }
-            if (portfolioWithQuotes.isNotEmpty()) globalPortfolioCache = portfolioWithQuotes
+            if (portfolioWithQuotes.isNotEmpty()) {
+                globalPortfolioCache = portfolioWithQuotes
+                if (portfolioWithQuotes.size >= 5) {
+                    updateAchievementProgress("diversified", 1f)
+                }
+                
+                // Track Sector Specialist: Own stocks in 3+ industries
+                val industries = portfolioWithQuotes.mapNotNull { it.first.industry }.distinct()
+                if (industries.size >= 3) {
+                    updateAchievementProgress("diversified_sector", 1f)
+                }
+            }
             globalPortfolioCache ?: emptyList()
         } catch (e: Exception) {
             recordError(e)
@@ -824,16 +835,74 @@ class MarketRepository @Inject constructor(
                 if (currentBalance >= totalCost) {
                     newBalance = currentBalance - totalCost
                     transaction.update(userRef, "balance", newBalance)
-                    if (portfolioDoc.exists()) transaction.update(portfolioRef, "quantity", (portfolioDoc.getLong("quantity") ?: 0L) + quantity)
-                    else transaction.set(portfolioRef, mapOf("quantity" to quantity.toLong(), "symbol" to symbol))
+                    if (portfolioDoc.exists()) {
+                        transaction.update(portfolioRef, "quantity", (portfolioDoc.getLong("quantity") ?: 0L) + quantity)
+                    } else {
+                        transaction.set(portfolioRef, mapOf(
+                            "quantity" to quantity.toLong(),
+                            "symbol" to symbol,
+                            "purchaseDate" to FieldValue.serverTimestamp()
+                        ))
+                    }
                     null
                 } else throw Exception("Insufficient balance")
             }.await()
+            
+            // Track Achievements
+            updateAchievementProgress("first_trade", 1f)
+            if (totalCost >= 10000.0) {
+                updateAchievementProgress("big_spender", 1f)
+            }
+            
+            // Track Risk Taker: Buying stock down > 10%
+            getStockQuote(symbol)?.let { quote ->
+                if (quote.percentChange <= -10.0) {
+                    updateAchievementProgress("risk_taker", 1f)
+                }
+            }
+            
             analytics.logEvent(FirebaseAnalytics.Event.PURCHASE, Bundle().apply { putString(FirebaseAnalytics.Param.CURRENCY, "USD"); putDouble(FirebaseAnalytics.Param.VALUE, totalCost); putString(FirebaseAnalytics.Param.TRANSACTION_ID, symbol) })
             globalPortfolioCache = null
             Result.success(newBalance)
         } catch (e: Exception) {
             recordError(e); Result.failure(e)
+        }
+    }
+
+    suspend fun updateAchievementProgress(id: String, progress: Float) {
+        val current = stockDao.getAchievement(id)
+        if (current == null) {
+            stockDao.insertAchievement(AchievementEntity(id = id, progress = progress, isUnlocked = progress >= 1f, unlockedAt = if (progress >= 1f) System.currentTimeMillis() else null))
+        } else if (!current.isUnlocked) {
+            val newProgress = (current.progress + progress).coerceAtMost(1f)
+            val unlocked = newProgress >= 1f
+            stockDao.updateAchievement(current.copy(
+                progress = newProgress,
+                isUnlocked = unlocked,
+                unlockedAt = if (unlocked) System.currentTimeMillis() else null
+            ))
+            
+            if (unlocked) {
+                // Notify user
+                val achievement = ALL_ACHIEVEMENTS.find { it.id == id }
+                achievement?.let {
+                    notificationHelper.showNotification(
+                        "Achievement Unlocked!",
+                        "${it.icon} ${it.title}: ${it.description}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun getAchievements(): Flow<List<Achievement>> = stockDao.getAllAchievements().map { entities ->
+        ALL_ACHIEVEMENTS.map { template ->
+            val entity = entities.find { it.id == template.id }
+            template.copy(
+                isUnlocked = entity?.isUnlocked ?: false,
+                progress = entity?.progress ?: 0f,
+                unlockedAt = entity?.unlockedAt
+            )
         }
     }
 
@@ -843,15 +912,40 @@ class MarketRepository @Inject constructor(
         return try {
             val userRef = firestore.collection("users").document(targetUserId)
             val portfolioRef = userRef.collection("portfolio").document(symbol)
+            
+            var resultDays = -1L
+            var resultInstantSell = false
+
             firestore.runTransaction { transaction ->
-                val currentQty = transaction.get(portfolioRef).getLong("quantity") ?: 0L
+                val portfolioDoc = transaction.get(portfolioRef)
+                val currentQty = portfolioDoc.getLong("quantity") ?: 0L
+                val purchaseDate = portfolioDoc.getTimestamp("purchaseDate")
+                
                 if (currentQty >= quantity) {
                     val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
                     transaction.update(userRef, "balance", currentBalance + totalGain)
                     transaction.update(portfolioRef, "quantity", currentQty - quantity)
+                    
+                    purchaseDate?.let { date ->
+                        val holdTimeMillis = System.currentTimeMillis() - date.toDate().time
+                        resultDays = holdTimeMillis / (1000 * 60 * 60 * 24)
+                        resultInstantSell = holdTimeMillis < (24 * 60 * 60 * 1000)
+                    }
+
                     null
                 } else throw Exception("Insufficient quantity")
             }.await()
+            
+            if (resultDays >= 7) updateAchievementProgress("diamond_hands", 1f)
+            else if (resultInstantSell) updateAchievementProgress("paper_hands", 1f)
+
+            // Track Achievements: Bull Runner (Profit on sale)
+            getStockQuote(symbol)?.let { quote ->
+                if (quote.percentChange >= 10.0) {
+                    updateAchievementProgress("bull_runner", 1f)
+                }
+            }
+
             globalPortfolioCache = null
             Result.success(Unit)
         } catch (e: Exception) {
@@ -885,6 +979,12 @@ class MarketRepository @Inject constructor(
         return try {
             firestore.collection("users").document(userId).update(mapOf("totalAccountValue" to value, "lastSync" to FieldValue.serverTimestamp())).await()
             saveAccountValueHistory(userId, value)
+            
+            // Track Achievement: Whale
+            if (value >= 250000.0) {
+                updateAchievementProgress("whale", 1f)
+            }
+
             Result.success(Unit)
         } catch (e: Exception) { recordError(e); Result.failure(e) }
     }
@@ -941,6 +1041,10 @@ class MarketRepository @Inject constructor(
     suspend fun getInsiderTransactions(symbol: String): List<FinnhubInsiderTransaction> = try { 
         api.getInsiderTransactions(symbol, apiKey).data.take(20) 
     } catch (e: Exception) { recordError(e); emptyList() }
+
+    suspend fun trackAIUsage() {
+        updateAchievementProgress("ai_enthusiast", 0.2f)
+    }
 
     suspend fun getEconomicCalendar(): List<FinnhubEconomicEntry> {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

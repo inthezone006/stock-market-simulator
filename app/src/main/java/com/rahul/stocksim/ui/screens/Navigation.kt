@@ -40,6 +40,7 @@ sealed class Screen(val route: String) {
     object Details : Screen("details/{symbol}") {
         fun createRoute(symbol: String) = "details/$symbol"
     }
+    object Achievements : Screen("achievements")
     object MarketTutorial : Screen("market_tutorial")
 }
 

@@ -201,6 +201,11 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.EditProfile.route) {
                             EditProfileScreen(navController = navController)
                         }
+                        composable(Screen.Achievements.route) {
+                            AchievementsScreen(
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
                         composable(
                             route = Screen.Details.route,
                             arguments = listOf(

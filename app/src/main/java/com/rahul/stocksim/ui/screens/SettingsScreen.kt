@@ -305,12 +305,6 @@ fun SettingsScreen(navController: NavController) {
                         value = "Update password",
                         onClick = { navController.navigate(Screen.PasswordSetup.createRoute(true)) }
                     )
-                    SettingsItem(
-                        icon = Icons.Default.Delete,
-                        label = "Account Management",
-                        value = "Manage account deletion",
-                        onClick = { navController.navigate(Screen.EditProfile.route) }
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

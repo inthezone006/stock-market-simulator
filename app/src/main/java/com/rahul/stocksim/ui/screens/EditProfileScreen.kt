@@ -1,43 +1,23 @@
 package com.rahul.stocksim.ui.screens
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.navigation.NavController
 import com.rahul.stocksim.data.AuthRepository
 import kotlinx.coroutines.launch
-
-private fun Context.findActivity(): Activity? {
-    var context = this
-    while (context is ContextWrapper) {
-        if (context is Activity) return context
-        context = context.baseContext
-    }
-    return null
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,10 +30,6 @@ fun EditProfileScreen(navController: NavController) {
     var name by remember { mutableStateOf(user?.displayName ?: "") }
     
     var isUpdatingName by remember { mutableStateOf(false) }
-    var isDeletingAccount by remember { mutableStateOf(false) }
-    
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var showGoogleReauthDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color(0xFF121212),
@@ -141,150 +117,6 @@ fun EditProfileScreen(navController: NavController) {
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Danger Zone
-            Text("Danger Zone", color = Color.Red, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
-                border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.3f))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        "Once you delete your account, there is no going back. Please be certain.",
-                        color = Color.Gray,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { 
-                            if (authRepository.isGoogleUser()) {
-                                showGoogleReauthDialog = true
-                            } else {
-                                showDeleteDialog = true 
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000))
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Delete account", fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
         }
-    }
-
-    if (showDeleteDialog) {
-        var deleteConfirmPassword by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { if (!isDeletingAccount) showDeleteDialog = false },
-            containerColor = Color(0xFF1F1F1F),
-            titleContentColor = Color.White,
-            title = { Text("Are you absolutely sure?") },
-            text = {
-                Column {
-                    Text("This action will permanently delete your portfolio, history, and account settings.", color = Color.LightGray)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = deleteConfirmPassword,
-                        onValueChange = { deleteConfirmPassword = it },
-                        label = { Text("Confirm Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color.White, unfocusedBorderColor = Color.DarkGray)
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        isDeletingAccount = true
-                        coroutineScope.launch {
-                            val result = authRepository.deleteAccount(deleteConfirmPassword)
-                            isDeletingAccount = false
-                            if (result.isSuccess) {
-                                showDeleteDialog = false
-                                navController.navigate(Screen.Login.route) {
-                                    popUpTo(Screen.Main.route) { inclusive = true }
-                                }
-                                Toast.makeText(context, "Account deleted", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    },
-                    enabled = deleteConfirmPassword.isNotEmpty() && !isDeletingAccount
-                ) {
-                    if (isDeletingAccount) CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                    else Text("DELETE FOREVER", color = Color.Red, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeletingAccount) {
-                    Text("Cancel", color = Color.Gray)
-                }
-            }
-        )
-    }
-
-    if (showGoogleReauthDialog) {
-        val credentialManager = CredentialManager.create(context)
-        AlertDialog(
-            onDismissRequest = { if (!isDeletingAccount) showGoogleReauthDialog = false },
-            containerColor = Color(0xFF1F1F1F),
-            titleContentColor = Color.White,
-            title = { Text("Delete Google Account") },
-            text = {
-                Text(
-                    "To delete your account, you need to sign in with Google again to verify your identity.",
-                    color = Color.LightGray
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = WEB_CLIENT_ID).build()
-                        val request = GetCredentialRequest.Builder().addCredentialOption(signInOption).build()
-                        
-                        isDeletingAccount = true
-                        coroutineScope.launch {
-                            try {
-                                val activity = context.findActivity() ?: return@launch
-                                val result = credentialManager.getCredential(request = request, context = activity)
-                                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-                                val deleteResult = authRepository.deleteAccountWithGoogle(googleIdTokenCredential.idToken)
-                                
-                                isDeletingAccount = false
-                                if (deleteResult.isSuccess) {
-                                    showGoogleReauthDialog = false
-                                    navController.navigate(Screen.Login.route) {
-                                        popUpTo(Screen.Main.route) { inclusive = true }
-                                    }
-                                    Toast.makeText(context, "Account deleted", Toast.LENGTH_LONG).show()
-                                } else {
-                                    Toast.makeText(context, "Error: ${deleteResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                                }
-                            } catch (e: Exception) {
-                                isDeletingAccount = false
-                                Toast.makeText(context, "Verification failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    },
-                    enabled = !isDeletingAccount
-                ) {
-                    if (isDeletingAccount) CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                    else Text("SIGN IN & DELETE", color = Color.Red, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showGoogleReauthDialog = false }, enabled = !isDeletingAccount) {
-                    Text("Cancel", color = Color.Gray)
-                }
-            }
-        )
     }
 }

@@ -16,8 +16,8 @@ android {
         applicationId = "com.rahul.stocksim"
         minSdk = 24
         targetSdk = 35
-        versionCode = 46
-        versionName = "4.6.5"
+        versionCode = 47
+        versionName = "4.6.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val geminiApiKey: String? = properties["GEMINI_API_KEY"] as? String

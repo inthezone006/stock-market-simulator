@@ -101,6 +101,8 @@ This app also logs various different user data.
 **For High-Level Stats**: Go to **Analytics > Dashboard**.
 **For Specific Actions**: Go to **Analytics > Events**. And **For Technical Logs**: Go to **Release & Monitor > Crashlytics** to click on any non-fatal log to see the **Logs** tab, which contains the full **API_LOG** (OkHttp Request/Response).
 
+**IMPORTANT**: Add GEMINI_API_KEY to `local.properties` before building.
+
 ## 🔨 Updating
 
 For each update to the app for production, make sure to update the `versionCode` and `versionName` in `build.gradle.kts`.

@@ -1487,25 +1487,63 @@ private fun parseMarkdown(markdown: String): androidx.compose.ui.text.AnnotatedS
     val textWithBullets = markdown.replace(bulletRegex, "• ")
 
     return androidx.compose.ui.text.buildAnnotatedString {
-        // 2. Handle **bold** text
-        val boldRegex = Regex("""\*\*(.*?)\*\*""")
-        var lastIndex = 0
-        
-        boldRegex.findAll(textWithBullets).forEach { matchResult ->
-            // Add text before the match
-            append(textWithBullets.substring(lastIndex, matchResult.range.first))
+        val lines = textWithBullets.split("\n")
+        lines.forEachIndexed { index, line ->
+            var currentLine = line
+            var isHeader = false
             
-            // Add bold text with a brighter color for emphasis
-            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Color.White))
-            append(matchResult.groupValues[1])
-            pop()
+            // Handle Headers
+            when {
+                currentLine.startsWith("### ") -> {
+                    isHeader = true
+                    currentLine = currentLine.removePrefix("### ")
+                }
+                currentLine.startsWith("## ") -> {
+                    isHeader = true
+                    currentLine = currentLine.removePrefix("## ")
+                }
+                currentLine.startsWith("# ") -> {
+                    isHeader = true
+                    currentLine = currentLine.removePrefix("# ")
+                }
+            }
+
+            if (isHeader) {
+                pushStyle(androidx.compose.ui.text.SpanStyle(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFBB86FC),
+                    fontSize = 17.sp
+                ))
+            }
+
+            // Parse Bold and Italic inside the line
+            var lineIndex = 0
+            val mixedRegex = Regex("""(\*\*.*?\*\*)|(\*.*?\*)""")
             
-            lastIndex = matchResult.range.last + 1
-        }
-        
-        // Add remaining text
-        if (lastIndex < textWithBullets.length) {
-            append(textWithBullets.substring(lastIndex))
+            mixedRegex.findAll(currentLine).forEach { matchResult ->
+                append(currentLine.substring(lineIndex, matchResult.range.first))
+                val match = matchResult.value
+                when {
+                    match.startsWith("**") -> {
+                        pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Color.White))
+                        append(match.substring(2, match.length - 2))
+                        pop()
+                    }
+                    match.startsWith("*") -> {
+                        pushStyle(androidx.compose.ui.text.SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, color = Color.White.copy(alpha = 0.9f)))
+                        append(match.substring(1, match.length - 1))
+                        pop()
+                    }
+                }
+                lineIndex = matchResult.range.last + 1
+            }
+            append(currentLine.substring(lineIndex))
+
+            if (isHeader) pop()
+            
+            if (index < lines.size - 1) {
+                append("\n")
+            }
         }
     }
 }

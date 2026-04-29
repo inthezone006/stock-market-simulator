@@ -1,5 +1,5 @@
 import java.util.Properties
-import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-configure<ApplicationExtension> {
+android {
     namespace = "com.rahul.stocksim"
     compileSdk = 35
 
@@ -66,15 +66,15 @@ configure<ApplicationExtension> {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-        }
-    }
-    
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 
@@ -136,7 +136,6 @@ dependencies {
     implementation(libs.google.generative.ai)
     implementation("com.google.accompanist:accompanist-pager:0.34.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.34.0")
-    implementation(libs.google.generative.ai)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

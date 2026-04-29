@@ -14,7 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -24,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import androidx.lifecycle.lifecycleScope
 import com.rahul.stocksim.ui.theme.TradeSimTheme
 import com.rahul.stocksim.ui.screens.*
 import androidx.navigation.compose.NavHost
@@ -64,14 +64,13 @@ class MainActivity : ComponentActivity() {
             val auth = Firebase.auth
             val analytics = Firebase.analytics
             val context = LocalContext.current
-            val coroutineScope = rememberCoroutineScope()
 
-            val fetchAndSaveToken = {
+            fun fetchAndSaveToken() {
                 Firebase.messaging.token.addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val token = task.result
                         Log.d("FCM_TOKEN", "Token: $token")
-                        coroutineScope.launch {
+                        lifecycleScope.launch {
                             authRepository.saveFcmToken(token)
                         }
                     }
@@ -222,7 +221,7 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.MarketTutorial.route) {
                             MarketTutorialScreen(
                                 onComplete = {
-                                    coroutineScope.launch {
+                                    lifecycleScope.launch {
                                         authRepository.setTutorialCompleted()
                                         navController.popBackStack()
                                     }

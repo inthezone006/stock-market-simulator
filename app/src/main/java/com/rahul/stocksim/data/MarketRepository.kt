@@ -293,6 +293,12 @@ class MarketRepository @Inject constructor(
     }
 
     private fun recordError(e: Exception) {
+        if (e is CancellationException ||
+            e is java.net.SocketTimeoutException || 
+            e.message?.contains("Insufficient", ignoreCase = true) == true) {
+            return
+        }
+
         if (e is HttpException && e.code() == 401) {
             crashlytics.log("Finnhub API 401 Unauthorized: Check API Key validity. Current key: ${apiKey.take(5)}...")
             crashlytics.setCustomKey("api_auth_error", true)

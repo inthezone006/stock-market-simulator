@@ -1,3 +1,6 @@
+import java.util.Properties
+import com.android.build.api.dsl.ApplicationExtension
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlinAndroid)
@@ -8,7 +11,7 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-android {
+configure<ApplicationExtension> {
     namespace = "com.rahul.stocksim"
     compileSdk = 35
 
@@ -20,8 +23,16 @@ android {
         versionName = "4.6.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val geminiApiKey: String? = properties["GEMINI_API_KEY"] as? String
-        buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey ?: ""}\"")
+        
+        // Load GEMINI_API_KEY from local.properties (which is gitignored)
+        val localProperties = Properties()
+        val localPropertiesFile = project.rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+        
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {
@@ -55,8 +66,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlinOptions {
-        jvmTarget = "21"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
     }
     
     buildFeatures {

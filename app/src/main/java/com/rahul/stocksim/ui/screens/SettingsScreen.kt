@@ -72,34 +72,32 @@ fun SettingsScreen(navController: NavController) {
         }
     }
 
-    val loadData = {
-        coroutineScope.launch {
-            try {
-                user?.reload()?.await()
-                user = authRepository.currentUser
-                displayName = user?.displayName ?: ""
-                profilePhotoUrl = user?.photoUrl
-                val settings = authRepository.getNotificationSettings()
-                
-                // Sync with system permission on Android 13+
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-                    if (!hasPermission && settings.masterEnabled) {
-                        // System permission was denied, force disable the app-level setting
-                        val updated = settings.copy(masterEnabled = false)
-                        notifSettings = updated
-                        authRepository.saveNotificationSettings(updated)
-                    } else {
-                        notifSettings = settings
-                    }
+    val loadData: suspend () -> Unit = {
+        try {
+            user?.reload()?.await()
+            user = authRepository.currentUser
+            displayName = user?.displayName ?: ""
+            profilePhotoUrl = user?.photoUrl
+            val settings = authRepository.getNotificationSettings()
+            
+            // Sync with system permission on Android 13+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                if (!hasPermission && settings.masterEnabled) {
+                    // System permission was denied, force disable the app-level setting
+                    val updated = settings.copy(masterEnabled = false)
+                    notifSettings = updated
+                    authRepository.saveNotificationSettings(updated)
                 } else {
                     notifSettings = settings
                 }
-            } catch (e: Exception) {
-                // Handle potential errors
-            } finally {
-                isRefreshing = false
+            } else {
+                notifSettings = settings
             }
+        } catch (e: Exception) {
+            // Handle potential errors
+        } finally {
+            isRefreshing = false
         }
     }
 
@@ -125,7 +123,7 @@ fun SettingsScreen(navController: NavController) {
             isRefreshing = isRefreshing,
             onRefresh = {
                 isRefreshing = true
-                loadData()
+                coroutineScope.launch { loadData() }
             },
             modifier = Modifier
                 .fillMaxSize()

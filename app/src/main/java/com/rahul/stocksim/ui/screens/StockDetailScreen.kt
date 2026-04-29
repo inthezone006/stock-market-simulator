@@ -1482,17 +1482,20 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
 }
 
 private fun parseMarkdown(markdown: String): androidx.compose.ui.text.AnnotatedString {
+    // 1. Replace bullet point asterisks (* ) at the start of lines with real bullet characters (• )
+    val bulletRegex = Regex("(?m)^\\s*\\*\\s+")
+    val textWithBullets = markdown.replace(bulletRegex, "• ")
+
     return androidx.compose.ui.text.buildAnnotatedString {
-        var currentText = markdown
-        // Basic parser for **bold** text
+        // 2. Handle **bold** text
         val boldRegex = Regex("""\*\*(.*?)\*\*""")
         var lastIndex = 0
         
-        boldRegex.findAll(markdown).forEach { matchResult ->
+        boldRegex.findAll(textWithBullets).forEach { matchResult ->
             // Add text before the match
-            append(markdown.substring(lastIndex, matchResult.range.first))
+            append(textWithBullets.substring(lastIndex, matchResult.range.first))
             
-            // Add bold text
+            // Add bold text with a brighter color for emphasis
             pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Color.White))
             append(matchResult.groupValues[1])
             pop()
@@ -1501,8 +1504,8 @@ private fun parseMarkdown(markdown: String): androidx.compose.ui.text.AnnotatedS
         }
         
         // Add remaining text
-        if (lastIndex < markdown.length) {
-            append(markdown.substring(lastIndex))
+        if (lastIndex < textWithBullets.length) {
+            append(textWithBullets.substring(lastIndex))
         }
     }
 }

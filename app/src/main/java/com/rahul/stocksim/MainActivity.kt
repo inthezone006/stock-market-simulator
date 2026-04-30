@@ -33,6 +33,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.messaging.messaging
 import com.rahul.stocksim.data.AuthRepository
 import com.rahul.stocksim.service.PriceAlertWorker
+import com.rahul.stocksim.service.DailyHistoryWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         
         PriceAlertWorker.schedule(this)
+        DailyHistoryWorker.schedule(this)
         
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(

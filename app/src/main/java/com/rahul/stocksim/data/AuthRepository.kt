@@ -17,6 +17,8 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.CancellationException
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class NotificationSettings(
     val masterEnabled: Boolean = true,
@@ -282,6 +284,23 @@ class AuthRepository {
                 batch.set(watchlistRef, mapOf("symbol" to symbol))
             }
             batch.commit().await()
+
+            // Initialize 30-day history with the starting balance
+            val historyRef = userRef.collection("account_history")
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val calendar = Calendar.getInstance()
+            val historyBatch = firestore.batch()
+            
+            for (i in 0..29) {
+                val dateStr = sdf.format(calendar.time)
+                val docRef = historyRef.document(dateStr)
+                historyBatch.set(docRef, mapOf(
+                    "value" to balance,
+                    "timestamp" to com.google.firebase.Timestamp(calendar.time)
+                ))
+                calendar.add(Calendar.DAY_OF_YEAR, -1)
+            }
+            historyBatch.commit().await()
 
             logEventWithUser("select_difficulty_level", Bundle().apply {
                 putInt("level", level)

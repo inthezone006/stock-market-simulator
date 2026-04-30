@@ -32,7 +32,6 @@ class PriceAlertWorker @AssistedInject constructor(
             val contracts = repository.getPendingTradeContractsForCurrentUser()
             
             if (alerts.isEmpty() && contracts.isEmpty()) {
-                syncAccountHistory()
                 return@withContext Result.success()
             }
 
@@ -125,29 +124,10 @@ class PriceAlertWorker @AssistedInject constructor(
                 }
             }
             
-            // Weekly Account Value Sync
-            syncAccountHistory()
-
             Result.success()
         } catch (e: Exception) {
             Log.e("PriceAlertWorker", "Error in background work", e)
             Result.retry()
-        }
-    }
-
-    private suspend fun syncAccountHistory() {
-        try {
-            val userId = repository.getCurrentUserId() ?: return
-            val balance = repository.getUserBalance().first()
-            val portfolio = repository.getPortfolioWithQuotes(forceRefresh = true)
-            val totalStockValue = portfolio.sumOf { it.first.price * it.second }
-            val totalAccountValue = balance + totalStockValue
-
-            if (totalAccountValue > 0) {
-                repository.saveAccountValueHistory(userId, totalAccountValue)
-            }
-        } catch (e: Exception) {
-            Log.e("PriceAlertWorker", "Error syncing account history", e)
         }
     }
 

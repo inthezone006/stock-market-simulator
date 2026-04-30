@@ -81,18 +81,13 @@ class PortfolioViewModel @Inject constructor(
 
     private fun loadHistory() {
         viewModelScope.launch {
-            // Fetch total account value history or use mock data
-            val now = System.currentTimeMillis() / 1000
-            val mockHistory = listOf(
-                StockPricePoint(now - 86400 * 6, 95000.0),
-                StockPricePoint(now - 86400 * 5, 97000.0),
-                StockPricePoint(now - 86400 * 4, 96000.0),
-                StockPricePoint(now - 86400 * 3, 102000.0),
-                StockPricePoint(now - 86400 * 2, 105000.0),
-                StockPricePoint(now - 86400 * 1, 103000.0),
-                StockPricePoint(now, 108000.0)
-            )
-            _portfolioHistory.value = mockHistory
+            marketRepository.getAccountValueHistory().collect { historyPairs ->
+                // Convert Firestore pairs (ms) to StockPricePoints (s)
+                val points = historyPairs.map { (timestampMs, value) ->
+                    StockPricePoint(timestampMs / 1000, value)
+                }
+                _portfolioHistory.value = points
+            }
         }
     }
 
@@ -100,6 +95,8 @@ class PortfolioViewModel @Inject constructor(
         viewModelScope.launch {
             _isRefreshing.value = true
             loadData(forceRefresh = true)
+            // Re-fetch history to get the latest synced point
+            loadHistory()
             _isRefreshing.value = false
         }
     }
@@ -108,14 +105,29 @@ class PortfolioViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val portfolioItems = marketRepository.getPortfolioWithQuotes(forceRefresh)
-                _uiState.value = PortfolioUiState.Success(portfolioItems)
                 
-                // Sync total account value if we have data
+                // 1. Calculate current real-time values
                 val balance = marketRepository.getUserBalance().first()
                 val totalStockValue = portfolioItems.sumOf { it.first.price * it.second }
                 val totalAccountValue = balance + totalStockValue
+                
+                _uiState.value = PortfolioUiState.Success(portfolioItems)
+                
+                // 2. Sync to Firestore if valid
                 if (totalAccountValue > 0) {
                     marketRepository.syncTotalAccountValue(totalAccountValue)
+                    
+                    // 3. Update the local graph state immediately so it ends at the current value
+                    val currentHistory = _portfolioHistory.value.toMutableList()
+                    val now = System.currentTimeMillis() / 1000
+                    
+                    // Remove any existing point for "today" (seconds within last hour approx) 
+                    // and add the precise latest value
+                    if (currentHistory.isNotEmpty() && now - currentHistory.last().timestamp < 3600) {
+                        currentHistory.removeAt(currentHistory.size - 1)
+                    }
+                    currentHistory.add(StockPricePoint(now, totalAccountValue))
+                    _portfolioHistory.value = currentHistory
                 }
             } catch (e: Exception) {
                 _uiState.value = PortfolioUiState.Error(e.message ?: "Unknown error")

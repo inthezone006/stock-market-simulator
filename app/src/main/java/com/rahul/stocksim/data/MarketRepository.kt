@@ -978,7 +978,6 @@ class MarketRepository @Inject constructor(
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
             firestore.collection("users").document(userId).update(mapOf("totalAccountValue" to value, "lastSync" to FieldValue.serverTimestamp())).await()
-            saveAccountValueHistory(userId, value)
             
             // Track Achievement: Whale
             if (value >= 250000.0) {
@@ -992,14 +991,47 @@ class MarketRepository @Inject constructor(
     suspend fun saveAccountValueHistory(userId: String, value: Double) {
         try {
             val historyRef = firestore.collection("users").document(userId).collection("account_history")
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             
-            historyRef.document(today).set(
-                mapOf(
-                    "value" to value,
-                    "timestamp" to FieldValue.serverTimestamp()
-                )
-            ).await()
+            // 1. Get existing history to handle the backfilling logic
+            val snapshot = historyRef.orderBy("timestamp", FirestoreQuery.Direction.DESCENDING).limit(10).get().await()
+            val existingDocs = snapshot.documents
+            
+            if (existingDocs.isEmpty()) {
+                // Initial Backfill: Create 30 days of history with the current value
+                val batch = firestore.batch()
+                val calendar = Calendar.getInstance()
+                
+                for (i in 0..29) {
+                    val timestamp = Timestamp(calendar.time)
+                    val dateStr = sdf.format(calendar.time)
+                    val docRef = historyRef.document(dateStr)
+                    batch.set(docRef, mapOf(
+                        "value" to value,
+                        "timestamp" to timestamp
+                    ))
+                    calendar.add(Calendar.DAY_OF_YEAR, -1)
+                }
+                batch.commit().await()
+                Log.d("MarketRepository", "Initial 30-day backfill completed for user $userId")
+            } else {
+                // Regular Daily Update
+                val today = sdf.format(Date())
+                historyRef.document(today).set(
+                    mapOf(
+                        "value" to value,
+                        "timestamp" to FieldValue.serverTimestamp()
+                    )
+                ).await()
+
+                // Prune history to keep only the last 31 entries (today + 30 history days)
+                if (existingDocs.size > 31) {
+                    val oldestDocs = historyRef.orderBy("timestamp").limit((existingDocs.size - 31).toLong()).get().await()
+                    for (doc in oldestDocs.documents) {
+                        doc.reference.delete()
+                    }
+                }
+            }
         } catch (e: Exception) {
             recordError(e)
         }
@@ -1007,10 +1039,22 @@ class MarketRepository @Inject constructor(
 
     fun getAccountValueHistory(): Flow<List<Pair<Long, Double>>> = flow {
         val userId = auth.currentUser?.uid ?: return@flow
-        val snapshot = firestore.collection("users").document(userId)
+        
+        var snapshot = firestore.collection("users").document(userId)
             .collection("account_history")
             .orderBy("timestamp")
             .get().await()
+        
+        // If there are no values present, backfill 30 days automatically
+        if (snapshot.isEmpty) {
+            val balance = getUserBalance().first()
+            saveAccountValueHistory(userId, balance)
+            // Re-fetch after backfilling
+            snapshot = firestore.collection("users").document(userId)
+                .collection("account_history")
+                .orderBy("timestamp")
+                .get().await()
+        }
         
         val history = snapshot.documents.mapNotNull { doc ->
             val value = doc.getDouble("value") ?: return@mapNotNull null

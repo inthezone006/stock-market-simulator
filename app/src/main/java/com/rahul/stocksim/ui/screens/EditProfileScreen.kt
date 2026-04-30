@@ -3,6 +3,7 @@ package com.rahul.stocksim.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -28,8 +29,10 @@ fun EditProfileScreen(navController: NavController) {
     val user = authRepository.currentUser
     
     var name by remember { mutableStateOf(user?.displayName ?: "") }
-    
     var isUpdatingName by remember { mutableStateOf(false) }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color(0xFF121212),
@@ -117,6 +120,99 @@ fun EditProfileScreen(navController: NavController) {
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Danger Zone Section
+            Text(
+                "Danger Zone",
+                color = Color.Red,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "Delete Account",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        "This will permanently remove all your progress, balance, and account data. This action cannot be undone.",
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    
+                    Button(
+                        onClick = { showDeleteDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("DELETE ACCOUNT", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!isDeleting) showDeleteDialog = false },
+            containerColor = Color(0xFF1F1F1F),
+            title = { Text("Permanently Delete Account?", color = Color.White) },
+            text = { 
+                Text(
+                    "Are you sure you want to delete your account? All your simulator data will be lost forever.",
+                    color = Color.Gray
+                ) 
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        isDeleting = true
+                        coroutineScope.launch {
+                            val result = authRepository.deleteCurrentUser()
+                            isDeleting = false
+                            if (result.isSuccess) {
+                                Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+                                navController.navigate(Screen.Login.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            } else {
+                                val error = result.exceptionOrNull()?.message ?: "Unknown error"
+                                if (error.contains("recent-login")) {
+                                    Toast.makeText(context, "Please log in again before deleting your account for security purposes.", Toast.LENGTH_LONG).show()
+                                    authRepository.logout()
+                                    navController.navigate(Screen.Login.route) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Deletion failed: $error", Toast.LENGTH_LONG).show()
+                                    showDeleteDialog = false
+                                }
+                            }
+                        }
+                    },
+                    enabled = !isDeleting
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.Red)
+                    } else {
+                        Text("DELETE", color = Color.Red, fontWeight = FontWeight.Bold)
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleting) {
+                    Text("CANCEL", color = Color.White)
+                }
+            }
+        )
     }
 }

@@ -69,7 +69,7 @@ fun PasswordSetupScreen(
         containerColor = Color(0xFF121212),
         topBar = {
             TopAppBar(
-                title = { Text(if (isChangePassword) "Change Password" else "Security Setup", color = Color.White) },
+                title = { Text(if (isChangePassword) "Change Password" else "Security Setup", color = Color.White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = handleBack, enabled = !isLoading) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)

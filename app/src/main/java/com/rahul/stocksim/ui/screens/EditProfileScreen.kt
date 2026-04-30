@@ -35,7 +35,7 @@ fun EditProfileScreen(navController: NavController) {
         containerColor = Color(0xFF121212),
         topBar = {
             TopAppBar(
-                title = { Text("Edit Profile", color = Color.White) },
+                title = { Text("Edit Profile", color = Color.White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)

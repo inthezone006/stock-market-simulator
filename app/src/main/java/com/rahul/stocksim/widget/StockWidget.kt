@@ -77,7 +77,7 @@ class StockWidget : GlanceAppWidget() {
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .padding(8.dp),
+                    .padding(16.dp), // Increased padding for corners/edges
                 horizontalAlignment = Alignment.Horizontal.CenterHorizontally
             ) {
                 Row(
@@ -138,7 +138,7 @@ class StockWidget : GlanceAppWidget() {
     @Composable
     private fun WatchlistContent(stocks: List<Stock>) {
         Column(
-            modifier = GlanceModifier.fillMaxWidth(),
+            modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 20.dp), // Pull items left and right closer together
             horizontalAlignment = Alignment.Horizontal.CenterHorizontally
         ) {
             if (stocks.isEmpty()) {
@@ -185,12 +185,12 @@ class StockWidget : GlanceAppWidget() {
                     horizontalAlignment = Alignment.Horizontal.CenterHorizontally
                 ) {
                     val recentHistory = history.takeLast(12)
-                    val maxVal = recentHistory.maxOf { it.second }
-                    val minVal = recentHistory.minOf { it.second }
-                    val range = (maxVal - minVal).coerceAtLeast(1.0)
+                    val maxOfHistory = recentHistory.maxOfOrNull { it.second } ?: 1.0
+                    val minOfHistory = recentHistory.minOfOrNull { it.second } ?: 0.0
+                    val range = (maxOfHistory - minOfHistory).coerceAtLeast(1.0)
 
                     recentHistory.forEach { point ->
-                        val heightFactor = ((point.second - minVal) / range).toFloat()
+                        val heightFactor = ((point.second - minOfHistory) / range).toFloat()
                         val barHeight = (heightFactor * 50).coerceAtLeast(4f).toInt()
                         Box(
                             modifier = GlanceModifier
@@ -216,24 +216,29 @@ class StockWidget : GlanceAppWidget() {
                 horizontalAlignment = Alignment.Horizontal.CenterHorizontally
             ) {
                 Text(
-                    text = if (latest.isUnlocked) "Latest Unlock" else "Next Challenge",
+                    text = if (latest.isUnlocked) "Latest Achievement" else "Next Challenge",
                     style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 13.sp)
                 )
-                Spacer(modifier = GlanceModifier.height(12.dp))
-                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                    Text(latest.icon, style = TextStyle(fontSize = 40.sp))
-                    Spacer(modifier = GlanceModifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = latest.title,
-                            style = TextStyle(color = ColorProvider(Color.White), fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        )
-                        Text(
-                            text = latest.description,
-                            style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 13.sp),
-                            maxLines = 1
-                        )
-                    }
+                Spacer(modifier = GlanceModifier.height(8.dp))
+                // Centered Icon
+                Text(latest.icon, style = TextStyle(fontSize = 44.sp))
+                
+                Spacer(modifier = GlanceModifier.height(8.dp))
+                
+                // Text below icon, centered
+                Column(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.Horizontal.CenterHorizontally
+                ) {
+                    Text(
+                        text = latest.title,
+                        style = TextStyle(color = ColorProvider(Color.White), fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    )
+                    Text(
+                        text = latest.description,
+                        style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 13.sp),
+                        maxLines = 1
+                    )
                 }
             }
         }

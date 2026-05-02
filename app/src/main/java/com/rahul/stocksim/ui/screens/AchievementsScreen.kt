@@ -114,8 +114,11 @@ fun AchievementItem(achievement: Achievement) {
             ) {
                 Text(
                     text = achievement.icon,
-                    fontSize = 28.sp,
-                    modifier = Modifier.graphicsLayer { alpha = if (achievement.isUnlocked) 1f else 0.4f }
+                    fontSize = 24.sp, // Slightly smaller to ensure fit
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer { alpha = if (achievement.isUnlocked) 1f else 0.4f }
                 )
                 if (!achievement.isUnlocked) {
                     Icon(

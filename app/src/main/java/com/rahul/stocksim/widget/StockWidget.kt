@@ -47,6 +47,7 @@ class StockWidget : GlanceAppWidget() {
         // Fetch data
         val watchlist = try { repository.getWatchlistWithQuotes(forceRefresh = false) } catch (e: Exception) { emptyList() }
         val balance = try { repository.getUserBalance().first() } catch (e: Exception) { 0.0 }
+        val achievements = try { repository.getAchievements().first() } catch (e: Exception) { emptyList() }
         val portfolioHistory = try { repository.getAccountValueHistory().first() } catch (e: Exception) { emptyList() }
 
         provideContent {
@@ -54,7 +55,7 @@ class StockWidget : GlanceAppWidget() {
             val modeStr = prefs[WidgetKeys.MODE] ?: WidgetMode.WATCHLIST.name
             val mode = try { WidgetMode.valueOf(modeStr) } catch (e: Exception) { WidgetMode.WATCHLIST }
 
-            WidgetContainer(mode, watchlist, balance, portfolioHistory)
+            WidgetContainer(mode, watchlist, balance, achievements, portfolioHistory)
         }
     }
 
@@ -63,9 +64,9 @@ class StockWidget : GlanceAppWidget() {
         mode: WidgetMode,
         watchlist: List<Stock>,
         balance: Double,
+        achievements: List<Achievement>,
         history: List<Pair<Long, Double>>
     ) {
-        // Use a Box to wrap everything and make it clickable
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -75,7 +76,7 @@ class StockWidget : GlanceAppWidget() {
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .padding(16.dp), // Increased padding for corners/edges
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.Horizontal.CenterHorizontally
             ) {
                 Row(
@@ -107,6 +108,7 @@ class StockWidget : GlanceAppWidget() {
                         WidgetMode.WATCHLIST -> WatchlistContent(watchlist)
                         WidgetMode.PORTFOLIO -> PortfolioContent(balance, history)
                         WidgetMode.SPOTLIGHT -> SpotlightContent(watchlist)
+                        WidgetMode.ACHIEVEMENT -> AchievementContent(achievements)
                     }
                 }
 
@@ -123,7 +125,7 @@ class StockWidget : GlanceAppWidget() {
                             Box(
                                 modifier = GlanceModifier
                                     .size(6.dp)
-                                    .padding(horizontal = 2.dp)
+                                    .padding(horizontal = 1.dp)
                                     .background(if (m == mode) Color(0xFFBB86FC) else Color.DarkGray)
                             ) {}
                         }
@@ -136,7 +138,7 @@ class StockWidget : GlanceAppWidget() {
     @Composable
     private fun WatchlistContent(stocks: List<Stock>) {
         Column(
-            modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 20.dp), // Pull items left and right closer together
+            modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.Horizontal.CenterHorizontally
         ) {
             if (stocks.isEmpty()) {
@@ -171,7 +173,7 @@ class StockWidget : GlanceAppWidget() {
         ) {
             Text("Available Cash", style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 14.sp))
             Text(
-                text = "$${String.format(Locale.US, "%,.2f", balance)}",
+                text = "$${String.format(Locale.US, "%.2f", balance)}",
                 style = TextStyle(color = ColorProvider(Color.White), fontWeight = FontWeight.Bold, fontSize = 28.sp)
             )
             
@@ -183,12 +185,12 @@ class StockWidget : GlanceAppWidget() {
                     horizontalAlignment = Alignment.Horizontal.CenterHorizontally
                 ) {
                     val recentHistory = history.takeLast(12)
-                    val maxOfHistory = recentHistory.maxOfOrNull { it.second } ?: 1.0
-                    val minOfHistory = recentHistory.minOfOrNull { it.second } ?: 0.0
-                    val range = (maxOfHistory - minOfHistory).coerceAtLeast(1.0)
+                    val maxVal = recentHistory.maxOfOrNull { it.second } ?: 1.0
+                    val minVal = recentHistory.minOfOrNull { it.second } ?: 0.0
+                    val range = (maxVal - minVal).coerceAtLeast(1.0)
 
                     recentHistory.forEach { point ->
-                        val heightFactor = ((point.second - minOfHistory) / range).toFloat()
+                        val heightFactor = ((point.second - minVal) / range).toFloat()
                         val barHeight = (heightFactor * 50).coerceAtLeast(4f).toInt()
                         Box(
                             modifier = GlanceModifier
@@ -214,7 +216,7 @@ class StockWidget : GlanceAppWidget() {
             ) {
                 Text(
                     text = "Top Mover",
-                    style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 12.sp)
+                    style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 14.sp)
                 )
                 Spacer(modifier = GlanceModifier.height(4.dp))
                 Text(
@@ -224,15 +226,53 @@ class StockWidget : GlanceAppWidget() {
                 val color = if (topMover.change >= 0) Color.Green else Color.Red
                 Text(
                     text = "${if (topMover.change >= 0) "+" else ""}${String.format(Locale.US, "%.2f%%", topMover.percentChange)}",
-                    style = TextStyle(color = ColorProvider(color), fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    style = TextStyle(color = ColorProvider(color), fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 )
                 Text(
                     text = "$${String.format(Locale.US, "%.2f", topMover.price)}",
-                    style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 14.sp)
+                    style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 16.sp)
                 )
             }
         } else {
             Text("No data available", style = TextStyle(color = ColorProvider(Color.Gray)))
+        }
+    }
+
+    @Composable
+    private fun AchievementContent(achievements: List<Achievement>) {
+        val unlocked = achievements.filter { it.isUnlocked }.sortedByDescending { it.unlockedAt ?: 0L }
+        val latest = unlocked.firstOrNull() ?: achievements.firstOrNull()
+
+        if (latest != null) {
+            Column(
+                modifier = GlanceModifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.Horizontal.CenterHorizontally
+            ) {
+                Text(
+                    text = if (latest.isUnlocked) "Latest Achievement" else "Next Challenge",
+                    style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 11.sp)
+                )
+                Spacer(modifier = GlanceModifier.height(8.dp))
+                
+                // Centered large icon
+                Text(
+                    text = latest.icon, 
+                    style = TextStyle(fontSize = 48.sp, textAlign = TextAlign.Center),
+                    modifier = GlanceModifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = GlanceModifier.height(8.dp))
+                
+                Text(
+                    text = latest.title,
+                    style = TextStyle(color = ColorProvider(Color.White), fontWeight = FontWeight.Bold, fontSize = 20.sp, textAlign = TextAlign.Center)
+                )
+                Text(
+                    text = latest.description,
+                    style = TextStyle(color = ColorProvider(Color.Gray), fontSize = 13.sp, textAlign = TextAlign.Center),
+                    maxLines = 1
+                )
+            }
         }
     }
 }
@@ -240,7 +280,8 @@ class StockWidget : GlanceAppWidget() {
 enum class WidgetMode(val label: String) {
     WATCHLIST("Watchlist"),
     PORTFOLIO("Account"),
-    SPOTLIGHT("Spotlight")
+    SPOTLIGHT("Spotlight"),
+    ACHIEVEMENT("Badges")
 }
 
 object WidgetKeys {
@@ -256,7 +297,8 @@ class ToggleModeAction : ActionCallback {
             val next = when (try { WidgetMode.valueOf(current) } catch (e: Exception) { WidgetMode.WATCHLIST }) {
                 WidgetMode.WATCHLIST -> WidgetMode.PORTFOLIO
                 WidgetMode.PORTFOLIO -> WidgetMode.SPOTLIGHT
-                WidgetMode.SPOTLIGHT -> WidgetMode.WATCHLIST
+                WidgetMode.SPOTLIGHT -> WidgetMode.ACHIEVEMENT
+                WidgetMode.ACHIEVEMENT -> WidgetMode.WATCHLIST
             }
             Log.d("StockWidget", "Next mode: ${next.name}")
             prefs.toMutablePreferences().apply {

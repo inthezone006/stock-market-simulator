@@ -1574,12 +1574,16 @@ fun InsiderTradingSection(transactions: List<FinnhubInsiderTransaction>) {
                         Column(horizontalAlignment = Alignment.End) {
                             val color = if (tx.change > 0) Color.Green else Color.Red
                             Text(
-                                text = "${if (tx.change > 0) "+" else ""}${tx.change}",
+                                text = "${if (tx.change > 0) "+" else ""}${String.format(Locale.US, "%,d", tx.change)}",
                                 color = color,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(text = "at $${tx.transactionPrice}", color = Color.Gray, fontSize = 12.sp)
+                            Text(
+                                text = "at ${String.format(Locale.US, "$%,.2f", tx.transactionPrice)}",
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
                         }
                     }
                     if (tx != transactions.take(5).last()) {

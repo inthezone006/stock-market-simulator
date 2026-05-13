@@ -4,9 +4,20 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.rahul.stocksim.data.local.entity.AchievementEntity
 import com.rahul.stocksim.data.local.entity.PriceAlertEntity
-import com.rahul.stocksim.data.local.entity.StockEntity
+import com.rahul.stocksim.data.local.entity.*
 
-@Database(entities = [StockEntity::class, PriceAlertEntity::class, AchievementEntity::class], version = 3, exportSchema = false)
+@Database(
+    entities = [
+        StockEntity::class,
+        PriceAlertEntity::class,
+        AchievementEntity::class,
+        NewsEntity::class,
+        StockHistoryEntity::class,
+        CompanyDetailsEntity::class
+    ],
+    version = 5,
+    exportSchema = false
+)
 abstract class StockDatabase : RoomDatabase() {
     abstract fun stockDao(): StockDao
 }

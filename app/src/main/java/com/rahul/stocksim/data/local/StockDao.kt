@@ -1,9 +1,7 @@
 package com.rahul.stocksim.data.local
 
 import androidx.room.*
-import com.rahul.stocksim.data.local.entity.AchievementEntity
-import com.rahul.stocksim.data.local.entity.PriceAlertEntity
-import com.rahul.stocksim.data.local.entity.StockEntity
+import com.rahul.stocksim.data.local.entity.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -49,4 +47,28 @@ interface StockDao {
 
     @Delete
     suspend fun deletePriceAlert(alert: PriceAlertEntity): Int
+
+    // News Caching
+    @Query("SELECT * FROM news WHERE symbol IS NULL ORDER BY datetime DESC LIMIT 20")
+    suspend fun getGeneralNews(): List<NewsEntity>
+
+    @Query("SELECT * FROM news WHERE symbol = :symbol ORDER BY datetime DESC LIMIT 10")
+    suspend fun getCompanyNews(symbol: String): List<NewsEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNews(news: List<NewsEntity>)
+
+    // History Caching
+    @Query("SELECT * FROM stock_history WHERE symbol = :symbol AND period = :period")
+    suspend fun getStockHistory(symbol: String, period: String): StockHistoryEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStockHistory(history: StockHistoryEntity)
+
+    // Company Details Caching
+    @Query("SELECT * FROM company_details WHERE symbol = :symbol")
+    suspend fun getCompanyDetails(symbol: String): CompanyDetailsEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCompanyDetails(details: CompanyDetailsEntity)
 }

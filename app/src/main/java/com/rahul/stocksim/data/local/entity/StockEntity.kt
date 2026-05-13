@@ -17,5 +17,6 @@ data class StockEntity(
     val isCrypto: Boolean,
     val isForex: Boolean,
     val industry: String?,
+    val logoUrl: String? = null,
     val lastUpdated: Long = System.currentTimeMillis()
 )

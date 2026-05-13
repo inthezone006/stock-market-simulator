@@ -29,6 +29,8 @@ import com.rahul.stocksim.ui.screens.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import com.google.firebase.auth.auth
 import com.google.firebase.messaging.messaging
 import com.rahul.stocksim.data.AuthRepository
@@ -122,7 +124,31 @@ class MainActivity : ComponentActivity() {
                 ) {
                     NavHost(
                         navController = navController,
-                        startDestination = startDest
+                        startDestination = startDest,
+                        enterTransition = { 
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(400)
+                            ) + fadeIn(animationSpec = tween(400))
+                        },
+                        exitTransition = { 
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(400)
+                            ) + fadeOut(animationSpec = tween(400))
+                        },
+                        popEnterTransition = { 
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(400)
+                            ) + fadeIn(animationSpec = tween(400))
+                        },
+                        popExitTransition = { 
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(400)
+                            ) + fadeOut(animationSpec = tween(400))
+                        }
                     ) {
                         composable(route = Screen.Login.route) {
                             LoginScreen(navController = navController)

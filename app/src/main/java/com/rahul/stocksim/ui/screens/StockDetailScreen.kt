@@ -113,7 +113,7 @@ fun StockDetailScreen(
                                         contentDescription = null,
                                         modifier = Modifier
                                             .size(32.dp)
-                                            .clip(RoundedCornerShape(6.dp))
+                                            .clip(RoundedCornerShape(8.dp))
                                             .background(Color.White),
                                         contentScale = ContentScale.Fit
                                     )
@@ -225,6 +225,10 @@ fun StockDetailScreen(
                 val financials = state.financials
                 val aiRecommendation = state.aiRecommendation
                 val newsArticles = state.newsArticles
+                val tdRsi = state.tdRsi
+                val tdMacd = state.tdMacd
+                val tdBbands = state.tdBbands
+                val candleHistory = state.candleHistory
 
                 LazyColumn(
                     state = scrollState,
@@ -252,7 +256,7 @@ fun StockDetailScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(56.dp)
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(RoundedCornerShape(14.dp))
                                         .background(Color(0xFF1F1F1F)),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -260,7 +264,9 @@ fun StockDetailScreen(
                                         AsyncImage(
                                             model = profile.logo,
                                             contentDescription = null,
-                                            modifier = Modifier.size(36.dp),
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(8.dp)),
                                             contentScale = ContentScale.Fit
                                         )
                                     } else {
@@ -295,12 +301,24 @@ fun StockDetailScreen(
                             Column(horizontalAlignment = Alignment.End) {
                                 val color = if (stock.change >= 0) Color.Green else Color.Red
                                 
-                                Text(
-                                    text = "$${String.format(Locale.US, "%.2f", stock.price)}",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = color,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                AnimatedContent(
+                                    targetState = stock.price,
+                                    transitionSpec = {
+                                        if (targetState > initialState) {
+                                            (slideInVertically { height -> height } + fadeIn()).togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                                        } else {
+                                            (slideInVertically { height -> -height } + fadeIn()).togetherWith(slideOutVertically { height -> height } + fadeOut())
+                                        }.using(SizeTransform(clip = false))
+                                    },
+                                    label = "StockPriceTicker"
+                                ) { price ->
+                                    Text(
+                                        text = "$${String.format(Locale.US, "%.2f", price)}",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = color,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                                 
                                 Text(
                                     text = "${if (stock.change >= 0) "+" else ""}${String.format(Locale.US, "%.2f", stock.change)} (${String.format(Locale.US, "%.2f", stock.percentChange)}%)",
@@ -316,8 +334,6 @@ fun StockDetailScreen(
                     item {
                         Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-
-                                
                                 if (rsiData?.rsi?.isNotEmpty() == true) {
                                     val currentRsi = rsiData.rsi.last()
                                     val rsiStatus = when {

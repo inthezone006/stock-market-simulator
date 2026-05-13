@@ -105,11 +105,19 @@ class StockDetailViewModel @Inject constructor(
                         emit(marketRepository.getEsgScores(stockSymbol))
                     else emit(null)
                 }
+                
+                // Advanced Twelve Data flows
+                val tdRsiFlow = flow { emit(marketRepository.getTwelveDataRSI(stockSymbol)) }
+                val tdMacdFlow = flow { emit(marketRepository.getTwelveDataMACD(stockSymbol)) }
+                val tdEmaFlow = flow { emit(marketRepository.getTwelveDataEMA(stockSymbol)) }
+                val tdBbandsFlow = flow { emit(marketRepository.getTwelveDataBBands(stockSymbol)) }
+                val tdHistoryFlow = flow { emit(marketRepository.getTwelveDataTimeSeries(stockSymbol, "1day")) }
 
                 combine(
                     profileFlow, financialsFlow, newsFlow, recsFlow, peersFlow,
                     earningsFlow, rsiFlow, sma50Flow, sma200Flow, dividendsFlow,
-                    marketStatusFlow, priceTargetFlow, esgFlow
+                    marketStatusFlow, priceTargetFlow, esgFlow,
+                    tdRsiFlow, tdMacdFlow, tdEmaFlow, tdBbandsFlow, tdHistoryFlow
                 ) { results ->
                     val profile = results[0] as? FinnhubProfileResponse
                     val financials = results[1] as? FinnhubFinancialsResponse
@@ -128,6 +136,17 @@ class StockDetailViewModel @Inject constructor(
                     val marketStatus = results[10] as? FinnhubMarketStatusResponse
                     val priceTarget = results[11] as? FinnhubPriceTargetResponse
                     val esg = results[12] as? FinnhubEsgResponse
+                    
+                    @Suppress("UNCHECKED_CAST")
+                    val tdRsi = results[13] as? List<TwelveDataIndicatorValue> ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    val tdMacd = results[14] as? List<TwelveDataMACDValue> ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    val tdEma = results[15] as? List<TwelveDataIndicatorValue> ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    val tdBbands = results[16] as? List<TwelveDataBBandsValue> ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    val tdHistory = results[17] as? List<TwelveDataTimeSeriesValue> ?: emptyList()
 
                     // New advanced features data
                     val insiders = marketRepository.getInsiderTransactions(stockSymbol)
@@ -167,7 +186,12 @@ class StockDetailViewModel @Inject constructor(
                         priceTarget = priceTarget,
                         aiRecommendation = aiRec,
                         insiderTransactions = insiders,
-                        aiAnalysis = aiAnalysis
+                        aiAnalysis = aiAnalysis,
+                        tdRsi = tdRsi,
+                        tdMacd = tdMacd,
+                        tdEma20 = tdEma.firstOrNull()?.rsi?.toDoubleOrNull(), // TwelveDataIndicatorValue uses 'rsi' field for value generically in some responses or we should have named it 'value'
+                        tdBbands = tdBbands.firstOrNull(),
+                        candleHistory = tdHistory
                     )
                 }.collect {
                     _uiState.value = it
@@ -322,7 +346,13 @@ sealed class StockDetailUiState {
         val priceTarget: FinnhubPriceTargetResponse?,
         val aiRecommendation: AIRecommendation?,
         val insiderTransactions: List<FinnhubInsiderTransaction> = emptyList(),
-        val aiAnalysis: String? = null
+        val aiAnalysis: String? = null,
+        // Advanced Twelve Data Features
+        val tdRsi: List<TwelveDataIndicatorValue> = emptyList(),
+        val tdMacd: List<TwelveDataMACDValue> = emptyList(),
+        val tdEma20: Double? = null,
+        val tdBbands: TwelveDataBBandsValue? = null,
+        val candleHistory: List<TwelveDataTimeSeriesValue> = emptyList()
     ) : StockDetailUiState()
     data class Error(val message: String) : StockDetailUiState()
 }

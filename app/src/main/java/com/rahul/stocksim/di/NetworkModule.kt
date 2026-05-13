@@ -2,6 +2,7 @@ package com.rahul.stocksim.di
 
 import com.rahul.stocksim.data.AuthRepository
 import com.rahul.stocksim.data.FinnhubApi
+import com.rahul.stocksim.data.TwelveDataApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,5 +43,16 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(FinnhubApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTwelveDataApi(okHttpClient: OkHttpClient): TwelveDataApi {
+        return Retrofit.Builder()
+            .baseUrl("https://api.twelvedata.com/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(TwelveDataApi::class.java)
     }
 }

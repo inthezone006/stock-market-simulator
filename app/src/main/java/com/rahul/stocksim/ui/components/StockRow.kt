@@ -3,6 +3,7 @@ package com.rahul.stocksim.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -12,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.rahul.stocksim.model.Stock
 
 @Composable
@@ -37,9 +40,38 @@ fun StockRow(
         color = Color.Transparent
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+              // Logo Box
+              Box(
+                  modifier = Modifier
+                      .size(40.dp)
+                      .clip(RoundedCornerShape(10.dp))
+                      .background(Color(0xFF1F1F1F)),
+                  contentAlignment = Alignment.Center
+              ) {
+                  if (!stock.logoUrl.isNullOrEmpty()) {
+                      AsyncImage(
+                          model = stock.logoUrl,
+                          contentDescription = null,
+                          modifier = Modifier
+                              .size(30.dp)
+                              .clip(RoundedCornerShape(6.dp)),
+                          contentScale = ContentScale.Fit
+                      )
+                  } else {
+                      Text(
+                          text = stock.symbol.take(1),
+                          color = Color.White,
+                          fontWeight = FontWeight.Bold,
+                          fontSize = 16.sp
+                      )
+                  }
+              }
+
+              Spacer(modifier = Modifier.width(12.dp))
+
               Column(
                   modifier = Modifier.weight(1f)
               ) {
@@ -51,33 +83,33 @@ fun StockRow(
                           color = Color.White
                       )
                       if (stock.isCrypto) {
-                          Spacer(modifier = Modifier.width(8.dp))
+                          Spacer(modifier = Modifier.width(6.dp))
                           Box(
                               modifier = Modifier
                                   .clip(RoundedCornerShape(4.dp))
-                                  .background(Color(0xFFFFA726).copy(alpha = 0.2f)) // Orange color for crypto tag
-                                  .padding(horizontal = 6.dp, vertical = 2.dp)
+                                  .background(Color(0xFFFFA726).copy(alpha = 0.2f))
+                                  .padding(horizontal = 4.dp, vertical = 1.dp)
                           ) {
                               Text(
                                   text = "CRYPTO",
                                   color = Color(0xFFFFA726),
-                                  fontSize = 10.sp,
+                                  fontSize = 9.sp,
                                   fontWeight = FontWeight.Bold
                               )
                           }
                       }
                       if (ownedQuantity > 0) {
-                          Spacer(modifier = Modifier.width(8.dp))
+                          Spacer(modifier = Modifier.width(6.dp))
                           Box(
                               modifier = Modifier
                                   .clip(RoundedCornerShape(4.dp))
                                   .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                                  .padding(horizontal = 6.dp, vertical = 2.dp)
+                                  .padding(horizontal = 4.dp, vertical = 1.dp)
                           ) {
                               Text(
                                   text = "$ownedQuantity",
                                   color = MaterialTheme.colorScheme.primary,
-                                  fontSize = 10.sp,
+                                  fontSize = 9.sp,
                                   fontWeight = FontWeight.Bold
                               )
                           }
@@ -85,9 +117,10 @@ fun StockRow(
                   }
                   Text(
                       text = stock.name,
-                      style = MaterialTheme.typography.bodyMedium,
+                      style = MaterialTheme.typography.bodySmall,
                       color = Color.Gray,
-                      maxLines = 1
+                      maxLines = 1,
+                      overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                   )
               }
 

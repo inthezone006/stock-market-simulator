@@ -22,6 +22,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import com.google.firebase.Timestamp
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
@@ -244,6 +246,7 @@ enum class AssetFilter { STOCKS, CRYPTO, FOREX, OTHERS }
 @Singleton
 class MarketRepository @Inject constructor(
     private val api: FinnhubApi,
+    private val twelveDataApi: TwelveDataApi,
     private val stockDao: StockDao,
     @ApplicationContext private val context: Context
 ) {
@@ -252,8 +255,30 @@ class MarketRepository @Inject constructor(
     private val analytics = Firebase.analytics
     private val crashlytics = Firebase.crashlytics
     private val notificationHelper = NotificationHelper(context)
+    private val gson = Gson()
     
     private val apiKey = "d38davhr01qlbdj4vutgd38davhr01qlbdj4vuu0"
+    private val twelveDataApiKey = "e55badc51cfd4ba5b9ed060f2c048d57"
+
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                preloadCaches()
+            } catch (e: Exception) {
+                Log.e("MarketRepository", "Error preloading caches", e)
+            }
+        }
+    }
+
+    private suspend fun preloadCaches() {
+        stockDao.getAllStocks().take(1).collect { stocks ->
+            stocks.forEach { stock ->
+                companyNameMap[stock.symbol] = stock.name
+                stock.industry?.let { industryCache[stock.symbol] = it }
+                stock.logoUrl?.let { logoCache[stock.symbol] = it }
+            }
+        }
+    }
 
     fun getApplicationContext() = context
 
@@ -269,6 +294,7 @@ class MarketRepository @Inject constructor(
         private var globalPortfolioCache: List<Pair<Stock, Long>>? = null
         
         private val industryCache = ConcurrentHashMap<String, String>()
+        private val logoCache = ConcurrentHashMap<String, String>()
         private val companyNameMap = ConcurrentHashMap<String, String>().apply {
             put("AAPL", "Apple Inc.")
             put("GOOGL", "Alphabet Inc.")
@@ -306,13 +332,23 @@ class MarketRepository @Inject constructor(
         crashlytics.recordException(e)
     }
 
-    suspend fun getStockQuote(symbol: String): Stock? {
+    suspend fun getStockQuote(symbol: String, skipTwelveData: Boolean = false): Stock? {
         val cached = quoteCache[symbol]
         if (cached != null && System.currentTimeMillis() - cached.second < CACHE_EXPIRATION_MS) {
             return cached.first
         }
 
-        // Try Room database for offline cache if network fails
+        // Try Twelve Data first for better quote detail + name
+        if (!skipTwelveData) {
+            val tdQuote = getTwelveDataQuote(symbol)
+            if (tdQuote != null) {
+                quoteCache[symbol] = tdQuote to System.currentTimeMillis()
+                stockDao.insertStock(tdQuote.toEntity())
+                return tdQuote
+            }
+        }
+
+        // Try Finnhub as fallback
         return try {
             apiMutex.withLock {
                 val reCached = quoteCache[symbol]
@@ -328,11 +364,12 @@ class MarketRepository @Inject constructor(
                 val response = api.getQuote(symbol, apiKey)
                 lastRequestTime = System.currentTimeMillis()
                 
-                if (!companyNameMap.containsKey(symbol) || !industryCache.containsKey(symbol)) {
+                if (!companyNameMap.containsKey(symbol) || !industryCache.containsKey(symbol) || !logoCache.containsKey(symbol)) {
                     try {
                         val profileRes = api.getCompanyProfile(symbol, apiKey)
                         if (profileRes.name != null) companyNameMap[symbol] = profileRes.name
                         if (profileRes.finnhubIndustry != null) industryCache[symbol] = profileRes.finnhubIndustry!!
+                        if (profileRes.logo != null) logoCache[symbol] = profileRes.logo!!
                     } catch (e: Exception) {}
                 }
 
@@ -351,7 +388,8 @@ class MarketRepository @Inject constructor(
                     prevClose = response.pc,
                     isCrypto = isCrypto,
                     isForex = isForex,
-                    industry = industryCache[symbol]
+                    industry = industryCache[symbol],
+                    logoUrl = logoCache[symbol]
                 )
                 
                 // Update caches
@@ -370,21 +408,53 @@ class MarketRepository @Inject constructor(
     private fun Stock.toEntity() = StockEntity(
         symbol = symbol, name = name, price = price, change = change, percentChange = percentChange,
         high = high, low = low, open = open, prevClose = prevClose, isCrypto = isCrypto,
-        isForex = isForex, industry = industry
+        isForex = isForex, industry = industry, logoUrl = logoUrl
     )
 
     private fun StockEntity.toDomain() = Stock(
         symbol = symbol, name = name, price = price, change = change, percentChange = percentChange,
         high = high, low = low, open = open, prevClose = prevClose, isCrypto = isCrypto,
-        isForex = isForex, industry = industry
+        isForex = isForex, industry = industry, logoUrl = logoUrl
     )
 
     suspend fun getStocksQuotes(symbols: List<String>): List<Stock> = coroutineScope {
-        symbols.map { symbol ->
+        if (symbols.isEmpty()) return@coroutineScope emptyList()
+        
+        // Eagerly fetch logos for symbols that don't have them in cache yet
+        val missingLogos = symbols.filter { !logoCache.containsKey(it) }
+        if (missingLogos.isNotEmpty()) {
+            launch {
+                missingLogos.forEach { symbol ->
+                    try {
+                        val profile = api.getCompanyProfile(symbol, apiKey)
+                        profile.logo?.let { logoCache[symbol] = it }
+                        profile.name?.let { companyNameMap[symbol] = it }
+                        profile.finnhubIndustry?.let { industryCache[symbol] = it }
+                        delay(200) // Small delay to avoid hitting rate limits too fast
+                    } catch (e: Exception) {
+                        Log.e("MarketRepository", "Error fetching profile for $symbol during eager load", e)
+                    }
+                }
+            }
+        }
+
+        // Use Twelve Data Batching for efficiency
+        val tdQuotes = getTwelveDataBatchQuotes(symbols)
+        
+        if (tdQuotes.size == symbols.size) {
+            return@coroutineScope tdQuotes
+        }
+
+        // Fallback or fill gaps with Finnhub if Twelve Data misses some or fails
+        val missingSymbols = symbols.filter { symbol -> tdQuotes.none { it.symbol == symbol } }
+        
+        if (missingSymbols.isEmpty()) return@coroutineScope tdQuotes
+
+        val finnhubQuotes = missingSymbols.map { symbol ->
             async {
                 try {
                     withTimeout(15000) {
-                        getStockQuote(symbol)
+                        getStockQuote(symbol, skipTwelveData = true)
                     }
                 } catch (e: Exception) {
                     Log.e("MarketRepository", "Error fetching quote for $symbol", e)
@@ -392,6 +462,8 @@ class MarketRepository @Inject constructor(
                 }
             }
         }.awaitAll().filterNotNull()
+        
+        tdQuotes + finnhubQuotes
     }
 
     suspend fun getWatchlistWithQuotes(forceRefresh: Boolean = false): List<Stock> {
@@ -440,6 +512,13 @@ class MarketRepository @Inject constructor(
     }
 
     suspend fun getStockHistory(symbol: String, period: String): List<StockPricePoint> {
+        val cached = stockDao.getStockHistory(symbol, period)
+        val expiration = if (period == "1D") 300_000L else 3600_000L // 5 mins for 1D, 1 hour others
+        if (cached != null && System.currentTimeMillis() - cached.lastUpdated < expiration) {
+            val type = object : TypeToken<List<StockPricePoint>>() {}.type
+            return gson.fromJson(cached.historyJson, type)
+        }
+
         val to = Instant.now().epochSecond
         val from = when (period) {
             "1D" -> to - (24 * 3600)
@@ -465,7 +544,7 @@ class MarketRepository @Inject constructor(
         val isCrypto = symbol.startsWith("BINANCE:") || cryptoSymbols.contains(symbol)
         val isForex = symbol.startsWith("OANDA:") || forexSymbols.contains(symbol)
 
-        return try {
+        val history = try {
             val response = when {
                 isCrypto -> api.getCryptoCandles(symbol, resolution, from, to, apiKey)
                 isForex -> api.getForexCandles(symbol, resolution, from, to, apiKey)
@@ -491,6 +570,15 @@ class MarketRepository @Inject constructor(
             // Fallback to simulation on network error
             getStockQuote(symbol)?.let { generateSimulatedPoints(symbol, FinnhubQuoteResponse(it.price, it.change, it.percentChange, it.high, it.low, it.open, it.prevClose), to, period) } ?: emptyList()
         }
+
+        if (history.isNotEmpty()) {
+            stockDao.insertStockHistory(StockHistoryEntity(symbol, period, gson.toJson(history)))
+        } else if (cached != null) {
+            val type = object : TypeToken<List<StockPricePoint>>() {}.type
+            return gson.fromJson(cached.historyJson, type)
+        }
+        
+        return history
     }
 
     private fun generateSimulatedPoints(symbol: String, quote: FinnhubQuoteResponse, endTime: Long, period: String): List<StockPricePoint> {
@@ -611,14 +699,24 @@ class MarketRepository @Inject constructor(
 
     suspend fun getCompanyNews(symbol: String): List<FinnhubNewsArticle> {
         return try {
+            val localNews = stockDao.getCompanyNews(symbol)
+            if (localNews.isNotEmpty() && System.currentTimeMillis() - localNews.first().lastUpdated < 3600_000L) {
+                return localNews.map { it.toDomain() }
+            }
+
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val calendar = Calendar.getInstance()
             val today = sdf.format(calendar.time)
             calendar.add(Calendar.DAY_OF_YEAR, -7)
-            api.getCompanyNews(symbol, sdf.format(calendar.time), today, apiKey).take(5)
+            val remoteNews = api.getCompanyNews(symbol, sdf.format(calendar.time), today, apiKey).take(5)
+            
+            if (remoteNews.isNotEmpty()) {
+                stockDao.insertNews(remoteNews.map { it.toEntity(symbol) })
+            }
+            remoteNews
         } catch (e: Exception) {
             recordError(e)
-            emptyList()
+            stockDao.getCompanyNews(symbol).map { it.toDomain() }
         }
     }
 
@@ -953,6 +1051,151 @@ class MarketRepository @Inject constructor(
         }
     }
 
+    suspend fun getTwelveDataQuote(symbol: String): Stock? {
+        return try {
+            val jsonElement = twelveDataApi.getQuote(symbol, twelveDataApiKey)
+            val gson = Gson()
+            val quote = if (jsonElement.isJsonObject && jsonElement.asJsonObject.has("symbol")) {
+                gson.fromJson(jsonElement, TwelveDataQuote::class.java)
+            } else if (jsonElement.isJsonObject) {
+                // It might be a map with one entry
+                val mapType = object : TypeToken<Map<String, TwelveDataQuote>>() {}.type
+                val map: Map<String, TwelveDataQuote> = gson.fromJson(jsonElement, mapType)
+                map[symbol] ?: map.values.firstOrNull()
+            } else null
+
+            quote?.let { response ->
+                Stock(
+                    symbol = response.symbol,
+                    name = response.name ?: symbol,
+                    price = response.close?.toDoubleOrNull() ?: 0.0,
+                    change = response.change?.toDoubleOrNull() ?: 0.0,
+                    percentChange = response.percent_change?.toDoubleOrNull() ?: 0.0,
+                    high = response.high?.toDoubleOrNull() ?: 0.0,
+                    low = response.low?.toDoubleOrNull() ?: 0.0,
+                    open = response.open?.toDoubleOrNull() ?: 0.0,
+                    prevClose = response.previous_close?.toDoubleOrNull() ?: 0.0,
+                    isCrypto = symbol.contains(":"),
+                    isForex = symbol.contains("/"),
+                    industry = industryCache[symbol]
+                )
+            }
+        } catch (e: Exception) {
+            recordError(e)
+            null
+        }
+    }
+
+    suspend fun getTwelveDataBatchQuotes(symbols: List<String>): List<Stock> {
+        if (symbols.isEmpty()) return emptyList()
+        return try {
+            val symbolString = symbols.joinToString(",")
+            val jsonElement = twelveDataApi.getQuote(symbolString, twelveDataApiKey)
+            val gson = Gson()
+            
+            // Check for API error status first
+            if (jsonElement.isJsonObject && jsonElement.asJsonObject.has("status") && 
+                jsonElement.asJsonObject.get("status").asString == "error") {
+                val message = jsonElement.asJsonObject.get("message")?.asString ?: "Unknown Twelve Data Error"
+                Log.e("MarketRepository", "Twelve Data API Error: $message")
+                return emptyList()
+            }
+
+            val responseMap = if (jsonElement.isJsonObject && !jsonElement.asJsonObject.has("symbol")) {
+                val mapType = object : TypeToken<Map<String, TwelveDataQuote>>() {}.type
+                gson.fromJson<Map<String, TwelveDataQuote>>(jsonElement, mapType)
+            } else if (jsonElement.isJsonObject) {
+                val quote = gson.fromJson(jsonElement, TwelveDataQuote::class.java)
+                mapOf(quote.symbol to quote)
+            } else emptyMap()
+
+            val stocks = responseMap.map { (symbol, response) ->
+                response.name?.let { companyNameMap[symbol] = it }
+                val isCrypto = symbol.contains(":") || symbol.contains("/") || cryptoSymbols.contains(symbol)
+                val isForex = symbol.contains("/") && !isCrypto || forexSymbols.contains(symbol)
+                Stock(
+                    symbol = symbol,
+                    name = response.name ?: symbol,
+                    price = response.close?.toDoubleOrNull() ?: 0.0,
+                    change = response.change?.toDoubleOrNull() ?: 0.0,
+                    percentChange = response.percent_change?.toDoubleOrNull() ?: 0.0,
+                    high = response.high?.toDoubleOrNull() ?: 0.0,
+                    low = response.low?.toDoubleOrNull() ?: 0.0,
+                    open = response.open?.toDoubleOrNull() ?: 0.0,
+                    prevClose = response.previous_close?.toDoubleOrNull() ?: 0.0,
+                    isCrypto = isCrypto,
+                    isForex = isForex,
+                    industry = industryCache[symbol],
+                    logoUrl = logoCache[symbol]
+                )
+            }
+            
+            if (stocks.isNotEmpty()) {
+                stockDao.insertStocks(stocks.map { it.toEntity() })
+            }
+            stocks
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getTwelveDataRSI(symbol: String, interval: String = "1day"): List<TwelveDataIndicatorValue> {
+        return try {
+            val response = twelveDataApi.getRSI(symbol, interval, apiKey = twelveDataApiKey)
+            response.values ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getTwelveDataMACD(symbol: String, interval: String = "1day"): List<TwelveDataMACDValue> {
+        return try {
+            val response = twelveDataApi.getMACD(symbol, interval, apiKey = twelveDataApiKey)
+            response.values ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e)
+            emptyList()
+        }
+    }
+
+    suspend fun getTwelveDataEMA(symbol: String, interval: String = "1day", timePeriod: Int = 20): List<TwelveDataIndicatorValue> {
+        return try {
+            val response = twelveDataApi.getEMA(symbol, interval, timePeriod, twelveDataApiKey)
+            response.values ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e); emptyList()
+        }
+    }
+
+    suspend fun getTwelveDataSMA(symbol: String, interval: String = "1day", timePeriod: Int = 50): List<TwelveDataIndicatorValue> {
+        return try {
+            val response = twelveDataApi.getSMA(symbol, interval, timePeriod, twelveDataApiKey)
+            response.values ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e); emptyList()
+        }
+    }
+
+    suspend fun getTwelveDataBBands(symbol: String, interval: String = "1day"): List<TwelveDataBBandsValue> {
+        return try {
+            val response = twelveDataApi.getBollingerBands(symbol, interval, apiKey = twelveDataApiKey)
+            response.values ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e); emptyList()
+        }
+    }
+
+    suspend fun getTwelveDataTimeSeries(symbol: String, interval: String, outputSize: Int = 50): List<TwelveDataTimeSeriesValue> {
+        return try {
+            val response = twelveDataApi.getTimeSeries(symbol, interval, outputSize, twelveDataApiKey)
+            response.values ?: emptyList()
+        } catch (e: Exception) {
+            recordError(e); emptyList()
+        }
+    }
+
     fun getUserBalance(): Flow<Double> = callbackFlow {
         val userId = auth.currentUser?.uid ?: run {
             trySend(0.0)
@@ -1076,15 +1319,89 @@ class MarketRepository @Inject constructor(
         } catch (e: Exception) { recordError(e); emptyList() }
     }
 
-    suspend fun getCompanyProfile(symbol: String): FinnhubProfileResponse? = try { api.getCompanyProfile(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
-    suspend fun getBasicFinancials(symbol: String): FinnhubFinancialsResponse? = try { api.getBasicFinancials(symbol, "all", apiKey) } catch (e: Exception) { recordError(e); null }
-    suspend fun getMarketNews(): List<FinnhubNewsArticle> = try { api.getMarketNews("general", apiKey).take(10) } catch (e: Exception) { recordError(e); emptyList() }
-    suspend fun getRecommendations(symbol: String): List<FinnhubRecommendationResponse> = try { api.getRecommendations(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
-    suspend fun getPeers(symbol: String): List<String> = try { api.getPeers(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
+    suspend fun getCompanyProfile(symbol: String): FinnhubProfileResponse? = try {
+        val cached = stockDao.getCompanyDetails(symbol)
+        if (cached?.profileJson != null && System.currentTimeMillis() - cached.lastUpdated < 86400000L) {
+            gson.fromJson(cached.profileJson, FinnhubProfileResponse::class.java)
+        } else {
+            val remote = api.getCompanyProfile(symbol, apiKey)
+            if (remote != null) {
+                val current = cached ?: CompanyDetailsEntity(symbol)
+                stockDao.insertCompanyDetails(current.copy(profileJson = gson.toJson(remote), lastUpdated = System.currentTimeMillis()))
+            }
+            remote
+        }
+    } catch (e: Exception) { recordError(e); null }
+
+    suspend fun getBasicFinancials(symbol: String): FinnhubFinancialsResponse? = try {
+        val cached = stockDao.getCompanyDetails(symbol)
+        if (cached?.financialsJson != null && System.currentTimeMillis() - cached.lastUpdated < 86400000L) {
+            gson.fromJson(cached.financialsJson, FinnhubFinancialsResponse::class.java)
+        } else {
+            val remote = api.getBasicFinancials(symbol, "all", apiKey)
+            if (remote != null) {
+                val current = cached ?: CompanyDetailsEntity(symbol)
+                stockDao.insertCompanyDetails(current.copy(financialsJson = gson.toJson(remote), lastUpdated = System.currentTimeMillis()))
+            }
+            remote
+        }
+    } catch (e: Exception) { recordError(e); null }
+
+    suspend fun getMarketNews(): List<FinnhubNewsArticle> = try { 
+        val localNews = stockDao.getGeneralNews()
+        if (localNews.isNotEmpty() && System.currentTimeMillis() - localNews.first().lastUpdated < 1800_000L) {
+            localNews.map { it.toDomain() }
+        } else {
+            val remoteNews = api.getMarketNews("general", apiKey).take(10)
+            if (remoteNews.isNotEmpty()) {
+                stockDao.insertNews(remoteNews.map { it.toEntity(null) })
+            }
+            remoteNews
+        }
+    } catch (e: Exception) { 
+        recordError(e)
+        stockDao.getGeneralNews().map { it.toDomain() }
+    }
+
+    suspend fun getRecommendations(symbol: String): List<FinnhubRecommendationResponse> = try {
+        val cached = stockDao.getCompanyDetails(symbol)
+        if (cached?.recommendationsJson != null && System.currentTimeMillis() - cached.lastUpdated < 86400000L) {
+            val type = object : TypeToken<List<FinnhubRecommendationResponse>>() {}.type
+            gson.fromJson(cached.recommendationsJson, type)
+        } else {
+            val remote = api.getRecommendations(symbol, apiKey)
+            val current = cached ?: CompanyDetailsEntity(symbol)
+            stockDao.insertCompanyDetails(current.copy(recommendationsJson = gson.toJson(remote), lastUpdated = System.currentTimeMillis()))
+            remote
+        }
+    } catch (e: Exception) { recordError(e); emptyList() }
+
+    suspend fun getPeers(symbol: String): List<String> = try {
+        val cached = stockDao.getCompanyDetails(symbol)
+        if (cached?.peersJson != null && System.currentTimeMillis() - cached.lastUpdated < 86400000L) {
+            val type = object : TypeToken<List<String>>() {}.type
+            gson.fromJson(cached.peersJson, type)
+        } else {
+            val remote = api.getPeers(symbol, apiKey)
+            val current = cached ?: CompanyDetailsEntity(symbol)
+            stockDao.insertCompanyDetails(current.copy(peersJson = gson.toJson(remote), lastUpdated = System.currentTimeMillis()))
+            remote
+        }
+    } catch (e: Exception) { recordError(e); emptyList() }
 
     suspend fun getInsiderTransactions(symbol: String): List<FinnhubInsiderTransaction> = try { 
         api.getInsiderTransactions(symbol, apiKey).data.take(20) 
     } catch (e: Exception) { recordError(e); emptyList() }
+
+    private fun FinnhubNewsArticle.toEntity(symbol: String?) = NewsEntity(
+        id = id, symbol = symbol, category = category, datetime = datetime, headline = headline,
+        image = image, related = related, source = source, summary = summary, url = url
+    )
+
+    private fun NewsEntity.toDomain() = FinnhubNewsArticle(
+        category = category, datetime = datetime, headline = headline, id = id,
+        image = image, related = related, source = source, summary = summary, url = url
+    )
 
     suspend fun trackAIUsage() {
         updateAchievementProgress("ai_enthusiast", 0.2f)

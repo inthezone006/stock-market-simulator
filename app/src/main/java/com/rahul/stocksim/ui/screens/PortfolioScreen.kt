@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.animation.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -110,12 +111,24 @@ fun PortfolioScreen(
                                                     horizontalArrangement = Arrangement.SpaceBetween,
                                                     verticalAlignment = Alignment.Bottom
                                                 ) {
-                                                    Text(
-                                                        text = "$${String.format("%,.2f", totalAccountValue)}",
-                                                        color = Color.White,
-                                                        fontSize = 32.sp,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
+                                                    AnimatedContent(
+                                                        targetState = totalAccountValue,
+                                                        transitionSpec = {
+                                                            if (targetState > initialState) {
+                                                                (slideInVertically { height -> height } + fadeIn()).togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                                                            } else {
+                                                                (slideInVertically { height -> -height } + fadeIn()).togetherWith(slideOutVertically { height -> height } + fadeOut())
+                                                            }.using(SizeTransform(clip = false))
+                                                        },
+                                                        label = "TotalValueTicker"
+                                                    ) { value ->
+                                                        Text(
+                                                            text = "$${String.format("%,.2f", value)}",
+                                                            color = Color.White,
+                                                            fontSize = 32.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
                                                     
                                                     Surface(
                                                         color = (if (dayChange >= 0) Color.Green else Color.Red).copy(alpha = 0.1f),

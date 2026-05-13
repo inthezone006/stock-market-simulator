@@ -14,10 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.rahul.stocksim.data.FinnhubNewsArticle
@@ -27,6 +30,7 @@ import com.rahul.stocksim.ui.components.NewsArticleItem
 import com.rahul.stocksim.ui.components.StockRow
 import com.rahul.stocksim.ui.viewmodels.MarketUiState
 import com.rahul.stocksim.ui.viewmodels.MarketViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,10 +82,21 @@ fun MarketScreen(
                             )
                         }
                         items(state.stockList) { currentStock ->
+                            val index = state.stockList.indexOf(currentStock)
+                            val animatedProgress = remember { Animatable(0f) }
+                            LaunchedEffect(state.stockList) {
+                                delay(index * 50L)
+                                animatedProgress.animateTo(1f, animationSpec = tween(500))
+                            }
+
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp, horizontal = 16.dp)
+                                    .graphicsLayer {
+                                        alpha = animatedProgress.value
+                                        translationY = (1f - animatedProgress.value) * 50f
+                                    }
                                     .clickable { onStockClick(currentStock) },
                                 color = Color(0xFF1F1F1F),
                                 shape = RoundedCornerShape(12.dp)

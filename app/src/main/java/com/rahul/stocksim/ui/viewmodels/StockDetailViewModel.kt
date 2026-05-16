@@ -79,12 +79,33 @@ class StockDetailViewModel @Inject constructor(
     fun refreshData() {
         val stockSymbol = symbol ?: return
         viewModelScope.launch {
-            _uiState.value = StockDetailUiState.Loading
+            // Instant load from memory cache
+            val cached = marketRepository.getCachedFullDetail(stockSymbol)
+            if (cached is StockDetailUiState.Success) {
+                _uiState.value = cached
+            } else if (_uiState.value !is StockDetailUiState.Success) {
+                _uiState.value = StockDetailUiState.Loading
+            }
+
             try {
                 val stockResult = marketRepository.getStockQuote(stockSymbol)
                 if (stockResult == null) {
-                    _uiState.value = StockDetailUiState.Error("Stock not found")
+                    if (_uiState.value is StockDetailUiState.Loading) {
+                        _uiState.value = StockDetailUiState.Error("Stock not found")
+                    }
                     return@launch
+                }
+                
+                // If we are still in Loading, show at least the stock price immediately
+                if (_uiState.value !is StockDetailUiState.Success) {
+                    _uiState.value = StockDetailUiState.Success(
+                        stock = stockResult,
+                        profile = null, financials = null, newsArticles = emptyList(),
+                        recommendations = emptyList(), peers = emptyList(), earnings = null,
+                        rsiData = null, sma50Data = null, sma200Data = null, dividends = emptyList(),
+                        newsSentiment = null, marketStatus = null, esgScores = null, priceTarget = null,
+                        aiRecommendation = null
+                    )
                 }
 
                 // Fetch data in parallel
@@ -189,12 +210,13 @@ class StockDetailViewModel @Inject constructor(
                         aiAnalysis = aiAnalysis,
                         tdRsi = tdRsi,
                         tdMacd = tdMacd,
-                        tdEma20 = tdEma.firstOrNull()?.rsi?.toDoubleOrNull(), // TwelveDataIndicatorValue uses 'rsi' field for value generically in some responses or we should have named it 'value'
+                        tdEma20 = tdEma.firstOrNull()?.rsi?.toDoubleOrNull(),
                         tdBbands = tdBbands.firstOrNull(),
                         candleHistory = tdHistory
                     )
                 }.collect {
                     _uiState.value = it
+                    marketRepository.cacheFullDetail(stockSymbol, it)
                 }
 
                 _isInWatchlist.value = marketRepository.getWatchlist().any { it.symbol == stockSymbol }

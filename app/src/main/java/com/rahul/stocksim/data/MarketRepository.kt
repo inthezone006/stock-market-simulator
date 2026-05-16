@@ -283,7 +283,34 @@ class MarketRepository @Inject constructor(
     fun getApplicationContext() = context
 
     private val quoteCache = ConcurrentHashMap<String, Pair<Stock, Long>>()
+    private val genericCache = ConcurrentHashMap<String, Pair<Any, Long>>()
+    private val fullDetailCache = ConcurrentHashMap<String, Any>() // Fast UI-level cache
+    
+    fun cacheFullDetail(symbol: String, detail: Any) {
+        fullDetailCache[symbol] = detail
+    }
+
+    fun getCachedFullDetail(symbol: String): Any? = fullDetailCache[symbol]
+
     private val CACHE_EXPIRATION_MS = 300_000L // 5 minutes
+    private val LONG_CACHE_EXPIRATION_MS = 3600_000L // 1 hour
+    
+    private suspend fun <T : Any> getCachedOrFetch(
+        key: String,
+        expirationMs: Long = CACHE_EXPIRATION_MS,
+        fetch: suspend () -> T?
+    ): T? {
+        val cached = genericCache[key]
+        if (cached != null && System.currentTimeMillis() - cached.second < expirationMs) {
+            @Suppress("UNCHECKED_CAST")
+            return cached.first as? T
+        }
+        val result = fetch()
+        if (result != null) {
+            genericCache[key] = result to System.currentTimeMillis()
+        }
+        return result
+    }
     
     private val apiMutex = Mutex()
     private var lastRequestTime = 0L
@@ -336,6 +363,14 @@ class MarketRepository @Inject constructor(
         val cached = quoteCache[symbol]
         if (cached != null && System.currentTimeMillis() - cached.second < CACHE_EXPIRATION_MS) {
             return cached.first
+        }
+        
+        // Try Room before network if memory is empty
+        val dbStock = stockDao.getStock(symbol)?.toDomain()
+        if (dbStock != null && cached == null) {
+             // If we have nothing in memory, use DB stock temporarily
+             quoteCache[symbol] = dbStock to System.currentTimeMillis() - (CACHE_EXPIRATION_MS / 2) // set as semi-old
+             // We don't return here yet, we still want to refresh from network if it's been > 5 mins
         }
 
         // Try Twelve Data first for better quote detail + name
@@ -697,28 +732,28 @@ class MarketRepository @Inject constructor(
         return points
     }
 
-    suspend fun getCompanyNews(symbol: String): List<FinnhubNewsArticle> {
-        return try {
+    suspend fun getCompanyNews(symbol: String): List<FinnhubNewsArticle> = getCachedOrFetch("company_news_$symbol", 1800_000L) {
+        try {
             val localNews = stockDao.getCompanyNews(symbol)
             if (localNews.isNotEmpty() && System.currentTimeMillis() - localNews.first().lastUpdated < 3600_000L) {
-                return localNews.map { it.toDomain() }
+                localNews.map { it.toDomain() }
+            } else {
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val calendar = Calendar.getInstance()
+                val today = sdf.format(calendar.time)
+                calendar.add(Calendar.DAY_OF_YEAR, -7)
+                val remoteNews = api.getCompanyNews(symbol, sdf.format(calendar.time), today, apiKey).take(5)
+                
+                if (remoteNews.isNotEmpty()) {
+                    stockDao.insertNews(remoteNews.map { it.toEntity(symbol) })
+                }
+                remoteNews
             }
-
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val calendar = Calendar.getInstance()
-            val today = sdf.format(calendar.time)
-            calendar.add(Calendar.DAY_OF_YEAR, -7)
-            val remoteNews = api.getCompanyNews(symbol, sdf.format(calendar.time), today, apiKey).take(5)
-            
-            if (remoteNews.isNotEmpty()) {
-                stockDao.insertNews(remoteNews.map { it.toEntity(symbol) })
-            }
-            remoteNews
         } catch (e: Exception) {
             recordError(e)
             stockDao.getCompanyNews(symbol).map { it.toDomain() }
         }
-    }
+    } ?: emptyList()
 
     suspend fun searchStocks(query: String, filter: AssetFilter = AssetFilter.STOCKS): List<Stock> = coroutineScope {
         try {
@@ -1141,59 +1176,71 @@ class MarketRepository @Inject constructor(
     }
 
     suspend fun getTwelveDataRSI(symbol: String, interval: String = "1day"): List<TwelveDataIndicatorValue> {
-        return try {
-            val response = twelveDataApi.getRSI(symbol, interval, apiKey = twelveDataApiKey)
-            response.values ?: emptyList()
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
+        return getCachedOrFetch("rsi_$symbol$interval", LONG_CACHE_EXPIRATION_MS) {
+            try {
+                val response = twelveDataApi.getRSI(symbol, interval, apiKey = twelveDataApiKey)
+                response.values
+            } catch (e: Exception) {
+                recordError(e)
+                null
+            }
+        } ?: emptyList()
     }
 
     suspend fun getTwelveDataMACD(symbol: String, interval: String = "1day"): List<TwelveDataMACDValue> {
-        return try {
-            val response = twelveDataApi.getMACD(symbol, interval, apiKey = twelveDataApiKey)
-            response.values ?: emptyList()
-        } catch (e: Exception) {
-            recordError(e)
-            emptyList()
-        }
+        return getCachedOrFetch("macd_$symbol$interval", LONG_CACHE_EXPIRATION_MS) {
+            try {
+                val response = twelveDataApi.getMACD(symbol, interval, apiKey = twelveDataApiKey)
+                response.values
+            } catch (e: Exception) {
+                recordError(e)
+                null
+            }
+        } ?: emptyList()
     }
 
     suspend fun getTwelveDataEMA(symbol: String, interval: String = "1day", timePeriod: Int = 20): List<TwelveDataIndicatorValue> {
-        return try {
-            val response = twelveDataApi.getEMA(symbol, interval, timePeriod, twelveDataApiKey)
-            response.values ?: emptyList()
-        } catch (e: Exception) {
-            recordError(e); emptyList()
-        }
+        return getCachedOrFetch("ema_$symbol$interval$timePeriod", LONG_CACHE_EXPIRATION_MS) {
+            try {
+                val response = twelveDataApi.getEMA(symbol, interval, timePeriod, twelveDataApiKey)
+                response.values
+            } catch (e: Exception) {
+                recordError(e); null
+            }
+        } ?: emptyList()
     }
 
     suspend fun getTwelveDataSMA(symbol: String, interval: String = "1day", timePeriod: Int = 50): List<TwelveDataIndicatorValue> {
-        return try {
-            val response = twelveDataApi.getSMA(symbol, interval, timePeriod, twelveDataApiKey)
-            response.values ?: emptyList()
-        } catch (e: Exception) {
-            recordError(e); emptyList()
-        }
+        return getCachedOrFetch("sma_$symbol$interval$timePeriod", LONG_CACHE_EXPIRATION_MS) {
+            try {
+                val response = twelveDataApi.getSMA(symbol, interval, timePeriod, twelveDataApiKey)
+                response.values
+            } catch (e: Exception) {
+                recordError(e); null
+            }
+        } ?: emptyList()
     }
 
     suspend fun getTwelveDataBBands(symbol: String, interval: String = "1day"): List<TwelveDataBBandsValue> {
-        return try {
-            val response = twelveDataApi.getBollingerBands(symbol, interval, apiKey = twelveDataApiKey)
-            response.values ?: emptyList()
-        } catch (e: Exception) {
-            recordError(e); emptyList()
-        }
+        return getCachedOrFetch("bbands_$symbol$interval", LONG_CACHE_EXPIRATION_MS) {
+            try {
+                val response = twelveDataApi.getBollingerBands(symbol, interval, apiKey = twelveDataApiKey)
+                response.values
+            } catch (e: Exception) {
+                recordError(e); null
+            }
+        } ?: emptyList()
     }
 
     suspend fun getTwelveDataTimeSeries(symbol: String, interval: String, outputSize: Int = 50): List<TwelveDataTimeSeriesValue> {
-        return try {
-            val response = twelveDataApi.getTimeSeries(symbol, interval, outputSize, twelveDataApiKey)
-            response.values ?: emptyList()
-        } catch (e: Exception) {
-            recordError(e); emptyList()
-        }
+        return getCachedOrFetch("timeseries_$symbol$interval$outputSize", LONG_CACHE_EXPIRATION_MS) {
+            try {
+                val response = twelveDataApi.getTimeSeries(symbol, interval, outputSize, twelveDataApiKey)
+                response.values
+            } catch (e: Exception) {
+                recordError(e); null
+            }
+        } ?: emptyList()
     }
 
     fun getUserBalance(): Flow<Double> = callbackFlow {
@@ -1347,21 +1394,23 @@ class MarketRepository @Inject constructor(
         }
     } catch (e: Exception) { recordError(e); null }
 
-    suspend fun getMarketNews(): List<FinnhubNewsArticle> = try { 
-        val localNews = stockDao.getGeneralNews()
-        if (localNews.isNotEmpty() && System.currentTimeMillis() - localNews.first().lastUpdated < 1800_000L) {
-            localNews.map { it.toDomain() }
-        } else {
-            val remoteNews = api.getMarketNews("general", apiKey).take(10)
-            if (remoteNews.isNotEmpty()) {
-                stockDao.insertNews(remoteNews.map { it.toEntity(null) })
+    suspend fun getMarketNews(): List<FinnhubNewsArticle> = getCachedOrFetch("market_news", 600_000L) { // 10 min memory cache
+        try { 
+            val localNews = stockDao.getGeneralNews()
+            if (localNews.isNotEmpty() && System.currentTimeMillis() - localNews.first().lastUpdated < 1800_000L) {
+                localNews.map { it.toDomain() }
+            } else {
+                val remoteNews = api.getMarketNews("general", apiKey).take(10)
+                if (remoteNews.isNotEmpty()) {
+                    stockDao.insertNews(remoteNews.map { it.toEntity(null) })
+                }
+                remoteNews
             }
-            remoteNews
+        } catch (e: Exception) { 
+            recordError(e)
+            stockDao.getGeneralNews().map { it.toDomain() }
         }
-    } catch (e: Exception) { 
-        recordError(e)
-        stockDao.getGeneralNews().map { it.toDomain() }
-    }
+    } ?: emptyList()
 
     suspend fun getRecommendations(symbol: String): List<FinnhubRecommendationResponse> = try {
         val cached = stockDao.getCompanyDetails(symbol)
@@ -1418,35 +1467,47 @@ class MarketRepository @Inject constructor(
         } catch (e: Exception) { recordError(e); emptyList() }
     }
 
-    suspend fun getEarningsCalendar(symbol: String): FinnhubEarningsCalendarResponse? {
+    suspend fun getEarningsCalendar(symbol: String): FinnhubEarningsCalendarResponse? = getCachedOrFetch("earnings_$symbol", LONG_CACHE_EXPIRATION_MS) {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); val calendar = Calendar.getInstance(); val today = sdf.format(calendar.time)
         calendar.add(Calendar.MONTH, 6)
-        return try { api.getEarningsCalendar(symbol, today, sdf.format(calendar.time), apiKey) } catch (e: Exception) { recordError(e); null }
+        try { api.getEarningsCalendar(symbol, today, sdf.format(calendar.time), apiKey) } catch (e: Exception) { recordError(e); null }
     }
 
-    suspend fun getTechnicalIndicator(symbol: String, indicator: String, timeperiod: Int? = null): FinnhubIndicatorResponse? {
+    suspend fun getTechnicalIndicator(symbol: String, indicator: String, timeperiod: Int? = null): FinnhubIndicatorResponse? = getCachedOrFetch("indicator_${symbol}_${indicator}_$timeperiod", CACHE_EXPIRATION_MS) {
         val to = Instant.now().epochSecond
-        return try { api.getTechnicalIndicator(symbol, "D", to - (365 * 24 * 3600), to, indicator, apiKey, timeperiod) } catch (e: Exception) { recordError(e); null }
+        try { api.getTechnicalIndicator(symbol, "D", to - (365 * 24 * 3600), to, indicator, apiKey, timeperiod) } catch (e: Exception) { recordError(e); null }
     }
 
-    suspend fun getDividends(symbol: String): List<FinnhubDividendResponse> {
+    suspend fun getDividends(symbol: String): List<FinnhubDividendResponse> = getCachedOrFetch("dividends_$symbol", LONG_CACHE_EXPIRATION_MS) {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); val calendar = Calendar.getInstance(); val today = sdf.format(calendar.time)
         calendar.add(Calendar.YEAR, -1)
-        return try { api.getDividends(symbol, sdf.format(calendar.time), today, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
-    }
+        try { api.getDividends(symbol, sdf.format(calendar.time), today, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
+    } ?: emptyList()
 
-    suspend fun getIpoCalendar(): List<FinnhubIpoEntry> {
+    suspend fun getIpoCalendar(): List<FinnhubIpoEntry> = getCachedOrFetch("ipo_calendar", LONG_CACHE_EXPIRATION_MS) {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); val calendar = Calendar.getInstance(); val today = sdf.format(calendar.time)
         calendar.add(Calendar.MONTH, 1)
-        return try { api.getIpoCalendar(today, sdf.format(calendar.time), apiKey).ipoCalendar } catch (e: Exception) { recordError(e); emptyList() }
-    }
+        try { api.getIpoCalendar(today, sdf.format(calendar.time), apiKey).ipoCalendar } catch (e: Exception) { recordError(e); emptyList() }
+    } ?: emptyList()
 
-    suspend fun getNewsSentiment(symbol: String): FinnhubNewsSentimentResponse? = try { api.getNewsSentiment(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
-    suspend fun getForexRates(base: String = "USD"): FinnhubForexRatesResponse? = try { api.getForexRates(base, apiKey) } catch (e: Exception) { recordError(e); null }
-    suspend fun getMarketStatus(exchange: String = "US"): FinnhubMarketStatusResponse? = try { api.getMarketStatus(exchange, apiKey) } catch (e: Exception) { recordError(e); null }
-    suspend fun getEsgScores(symbol: String): FinnhubEsgResponse? = try { api.getEsgScores(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
-    suspend fun getPriceTarget(symbol: String): FinnhubPriceTargetResponse? = try { api.getPriceTarget(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
-    suspend fun getEarningsSurprises(symbol: String): List<FinnhubEarningsSurpriseResponse> = try { api.getEarningsSurprises(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
+    suspend fun getNewsSentiment(symbol: String): FinnhubNewsSentimentResponse? = getCachedOrFetch("sentiment_$symbol", CACHE_EXPIRATION_MS) {
+        try { api.getNewsSentiment(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
+    }
+    suspend fun getForexRates(base: String = "USD"): FinnhubForexRatesResponse? = getCachedOrFetch("forex_rates_$base", CACHE_EXPIRATION_MS) {
+        try { api.getForexRates(base, apiKey) } catch (e: Exception) { recordError(e); null }
+    }
+    suspend fun getMarketStatus(exchange: String = "US"): FinnhubMarketStatusResponse? = getCachedOrFetch("market_status_$exchange", CACHE_EXPIRATION_MS) {
+        try { api.getMarketStatus(exchange, apiKey) } catch (e: Exception) { recordError(e); null }
+    }
+    suspend fun getEsgScores(symbol: String): FinnhubEsgResponse? = getCachedOrFetch("esg_$symbol", LONG_CACHE_EXPIRATION_MS) {
+        try { api.getEsgScores(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
+    }
+    suspend fun getPriceTarget(symbol: String): FinnhubPriceTargetResponse? = getCachedOrFetch("price_target_$symbol", LONG_CACHE_EXPIRATION_MS) {
+        try { api.getPriceTarget(symbol, apiKey) } catch (e: Exception) { recordError(e); null }
+    }
+    suspend fun getEarningsSurprises(symbol: String): List<FinnhubEarningsSurpriseResponse> = getCachedOrFetch("surprises_$symbol", LONG_CACHE_EXPIRATION_MS) {
+        try { api.getEarningsSurprises(symbol, apiKey) } catch (e: Exception) { recordError(e); emptyList() }
+    } ?: emptyList()
 
     fun getPriceAlerts(symbol: String): Flow<List<PriceAlertEntity>> {
         return stockDao.getAlertsForStock(symbol)

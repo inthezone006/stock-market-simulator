@@ -3,6 +3,7 @@ package com.rahul.stocksim.ui.screens
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -777,10 +778,8 @@ fun StockDetailScreen(
                     }
 
                     // --- GEMINI AI ANALYSIS SECTION ---
-                    state.aiAnalysis?.let { analysis ->
-                        item {
-                            AIAnalysisSection(analysis)
-                        }
+                    item {
+                        AIAnalysisSection(state.aiAnalysis)
                     }
 
                     // --- INSIDER TRADING SECTION ---
@@ -1458,11 +1457,12 @@ fun AIRecommendationSection(recommendation: AIRecommendation) {
 }
 
 @Composable
-fun AIAnalysisSection(analysis: String) {
+fun AIAnalysisSection(analysis: String?) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = 16.dp)
+            .animateContentSize(), // Smoothly animate height changes
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F)),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -1484,10 +1484,32 @@ fun AIAnalysisSection(analysis: String) {
             }
             Spacer(modifier = Modifier.height(16.dp))
             
-            MarkdownText(
-                markdown = analysis,
-                modifier = Modifier.fillMaxWidth()
-            )
+            AnimatedContent(
+                targetState = analysis,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(600, delayMillis = 100)) togetherWith 
+                    fadeOut(animationSpec = tween(300))
+                },
+                label = "AIAnalysisTransition"
+            ) { targetAnalysis ->
+                if (targetAnalysis != null) {
+                    MarkdownText(
+                        markdown = targetAnalysis,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color(0xFFBB86FC),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
+            }
         }
     }
 }

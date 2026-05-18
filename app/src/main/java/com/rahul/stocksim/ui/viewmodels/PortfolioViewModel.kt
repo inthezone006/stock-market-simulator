@@ -46,6 +46,7 @@ class PortfolioViewModel @Inject constructor(
                 .catch { emit(emptyList()) }
                 .collect {
                     _contracts.value = it
+                    healContracts(it)
                 }
         }
     }
@@ -56,7 +57,26 @@ class PortfolioViewModel @Inject constructor(
                 .catch { emit(emptyList()) }
                 .collect {
                     _executedContracts.value = it
+                    healContracts(it)
                 }
+        }
+    }
+
+    private fun healContracts(contracts: List<TradeContract>) {
+        val missingLogos = contracts.filter { it.logoUrl.isNullOrEmpty() }
+        if (missingLogos.isEmpty()) return
+
+        viewModelScope.launch {
+            missingLogos.forEach { contract ->
+                try {
+                    val profile = marketRepository.getCompanyProfile(contract.symbol)
+                    if (profile?.logo != null) {
+                        marketRepository.updateTradeContract(contract.copy(logoUrl = profile.logo))
+                    }
+                } catch (e: Exception) {
+                    // Silently fail healing
+                }
+            }
         }
     }
 

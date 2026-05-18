@@ -1,5 +1,6 @@
 package com.rahul.stocksim.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import com.rahul.stocksim.data.*
 import com.rahul.stocksim.data.local.entity.PriceAlertEntity
 import com.rahul.stocksim.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -86,30 +88,26 @@ class StockDetailViewModel @Inject constructor(
             val cached = marketRepository.getCachedFullDetail(stockSymbol)
             if (cached is StockDetailUiState.Success) {
                 _uiState.value = cached
-                _isRefreshing.value = true // Show loading indicator in header while we refresh
+                _isRefreshing.value = true 
             } else {
                 // 2. Fast load from Quote Cache (Just price/name)
                 val quickQuote = marketRepository.getStockQuote(stockSymbol, skipTwelveData = true)
                 if (quickQuote != null) {
-                    _uiState.value = StockDetailUiState.Success(
-                        stock = quickQuote,
-                        profile = null, financials = null, newsArticles = emptyList(),
-                        recommendations = emptyList(), peers = emptyList(), earnings = null,
-                        rsiData = null, sma50Data = null, sma200Data = null, dividends = emptyList(),
-                        newsSentiment = null, marketStatus = null, esgScores = null, priceTarget = null,
-                        aiRecommendation = null
-                    )
+                    _uiState.value = StockDetailUiState.Success(stock = quickQuote)
                     _isRefreshing.value = true
                 } else {
-                    // 3. Absolute fallback: Loading icon
                     _uiState.value = StockDetailUiState.Loading
                 }
             }
 
+            // Start graph loading immediately in parallel
+            refreshGraph("1D")
+
             try {
-                // If we don't have the quote yet, fetch it (TwelveData)
+                // 3. Fetch/Refresh the core Stock Quote (TwelveData/Finnhub)
                 val stockResult = if (_uiState.value is StockDetailUiState.Success) {
-                    (_uiState.value as StockDetailUiState.Success).stock
+                    val currentStock = (_uiState.value as StockDetailUiState.Success).stock
+                    marketRepository.getStockQuote(stockSymbol) ?: currentStock
                 } else {
                     marketRepository.getStockQuote(stockSymbol)
                 }
@@ -122,122 +120,122 @@ class StockDetailViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Fetch data in parallel
-                val profileFlow = flow { emit(marketRepository.getCompanyProfile(stockSymbol)) }
-                val financialsFlow = flow { emit(marketRepository.getBasicFinancials(stockSymbol)) }
-                val newsFlow = flow { emit(marketRepository.getCompanyNews(stockSymbol)) }
-                val recsFlow = flow { emit(marketRepository.getRecommendations(stockSymbol)) }
-                val peersFlow = flow { emit(marketRepository.getPeers(stockSymbol)) }
-                val earningsFlow = flow { emit(marketRepository.getEarningsCalendar(stockSymbol)) }
-                val rsiFlow = flow { emit(marketRepository.getTechnicalIndicator(stockSymbol, "rsi")) }
-                val sma50Flow = flow { emit(marketRepository.getTechnicalIndicator(stockSymbol, "sma", 50)) }
-                val sma200Flow = flow { emit(marketRepository.getTechnicalIndicator(stockSymbol, "sma", 200)) }
-                val dividendsFlow = flow { emit(marketRepository.getDividends(stockSymbol)) }
-                val marketStatusFlow = flow { emit(marketRepository.getMarketStatus()) }
-                val priceTargetFlow = flow { emit(marketRepository.getPriceTarget(stockSymbol)) }
-                val esgFlow = flow { 
+                // Update UI with at least the stock quote if it changed or if we were loading
+                if (_uiState.value !is StockDetailUiState.Success || (_uiState.value as StockDetailUiState.Success).stock.price != stockResult.price) {
+                     val currentState = _uiState.value as? StockDetailUiState.Success
+                     _uiState.value = currentState?.copy(stock = stockResult) ?: StockDetailUiState.Success(stock = stockResult)
+                }
+
+                // 4. Fetch all other data in parallel using async
+                val profileDeferred = async { marketRepository.getCompanyProfile(stockSymbol) }
+                val financialsDeferred = async { marketRepository.getBasicFinancials(stockSymbol) }
+                val newsDeferred = async { marketRepository.getCompanyNews(stockSymbol) }
+                val recsDeferred = async { marketRepository.getRecommendations(stockSymbol) }
+                val peersDeferred = async { marketRepository.getPeers(stockSymbol) }
+                val earningsDeferred = async { marketRepository.getEarningsCalendar(stockSymbol) }
+                val rsiDeferred = async { marketRepository.getTechnicalIndicator(stockSymbol, "rsi") }
+                val sma50Deferred = async { marketRepository.getTechnicalIndicator(stockSymbol, "sma", 50) }
+                val sma200Deferred = async { marketRepository.getTechnicalIndicator(stockSymbol, "sma", 200) }
+                val dividendsDeferred = async { marketRepository.getDividends(stockSymbol) }
+                val marketStatusDeferred = async { marketRepository.getMarketStatus() }
+                val priceTargetDeferred = async { marketRepository.getPriceTarget(stockSymbol) }
+                val esgDeferred = async { 
                     if (!stockResult.isCrypto && !stockResult.isForex) 
-                        emit(marketRepository.getEsgScores(stockSymbol))
-                    else emit(null)
+                        marketRepository.getEsgScores(stockSymbol)
+                    else null
                 }
+                val insidersDeferred = async { marketRepository.getInsiderTransactions(stockSymbol) }
                 
-                // Advanced Twelve Data flows
-                val tdRsiFlow = flow { emit(marketRepository.getTwelveDataRSI(stockSymbol)) }
-                val tdMacdFlow = flow { emit(marketRepository.getTwelveDataMACD(stockSymbol)) }
-                val tdEmaFlow = flow { emit(marketRepository.getTwelveDataEMA(stockSymbol)) }
-                val tdBbandsFlow = flow { emit(marketRepository.getTwelveDataBBands(stockSymbol)) }
-                val tdHistoryFlow = flow { emit(marketRepository.getTwelveDataTimeSeries(stockSymbol, "1day")) }
+                // Twelve Data Advanced
+                val tdRsiDeferred = async { marketRepository.getTwelveDataRSI(stockSymbol) }
+                val tdMacdDeferred = async { marketRepository.getTwelveDataMACD(stockSymbol) }
+                val tdEmaDeferred = async { marketRepository.getTwelveDataEMA(stockSymbol) }
+                val tdBbandsDeferred = async { marketRepository.getTwelveDataBBands(stockSymbol) }
+                val tdHistoryDeferred = async { marketRepository.getTwelveDataTimeSeries(stockSymbol, "1day") }
 
-                combine(
-                    profileFlow, financialsFlow, newsFlow, recsFlow, peersFlow,
-                    earningsFlow, rsiFlow, sma50Flow, sma200Flow, dividendsFlow,
-                    marketStatusFlow, priceTargetFlow, esgFlow,
-                    tdRsiFlow, tdMacdFlow, tdEmaFlow, tdBbandsFlow, tdHistoryFlow
-                ) { results ->
-                    val profile = results[0] as? FinnhubProfileResponse
-                    val financials = results[1] as? FinnhubFinancialsResponse
-                    @Suppress("UNCHECKED_CAST")
-                    val news = results[2] as? List<FinnhubNewsArticle> ?: emptyList()
-                    @Suppress("UNCHECKED_CAST")
-                    val recs = results[3] as? List<FinnhubRecommendationResponse> ?: emptyList()
-                    @Suppress("UNCHECKED_CAST")
-                    val peers = results[4] as? List<String> ?: emptyList()
-                    val earnings = results[5] as? FinnhubEarningsCalendarResponse
-                    val rsi = results[6] as? FinnhubIndicatorResponse
-                    val sma50 = results[7] as? FinnhubIndicatorResponse
-                    val sma200 = results[8] as? FinnhubIndicatorResponse
-                    @Suppress("UNCHECKED_CAST")
-                    val dividends = results[9] as? List<FinnhubDividendResponse> ?: emptyList()
-                    val marketStatus = results[10] as? FinnhubMarketStatusResponse
-                    val priceTarget = results[11] as? FinnhubPriceTargetResponse
-                    val esg = results[12] as? FinnhubEsgResponse
-                    
-                    @Suppress("UNCHECKED_CAST")
-                    val tdRsi = results[13] as? List<TwelveDataIndicatorValue> ?: emptyList()
-                    @Suppress("UNCHECKED_CAST")
-                    val tdMacd = results[14] as? List<TwelveDataMACDValue> ?: emptyList()
-                    @Suppress("UNCHECKED_CAST")
-                    val tdEma = results[15] as? List<TwelveDataIndicatorValue> ?: emptyList()
-                    @Suppress("UNCHECKED_CAST")
-                    val tdBbands = results[16] as? List<TwelveDataBBandsValue> ?: emptyList()
-                    @Suppress("UNCHECKED_CAST")
-                    val tdHistory = results[17] as? List<TwelveDataTimeSeriesValue> ?: emptyList()
+                // Wait for market data (but NOT AI Analysis yet)
+                val profile = profileDeferred.await()
+                val financials = financialsDeferred.await()
+                val news = newsDeferred.await()
+                val recs = recsDeferred.await()
+                val peers = peersDeferred.await()
+                val earnings = earningsDeferred.await()
+                val rsiRes = rsiDeferred.await()
+                val sma50Res = sma50Deferred.await()
+                val sma200Res = sma200Deferred.await()
+                val dividends = dividendsDeferred.await()
+                val marketStatus = marketStatusDeferred.await()
+                val priceTarget = priceTargetDeferred.await()
+                val esg = esgDeferred.await()
+                val insiders = insidersDeferred.await()
+                
+                val tdRsi = tdRsiDeferred.await()
+                val tdMacd = tdMacdDeferred.await()
+                val tdEma = tdEmaDeferred.await()
+                val tdBbands = tdBbandsDeferred.await()
+                val tdHistory = tdHistoryDeferred.await()
 
-                    // New advanced features data
-                    val insiders = marketRepository.getInsiderTransactions(stockSymbol)
-                    val aiAnalysis = geminiService.generateStockAnalysis(stockResult, news, financials)
-                    
-                    if (aiAnalysis != null) {
-                        marketRepository.trackAIUsage()
-                    }
+                val aiRec = marketRepository.analyzeStock(
+                    stock = stockResult,
+                    financials = financials,
+                    priceTarget = priceTarget,
+                    rsi = rsiRes?.rsi?.lastOrNull(),
+                    sma50 = sma50Res?.sma?.lastOrNull(),
+                    sma200 = sma200Res?.sma?.lastOrNull(),
+                    sentiment = null,
+                    analystRecs = recs.firstOrNull(),
+                    news = news
+                )
 
-                    val aiRec = marketRepository.analyzeStock(
-                        stock = stockResult,
-                        financials = financials,
-                        priceTarget = priceTarget,
-                        rsi = rsi?.rsi?.lastOrNull(),
-                        sma50 = sma50?.sma?.lastOrNull(),
-                        sma200 = sma200?.sma?.lastOrNull(),
-                        sentiment = null,
-                        analystRecs = recs.firstOrNull(),
-                        news = news
-                    )
+                // 5. Update UI with all market data
+                val mainSuccessState = StockDetailUiState.Success(
+                    stock = stockResult,
+                    profile = profile,
+                    financials = financials,
+                    newsArticles = news,
+                    recommendations = recs,
+                    peers = peers,
+                    earnings = earnings,
+                    rsiData = rsiRes,
+                    sma50Data = sma50Res,
+                    sma200Data = sma200Res,
+                    dividends = dividends,
+                    marketStatus = marketStatus,
+                    esgScores = esg,
+                    priceTarget = priceTarget,
+                    aiRecommendation = aiRec,
+                    insiderTransactions = insiders,
+                    aiAnalysis = (cached as? StockDetailUiState.Success)?.aiAnalysis,
+                    tdRsi = tdRsi,
+                    tdMacd = tdMacd,
+                    tdEma20 = tdEma.firstOrNull()?.rsi?.toDoubleOrNull(),
+                    tdBbands = tdBbands.firstOrNull(),
+                    candleHistory = tdHistory
+                )
+                
+                _uiState.value = mainSuccessState
+                marketRepository.cacheFullDetail(stockSymbol, mainSuccessState)
+                _isRefreshing.value = false
 
-                    StockDetailUiState.Success(
-                        stock = stockResult,
-                        profile = profile,
-                        financials = financials,
-                        newsArticles = news,
-                        recommendations = recs,
-                        peers = peers,
-                        earnings = earnings,
-                        rsiData = rsi,
-                        sma50Data = sma50,
-                        sma200Data = sma200,
-                        dividends = dividends,
-                        newsSentiment = null,
-                        marketStatus = marketStatus,
-                        esgScores = esg,
-                        priceTarget = priceTarget,
-                        aiRecommendation = aiRec,
-                        insiderTransactions = insiders,
-                        aiAnalysis = aiAnalysis,
-                        tdRsi = tdRsi,
-                        tdMacd = tdMacd,
-                        tdEma20 = tdEma.firstOrNull()?.rsi?.toDoubleOrNull(),
-                        tdBbands = tdBbands.firstOrNull(),
-                        candleHistory = tdHistory
-                    )
-                }.collect {
-                    _uiState.value = it
-                    marketRepository.cacheFullDetail(stockSymbol, it)
-                    _isRefreshing.value = false
-                }
-
+                // 6. Background load for persistent user data
                 _isInWatchlist.value = marketRepository.getWatchlist().any { it.symbol == stockSymbol }
                 _ownedQuantity.value = marketRepository.getPortfolio().find { it.first == stockSymbol }?.second ?: 0L
-                
-                refreshGraph("1D")
+
+                // 7. Finally, trigger AI Analysis in a separate coroutine
+                launch {
+                    try {
+                        val aiAnalysis = geminiService.generateStockAnalysis(stockResult, news, financials)
+                        marketRepository.trackAIUsage()
+                        val currentState = _uiState.value
+                        if (currentState is StockDetailUiState.Success) {
+                            val updatedState = currentState.copy(aiAnalysis = aiAnalysis)
+                            _uiState.value = updatedState
+                            marketRepository.cacheFullDetail(stockSymbol, updatedState)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("StockDetailViewModel", "AI Analysis failed", e)
+                    }
+                }
 
             } catch (e: Exception) {
                 _uiState.value = StockDetailUiState.Error(e.message ?: "Unknown error")
@@ -289,13 +287,15 @@ class StockDetailViewModel @Inject constructor(
 
     suspend fun createContract(type: ContractType, targetPrice: Double, quantity: Long): Result<Unit> {
         val stockSymbol = symbol ?: return Result.failure(Exception("No symbol"))
+        val currentStock = (uiState.value as? StockDetailUiState.Success)?.stock
         val contract = TradeContract(
             symbol = stockSymbol,
             type = type,
             targetPrice = targetPrice,
             quantity = quantity,
             status = ContractStatus.PENDING,
-            createdAt = Timestamp.now()
+            createdAt = Timestamp.now(),
+            logoUrl = currentStock?.logoUrl
         )
         val res = marketRepository.createTradeContract(contract)
         return res
@@ -315,6 +315,7 @@ class StockDetailViewModel @Inject constructor(
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, 30) // Default 30-day expiration
         
+        val currentStock = (uiState.value as? StockDetailUiState.Success)?.stock
         val contract = TradeContract(
             symbol = stockSymbol,
             type = if (isCall) ContractType.CALL_OPTION else ContractType.PUT_OPTION,
@@ -323,7 +324,8 @@ class StockDetailViewModel @Inject constructor(
             status = ContractStatus.PENDING,
             createdAt = Timestamp.now(),
             premium = premium,
-            expirationDate = Timestamp(calendar.time)
+            expirationDate = Timestamp(calendar.time),
+            logoUrl = currentStock?.logoUrl
         )
         
         return marketRepository.createTradeContract(contract)
@@ -368,24 +370,23 @@ sealed class StockDetailUiState {
     object Loading : StockDetailUiState()
     data class Success(
         val stock: Stock,
-        val profile: FinnhubProfileResponse?,
-        val financials: FinnhubFinancialsResponse?,
-        val newsArticles: List<FinnhubNewsArticle>,
-        val recommendations: List<FinnhubRecommendationResponse>,
-        val peers: List<String>,
-        val earnings: FinnhubEarningsCalendarResponse?,
-        val rsiData: FinnhubIndicatorResponse?,
-        val sma50Data: FinnhubIndicatorResponse?,
-        val sma200Data: FinnhubIndicatorResponse?,
-        val dividends: List<FinnhubDividendResponse>,
-        val newsSentiment: FinnhubNewsSentimentResponse?,
-        val marketStatus: FinnhubMarketStatusResponse?,
-        val esgScores: FinnhubEsgResponse?,
-        val priceTarget: FinnhubPriceTargetResponse?,
-        val aiRecommendation: AIRecommendation?,
+        val profile: FinnhubProfileResponse? = null,
+        val financials: FinnhubFinancialsResponse? = null,
+        val newsArticles: List<FinnhubNewsArticle> = emptyList(),
+        val recommendations: List<FinnhubRecommendationResponse> = emptyList(),
+        val peers: List<String> = emptyList(),
+        val earnings: FinnhubEarningsCalendarResponse? = null,
+        val rsiData: FinnhubIndicatorResponse? = null,
+        val sma50Data: FinnhubIndicatorResponse? = null,
+        val sma200Data: FinnhubIndicatorResponse? = null,
+        val dividends: List<FinnhubDividendResponse> = emptyList(),
+        val newsSentiment: FinnhubNewsSentimentResponse? = null,
+        val marketStatus: FinnhubMarketStatusResponse? = null,
+        val esgScores: FinnhubEsgResponse? = null,
+        val priceTarget: FinnhubPriceTargetResponse? = null,
+        val aiRecommendation: AIRecommendation? = null,
         val insiderTransactions: List<FinnhubInsiderTransaction> = emptyList(),
         val aiAnalysis: String? = null,
-        // Advanced Twelve Data Features
         val tdRsi: List<TwelveDataIndicatorValue> = emptyList(),
         val tdMacd: List<TwelveDataMACDValue> = emptyList(),
         val tdEma20: Double? = null,

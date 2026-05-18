@@ -20,5 +20,6 @@ data class TradeContract(
     val createdAt: Timestamp = Timestamp.now(),
     val status: ContractStatus = ContractStatus.PENDING,
     val premium: Double = 0.0,
-    val expirationDate: Timestamp? = null
+    val expirationDate: Timestamp? = null,
+    val logoUrl: String? = null
 )

@@ -45,26 +45,25 @@ fun GuideScreen(navController: NavController) {
         isTutorialCompleted = authRepository.isTutorialCompleted()
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212))
-            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+            .background(Color(0xFF121212)),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "TradeSim Guide",
-            style = MaterialTheme.typography.headlineMedium,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+        item {
+            Text(
+                text = "TradeSim Guide",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            item {
-                TutorialCard(
+        item {
+            TutorialCard(
                     isCompleted = isTutorialCompleted,
                     onClick = { navController.navigate(Screen.MarketTutorial.route) }
                 )
@@ -186,7 +185,6 @@ fun GuideScreen(navController: NavController) {
             }
         }
     }
-}
 
 @Composable
 fun TutorialCard(isCompleted: Boolean, onClick: () -> Unit) {

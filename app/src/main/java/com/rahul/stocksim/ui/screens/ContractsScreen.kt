@@ -24,6 +24,11 @@ import com.rahul.stocksim.ui.viewmodels.PortfolioUiState
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
+import coil.compose.AsyncImage
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,12 +167,40 @@ fun ContractRow(contract: TradeContract, onCancel: (() -> Unit)? = null, onExecu
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            // Logo
+            if (!contract.logoUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = contract.logoUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.05f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = contract.symbol.take(1),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = contract.symbol, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(text = contract.symbol, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.width(8.dp))
                     when (contract.status) {
                         ContractStatus.EXECUTED -> {
@@ -217,7 +250,17 @@ fun ContractRow(contract: TradeContract, onCancel: (() -> Unit)? = null, onExecu
                     color = Color.Gray,
                     fontSize = 12.sp
                 )
-                Text(text = "${contract.quantity} ${if(contract.type == ContractType.CALL_OPTION || contract.type == ContractType.PUT_OPTION) "contracts" else "units"}", color = Color.Gray, fontSize = 12.sp)
+                Text(
+                    text = "${contract.quantity} ${
+                        if (contract.type == ContractType.CALL_OPTION || contract.type == ContractType.PUT_OPTION) {
+                            if (contract.quantity == 1L) "contract" else "contracts"
+                        } else {
+                            if (contract.quantity == 1L) "unit" else "units"
+                        }
+                    }", 
+                    color = Color.Gray, 
+                    fontSize = 12.sp
+                )
             }
             if (contract.status == ContractStatus.PENDING) {
                 var showCloseConfirm by remember { mutableStateOf(false) }

@@ -82,21 +82,10 @@ fun MarketScreen(
                             )
                         }
                         items(state.stockList) { currentStock ->
-                            val index = state.stockList.indexOf(currentStock)
-                            val animatedProgress = remember { Animatable(0f) }
-                            LaunchedEffect(state.stockList) {
-                                delay(index * 50L)
-                                animatedProgress.animateTo(1f, animationSpec = tween(500))
-                            }
-
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp, horizontal = 16.dp)
-                                    .graphicsLayer {
-                                        alpha = animatedProgress.value
-                                        translationY = (1f - animatedProgress.value) * 50f
-                                    }
                                     .clickable { onStockClick(currentStock) },
                                 color = Color(0xFF1F1F1F),
                                 shape = RoundedCornerShape(12.dp)
@@ -104,8 +93,7 @@ fun MarketScreen(
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     StockRow(
                                         stock = currentStock,
-                                        ownedQuantity = state.portfolio[currentStock.symbol] ?: 0L,
-                                        onRowClick = { /* Handled by Surface click */ }
+                                        ownedQuantity = state.portfolio[currentStock.symbol] ?: 0L
                                     )
                                 }
                             }

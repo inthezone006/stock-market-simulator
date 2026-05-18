@@ -72,6 +72,7 @@ fun StockDetailScreen(
     val balance by viewModel.userBalance.collectAsState(initial = 0.0)
     val priceAlerts by viewModel.priceAlerts.collectAsState()
     val activeContracts by viewModel.activeContracts.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     var quantityInput by remember { mutableStateOf("1") }
     val quantity = quantityInput.toIntOrNull() ?: 0
@@ -176,6 +177,14 @@ fun StockDetailScreen(
                     }
                 },
                 actions = {
+                    if (isRefreshing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                     if (uiState is StockDetailUiState.Success) {
 
                         IconButton(onClick = { showAlertDialog = !showAlertDialog }) {

@@ -51,6 +51,9 @@ class StockDetailViewModel @Inject constructor(
     private val _activeContracts = MutableStateFlow<List<TradeContract>>(emptyList())
     val activeContracts: StateFlow<List<TradeContract>> = _activeContracts.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     val userBalance: Flow<Double> = marketRepository.getUserBalance()
 
     init {
@@ -79,33 +82,44 @@ class StockDetailViewModel @Inject constructor(
     fun refreshData() {
         val stockSymbol = symbol ?: return
         viewModelScope.launch {
-            // Instant load from memory cache
+            // 1. Instant load from memory cache (Full Detail)
             val cached = marketRepository.getCachedFullDetail(stockSymbol)
             if (cached is StockDetailUiState.Success) {
                 _uiState.value = cached
-            } else if (_uiState.value !is StockDetailUiState.Success) {
-                _uiState.value = StockDetailUiState.Loading
-            }
-
-            try {
-                val stockResult = marketRepository.getStockQuote(stockSymbol)
-                if (stockResult == null) {
-                    if (_uiState.value is StockDetailUiState.Loading) {
-                        _uiState.value = StockDetailUiState.Error("Stock not found")
-                    }
-                    return@launch
-                }
-                
-                // If we are still in Loading, show at least the stock price immediately
-                if (_uiState.value !is StockDetailUiState.Success) {
+                _isRefreshing.value = true // Show loading indicator in header while we refresh
+            } else {
+                // 2. Fast load from Quote Cache (Just price/name)
+                val quickQuote = marketRepository.getStockQuote(stockSymbol, skipTwelveData = true)
+                if (quickQuote != null) {
                     _uiState.value = StockDetailUiState.Success(
-                        stock = stockResult,
+                        stock = quickQuote,
                         profile = null, financials = null, newsArticles = emptyList(),
                         recommendations = emptyList(), peers = emptyList(), earnings = null,
                         rsiData = null, sma50Data = null, sma200Data = null, dividends = emptyList(),
                         newsSentiment = null, marketStatus = null, esgScores = null, priceTarget = null,
                         aiRecommendation = null
                     )
+                    _isRefreshing.value = true
+                } else {
+                    // 3. Absolute fallback: Loading icon
+                    _uiState.value = StockDetailUiState.Loading
+                }
+            }
+
+            try {
+                // If we don't have the quote yet, fetch it (TwelveData)
+                val stockResult = if (_uiState.value is StockDetailUiState.Success) {
+                    (_uiState.value as StockDetailUiState.Success).stock
+                } else {
+                    marketRepository.getStockQuote(stockSymbol)
+                }
+
+                if (stockResult == null) {
+                    if (_uiState.value is StockDetailUiState.Loading) {
+                        _uiState.value = StockDetailUiState.Error("Stock not found")
+                    }
+                    _isRefreshing.value = false
+                    return@launch
                 }
 
                 // Fetch data in parallel
@@ -217,6 +231,7 @@ class StockDetailViewModel @Inject constructor(
                 }.collect {
                     _uiState.value = it
                     marketRepository.cacheFullDetail(stockSymbol, it)
+                    _isRefreshing.value = false
                 }
 
                 _isInWatchlist.value = marketRepository.getWatchlist().any { it.symbol == stockSymbol }
@@ -226,6 +241,7 @@ class StockDetailViewModel @Inject constructor(
 
             } catch (e: Exception) {
                 _uiState.value = StockDetailUiState.Error(e.message ?: "Unknown error")
+                _isRefreshing.value = false
             }
         }
     }

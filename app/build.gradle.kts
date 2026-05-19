@@ -19,12 +19,11 @@ android {
         applicationId = "com.rahul.stocksim"
         minSdk = 24
         targetSdk = 35
-        versionCode = 56
-        versionName = "6.0.1"
+        versionCode = 57
+        versionName = "6.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // Load GEMINI_API_KEY from local.properties (which is gitignored)
         val localProperties = Properties()
         val localPropertiesFile = project.rootProject.file("local.properties")
         if (localPropertiesFile.exists()) {

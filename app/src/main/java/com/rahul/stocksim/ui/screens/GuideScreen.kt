@@ -1,6 +1,7 @@
 package com.rahul.stocksim.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -310,22 +311,15 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (currentStep > 0) {
-                        IconButton(onClick = { 
-                            currentStep--
-                            previewActive = false
-                        }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.size(48.dp))
-                    }
-                    
-                    TextButton(onClick = onDismiss) {
-                        Text("Exit", color = Color.Gray)
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.Gray
+                        )
                     }
                 }
 
@@ -416,30 +410,49 @@ fun MarketTutorialScreen(onComplete: () -> Unit, onDismiss: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
-                        .padding(32.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(horizontal = 48.dp, vertical = 32.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(
+                        onClick = { 
+                            currentStep--
+                            previewActive = false
+                        },
+                        enabled = currentStep > 0
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(32.dp),
+                            tint = if (currentStep > 0) Color.White else Color.White.copy(alpha = 0.3f)
+                        )
+                    }
+
                     if (currentStep < steps.size - 1) {
-                        Button(
+                        IconButton(
                             onClick = { 
                                 currentStep++ 
                                 previewActive = false
-                            },
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            }
                         ) {
-                            Text("Continue", fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Continue",
+                                modifier = Modifier.size(32.dp),
+                                tint = Color.White
+                            )
                         }
                     } else {
-                        Button(
-                            onClick = onComplete,
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
+                        IconButton(
+                            onClick = onComplete
                         ) {
-                            Text("Finish Tutorial", fontWeight = FontWeight.Bold)
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Finish",
+                                modifier = Modifier.size(32.dp),
+                                tint = Color(0xFF00C853)
+                            )
                         }
                     }
                 }

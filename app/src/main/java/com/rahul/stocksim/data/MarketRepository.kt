@@ -348,6 +348,8 @@ class MarketRepository @Inject constructor(
     private fun recordError(e: Exception) {
         if (e is CancellationException ||
             e is java.net.SocketTimeoutException || 
+            e is java.net.UnknownHostException ||
+            (e is FirebaseFirestoreException && e.code == FirebaseFirestoreException.Code.UNAVAILABLE) ||
             e.message?.contains("Insufficient", ignoreCase = true) == true) {
             return
         }
@@ -938,7 +940,7 @@ class MarketRepository @Inject constructor(
             firestore.runTransaction { transaction ->
                 // Update balance if there's any value to settle
                 if (totalSettlement > 0) {
-                    val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
+                    val currentBalance = (transaction.get(userRef).get("balance") as? Number)?.toDouble() ?: 0.0
                     transaction.update(userRef, "balance", currentBalance + totalSettlement)
                 }
                 
@@ -963,13 +965,13 @@ class MarketRepository @Inject constructor(
             val userRef = firestore.collection("users").document(targetUserId)
             val portfolioRef = userRef.collection("portfolio").document(symbol)
             firestore.runTransaction { transaction ->
-                val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
+                val currentBalance = (transaction.get(userRef).get("balance") as? Number)?.toDouble() ?: 0.0
                 val portfolioDoc = transaction.get(portfolioRef)
                 if (currentBalance >= totalCost) {
                     newBalance = currentBalance - totalCost
                     transaction.update(userRef, "balance", newBalance)
                     if (portfolioDoc.exists()) {
-                        transaction.update(portfolioRef, "quantity", (portfolioDoc.getLong("quantity") ?: 0L) + quantity)
+                        transaction.update(portfolioRef, "quantity", ((portfolioDoc.get("quantity") as? Number)?.toLong() ?: 0L) + quantity)
                     } else {
                         transaction.set(portfolioRef, mapOf(
                             "quantity" to quantity.toLong(),
@@ -1051,11 +1053,11 @@ class MarketRepository @Inject constructor(
 
             firestore.runTransaction { transaction ->
                 val portfolioDoc = transaction.get(portfolioRef)
-                val currentQty = portfolioDoc.getLong("quantity") ?: 0L
+                val currentQty = (portfolioDoc.get("quantity") as? Number)?.toLong() ?: 0L
                 val purchaseDate = portfolioDoc.getTimestamp("purchaseDate")
                 
                 if (currentQty >= quantity) {
-                    val currentBalance = transaction.get(userRef).getDouble("balance") ?: 0.0
+                    val currentBalance = (transaction.get(userRef).get("balance") as? Number)?.toDouble() ?: 0.0
                     transaction.update(userRef, "balance", currentBalance + totalGain)
                     transaction.update(portfolioRef, "quantity", currentQty - quantity)
                     
@@ -1094,8 +1096,8 @@ class MarketRepository @Inject constructor(
                 gson.fromJson(jsonElement, TwelveDataQuote::class.java)
             } else if (jsonElement.isJsonObject) {
                 // It might be a map with one entry
-                val mapType = object : TypeToken<Map<String, TwelveDataQuote>>() {}.type
-                val map: Map<String, TwelveDataQuote> = gson.fromJson(jsonElement, mapType)
+                val mapType = object : TypeToken<HashMap<String, TwelveDataQuote>>() {}.type
+                val map: HashMap<String, TwelveDataQuote> = gson.fromJson(jsonElement, mapType)
                 map[symbol] ?: map.values.firstOrNull()
             } else null
 
@@ -1137,8 +1139,8 @@ class MarketRepository @Inject constructor(
             }
 
             val responseMap = if (jsonElement.isJsonObject && !jsonElement.asJsonObject.has("symbol")) {
-                val mapType = object : TypeToken<Map<String, TwelveDataQuote>>() {}.type
-                gson.fromJson<Map<String, TwelveDataQuote>>(jsonElement, mapType)
+                val mapType = object : TypeToken<HashMap<String, TwelveDataQuote>>() {}.type
+                gson.fromJson<HashMap<String, TwelveDataQuote>>(jsonElement, mapType)
             } else if (jsonElement.isJsonObject) {
                 val quote = gson.fromJson(jsonElement, TwelveDataQuote::class.java)
                 mapOf(quote.symbol to quote)
@@ -1255,7 +1257,7 @@ class MarketRepository @Inject constructor(
                     recordError(error)
                     return@addSnapshotListener
                 }
-                val balance = snapshot?.getDouble("balance") ?: 0.0
+                val balance = (snapshot?.get("balance") as? Number)?.toDouble() ?: 0.0
                 trySend(balance)
             }
         awaitClose { listener.remove() }
@@ -1347,7 +1349,7 @@ class MarketRepository @Inject constructor(
         }
         
         val history = snapshot.documents.mapNotNull { doc ->
-            val value = doc.getDouble("value") ?: return@mapNotNull null
+            val value = (doc.get("value") as? Number)?.toDouble() ?: return@mapNotNull null
             val timestamp = doc.getTimestamp("timestamp")?.toDate()?.time ?: return@mapNotNull null
             timestamp to value
         }
@@ -1362,7 +1364,9 @@ class MarketRepository @Inject constructor(
     suspend fun getPortfolio(): List<Pair<String, Long>> {
         val userId = auth.currentUser?.uid ?: return emptyList()
         return try {
-            firestore.collection("users").document(userId).collection("portfolio").get().await().documents.map { it.getString("symbol").orEmpty() to (it.getLong("quantity") ?: 0L) }
+            firestore.collection("users").document(userId).collection("portfolio").get().await().documents.map { 
+                it.getString("symbol").orEmpty() to ((it.get("quantity") as? Number)?.toLong() ?: 0L) 
+            }
         } catch (e: Exception) { recordError(e); emptyList() }
     }
 

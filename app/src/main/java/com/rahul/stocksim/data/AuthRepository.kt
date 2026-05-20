@@ -36,7 +36,13 @@ class AuthRepository {
     private val crashlytics = Firebase.crashlytics
 
     private fun recordError(e: Exception) {
-        if (e is CancellationException || e is java.net.SocketTimeoutException) return
+        if (e is CancellationException || 
+            e is java.net.SocketTimeoutException ||
+            e is java.net.UnknownHostException ||
+            (e is com.google.firebase.firestore.FirebaseFirestoreException && 
+             e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.UNAVAILABLE)) {
+            return
+        }
         crashlytics.recordException(e)
     }
 

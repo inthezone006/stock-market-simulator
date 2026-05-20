@@ -70,8 +70,13 @@ class GeminiService @Inject constructor() {
         // If we reach here, all models failed
         val e = lastException ?: return@withContext "The AI was unable to generate a response."
         
-        // Log the final exception to Firebase
-        if (e !is kotlinx.coroutines.CancellationException && e !is java.net.SocketTimeoutException) {
+        // Log the final exception to Firebase (ignore cancellations and timeouts)
+        val isCancellation = e is kotlinx.coroutines.CancellationException || 
+                           e is java.util.concurrent.CancellationException ||
+                           e.cause is kotlinx.coroutines.CancellationException ||
+                           e.cause is java.util.concurrent.CancellationException
+
+        if (!isCancellation && e !is java.net.SocketTimeoutException) {
             FirebaseCrashlytics.getInstance().apply {
                 recordException(e)
                 setCustomKey("gemini_stock", stock.symbol)

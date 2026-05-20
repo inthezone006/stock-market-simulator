@@ -87,9 +87,10 @@ fun LeaderboardScreen(mainNavController: NavController) {
                         LeaderboardUser(
                             id = doc.id,
                             name = doc.getString("displayName") ?: doc.getString("email")?.split("@")?.get(0) ?: "Trader",
-                            totalAccountValue = doc.getDouble("totalAccountValue") ?: doc.getDouble("balance") ?: 0.0,
+                            totalAccountValue = (doc.get("totalAccountValue") as? Number)?.toDouble() 
+                                ?: (doc.get("balance") as? Number)?.toDouble() ?: 0.0,
                             photoUrl = doc.getString("photoUrl"),
-                            level = (doc.getLong("level") ?: 4L).toInt()
+                            level = ((doc.get("level") as? Number)?.toLong() ?: 4L).toInt()
                         )
                     }
                     
@@ -99,7 +100,11 @@ fun LeaderboardScreen(mainNavController: NavController) {
                 }
             } catch (e: Exception) {
                 Log.e("Leaderboard", "Query failed, falling back to local filter", e)
-                com.google.firebase.Firebase.crashlytics.recordException(e)
+                if (e !is kotlinx.coroutines.CancellationException && 
+                    e !is java.net.UnknownHostException &&
+                    e !is java.net.SocketTimeoutException) {
+                    com.google.firebase.Firebase.crashlytics.recordException(e)
+                }
                 
                 // Fallback: Fetch all users and filter locally if the index isn't ready
                 try {
@@ -112,9 +117,10 @@ fun LeaderboardScreen(mainNavController: NavController) {
                         LeaderboardUser(
                             id = doc.id,
                             name = doc.getString("displayName") ?: doc.getString("email")?.split("@")?.get(0) ?: "Trader",
-                            totalAccountValue = doc.getDouble("totalAccountValue") ?: doc.getDouble("balance") ?: 0.0,
+                            totalAccountValue = (doc.get("totalAccountValue") as? Number)?.toDouble() 
+                                ?: (doc.get("balance") as? Number)?.toDouble() ?: 0.0,
                             photoUrl = doc.getString("photoUrl"),
-                            level = (doc.getLong("level") ?: 4L).toInt()
+                            level = ((doc.get("level") as? Number)?.toLong() ?: 4L).toInt()
                         )
                     }
                     
@@ -124,7 +130,11 @@ fun LeaderboardScreen(mainNavController: NavController) {
                         allUsers.filter { it.level == selectedLevelFilter }
                     }
                 } catch (fallbackEx: Exception) {
-                    com.google.firebase.Firebase.crashlytics.recordException(fallbackEx)
+                    if (fallbackEx !is kotlinx.coroutines.CancellationException && 
+                        fallbackEx !is java.net.UnknownHostException &&
+                        fallbackEx !is java.net.SocketTimeoutException) {
+                        com.google.firebase.Firebase.crashlytics.recordException(fallbackEx)
+                    }
                     leaders = emptyList()
                     errorMessage = "Leaderboard currently unavailable."
                 }
